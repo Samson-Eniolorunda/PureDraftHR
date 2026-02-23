@@ -26,6 +26,9 @@ self.addEventListener("fetch", (event) => {
   // Network-first strategy for API / streaming routes
   if (event.request.url.includes("/api/")) return;
 
+  // Don't try to cache POST requests (Cache API only supports GET/HEAD)
+  if (event.request.method !== "GET") return;
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {

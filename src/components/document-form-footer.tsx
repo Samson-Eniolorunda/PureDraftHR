@@ -59,7 +59,7 @@ export function DocumentFormFooter({
       {/* Reference Template Upload (Optional) */}
       <Card className="p-4 bg-muted/50 border-dashed">
         <div className="space-y-2">
-          <Label className="text-sm font-medium">
+          <Label htmlFor="reference-file" className="text-sm font-medium">
             Upload a Reference Template (Optional)
           </Label>
           <p className="text-xs text-muted-foreground">
@@ -68,6 +68,7 @@ export function DocumentFormFooter({
           </p>
           <div className="relative">
             <input
+              id="reference-file"
               type="file"
               accept=".pdf,.docx,.txt"
               onChange={handleReferenceUpload}

@@ -2,27 +2,121 @@
 
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
+import { Sun, Moon, Smartphone } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function ThemeToggleButton() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={toggleTheme}
-      className="text-muted-foreground hover:text-foreground"
-      title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-    >
-      {theme === "dark" ? (
-        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-      ) : (
-        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-        </svg>
-      )}
-    </Button>
+    <>
+      {/* Desktop: Sun | System | Moon */}
+      <div className="hidden sm:flex items-center gap-1 rounded-lg border border-input bg-muted p-1">
+        <Button
+          variant={theme === "light" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setTheme("light")}
+          className={cn(
+            "h-8 px-2",
+            theme === "light"
+              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+          )}
+          title="Light mode"
+        >
+          <Sun className="h-4 w-4" />
+        </Button>
+
+        <Button
+          variant={theme === "system" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setTheme("system")}
+          className={cn(
+            "h-8 px-2",
+            theme === "system"
+              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+          )}
+          title="System theme"
+        >
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </Button>
+
+        <Button
+          variant={theme === "dark" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setTheme("dark")}
+          className={cn(
+            "h-8 px-2",
+            theme === "dark"
+              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+          )}
+          title="Dark mode"
+        >
+          <Moon className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Mobile: Sun | Mobile | Moon (system as default) */}
+      <div className="sm:hidden flex items-center gap-1 rounded-lg border border-input bg-muted p-1">
+        <Button
+          variant={theme === "light" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setTheme("light")}
+          className={cn(
+            "h-8 px-2",
+            theme === "light"
+              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+          )}
+          title="Light mode"
+        >
+          <Sun className="h-4 w-4" />
+        </Button>
+
+        <Button
+          variant={theme === "system" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setTheme("system")}
+          className={cn(
+            "h-8 px-2",
+            theme === "system"
+              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+          )}
+          title="System theme"
+        >
+          <Smartphone className="h-4 w-4" />
+        </Button>
+
+        <Button
+          variant={theme === "dark" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setTheme("dark")}
+          className={cn(
+            "h-8 px-2",
+            theme === "dark"
+              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+          )}
+          title="Dark mode"
+        >
+          <Moon className="h-4 w-4" />
+        </Button>
+      </div>
+    </>
   );
 }
