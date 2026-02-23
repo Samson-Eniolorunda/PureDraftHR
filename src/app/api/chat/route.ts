@@ -1,5 +1,5 @@
 import { streamText } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
 
 export const runtime = "edge";
 
@@ -19,11 +19,16 @@ Instructions:
 - Preserve all factual details exactly as provided.
 
 Available templates and their expected structures:
-1. "Incident Report": Title, Date/Time, Location, Parties Involved, Description of Incident, Witnesses, Actions Taken, Follow-Up Required.
-2. "Interview Notes": Candidate Name, Position, Date, Interviewer(s), Questions & Responses (numbered), Overall Impression, Recommendation.
-3. "Meeting Minutes": Meeting Title, Date/Time, Attendees, Agenda Items, Discussion Points, Decisions Made, Action Items (with owners & deadlines).
-4. "Performance Review": Employee Name, Review Period, Reviewer, Strengths, Areas for Improvement, Goals for Next Period, Overall Rating.
-5. "Policy Draft": Policy Title, Effective Date, Purpose, Scope, Definitions, Policy Statement, Procedures, Compliance, Review Schedule.
+1. "Incident Report": Title, Date/Time, Location, Parties Involved, Description, Witnesses, Actions Taken, Follow-Up.
+2. "Interview Notes": Candidate, Position, Date, Interviewer(s), Q&A (numbered), Impression, Recommendation.
+3. "Meeting Minutes": Title, Date/Time, Attendees, Agenda, Discussion, Decisions, Action Items (owners & deadlines).
+4. "Performance Review": Employee, Period, Reviewer, Strengths, Areas for Improvement, Goals, Rating.
+5. "Policy Draft": Title, Effective Date, Purpose, Scope, Definitions, Statement, Procedures, Compliance, Review Schedule.
+6. "Daily Report": Date, Department, Tasks Completed, In Progress, Issues/Blockers, Upcoming Tasks.
+7. "Employee Handbook": Section Title, Purpose, Policy Statement, Procedures, Examples, Compliance Notes.
+8. "Termination Letter": Employee Name, Position, Last Day, Reason (if applicable), Severance, Benefits Info.
+9. "Training Summary": Program Name, Date, Participants, Topics Covered, Key Learnings, Follow-Up Action.
+10. "Disciplinary Notice": Employee, Offense, Policy Violated, Consequence, Appeal Process, Signature Area.
 
 Output ONLY the formatted markdown document. Do not include any preamble or explanation.`,
 
@@ -83,7 +88,7 @@ export async function POST(req: Request) {
       : systemPrompt;
 
   const result = streamText({
-    model: openai("gpt-4o-mini"),
+    model: google("gemini-2.5-flash"),
     system: finalSystem,
     messages,
   });

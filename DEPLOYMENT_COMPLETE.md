@@ -17,11 +17,11 @@
 
 ### 3-in-1 HR Tools
 
-| Tool | Purpose | AI Features |
-|------|---------|-------------|
-| **Formatter** | Convert messy text into structured documents | 5 professional templates, semantic restructuring |
-| **Summarizer** | Distill lengthy documents into summaries | Plagiarism-free output, human-sounding tone |
-| **Builder** | Generate documents from scratch | 10+ document types, tone selection |
+| Tool           | Purpose                                      | AI Features                                      |
+| -------------- | -------------------------------------------- | ------------------------------------------------ |
+| **Formatter**  | Convert messy text into structured documents | 5 professional templates, semantic restructuring |
+| **Summarizer** | Distill lengthy documents into summaries     | Plagiarism-free output, human-sounding tone      |
+| **Builder**    | Generate documents from scratch              | 10+ document types, tone selection               |
 
 ### Core Features
 
@@ -32,7 +32,7 @@
 ✅ **Client-Side Export** — PDF & DOCX download in browser  
 ✅ **File Import** — Drag-drop support for PDF, DOCX, TXT  
 ✅ **Edge Runtime** — Optimized for serverless deployment  
-✅ **Type-Safe** — Full TypeScript with strict mode  
+✅ **Type-Safe** — Full TypeScript with strict mode
 
 ---
 
@@ -69,22 +69,23 @@ src/
 
 ## 📦 Dependencies Installed
 
-| Category | Count | Examples |
-|----------|-------|----------|
-| **Core** | 3 | next, react, react-dom |
-| **AI/LLM** | 2 | ai, @ai-sdk/openai |
-| **Styling** | 3 | tailwindcss, class-variance-authority |
-| **Export** | 3 | docx, html2pdf.js, file-saver |
-| **File Parsing** | 2 | mammoth (DOCX), pdf-parse (PDF) |
-| **UI** | 5 | lucide-react, react-markdown, clsx |
-| **Build/Dev** | 7+ | typescript, eslint, postcss, autoprefixer |
-| **Total** | 528 packages | All audited & working |
+| Category         | Count        | Examples                                  |
+| ---------------- | ------------ | ----------------------------------------- |
+| **Core**         | 3            | next, react, react-dom                    |
+| **AI/LLM**       | 2            | ai, @ai-sdk/openai                        |
+| **Styling**      | 3            | tailwindcss, class-variance-authority     |
+| **Export**       | 3            | docx, html2pdf.js, file-saver             |
+| **File Parsing** | 2            | mammoth (DOCX), pdf-parse (PDF)           |
+| **UI**           | 5            | lucide-react, react-markdown, clsx        |
+| **Build/Dev**    | 7+           | typescript, eslint, postcss, autoprefixer |
+| **Total**        | 528 packages | All audited & working                     |
 
 ---
 
 ## 🚀 Build & Deployment Status
 
 ### Build Results
+
 ```
 ✓ Compiled successfully in 14.0s
 ✓ Linting and checking validity of types
@@ -94,6 +95,7 @@ src/
 ```
 
 ### Git Repository
+
 ```
 📤 51 files committed
 📤 3 commits pushed to main
@@ -107,6 +109,7 @@ src/
 ## 🔧 How to Use
 
 ### 1. **Local Development**
+
 ```bash
 cd ~/hr-doc-utility
 npm install  # Already done ✓
@@ -115,12 +118,14 @@ npm run dev
 ```
 
 ### 2. **Production Build**
+
 ```bash
 npm run build
 npm run start
 ```
 
 ### 3. **Deploy to Vercel** (Recommended)
+
 ```bash
 npm install -g vercel
 vercel
@@ -128,7 +133,9 @@ vercel
 ```
 
 ### 4. **Environment Setup**
+
 Create `.env.local`:
+
 ```env
 OPENAI_API_KEY=your-key-here
 ```
@@ -138,39 +145,44 @@ OPENAI_API_KEY=your-key-here
 ## 📋 API Routes
 
 ### `POST /api/chat`
+
 Stream AI-generated content
 
 **Body:**
+
 ```json
 {
-  "messages": [{"role": "user", "content": "..."}],
+  "messages": [{ "role": "user", "content": "..." }],
   "tool": "formatter|summarizer|builder",
-  "template": "incident-report"  // optional
+  "template": "incident-report" // optional
 }
 ```
 
 **System Prompts:**
+
 - **Formatter**: Restructure into templates
 - **Summarizer**: Human-sounding, AI-detector-resistant
 - **Builder**: Generate docs from scratch
 
 ### `POST /api/extract`
+
 Extract text from PDF/DOCX/TXT files
 
 **Response:**
+
 ```json
-{"text": "extracted content..."}
+{ "text": "extracted content..." }
 ```
 
 ---
 
 ## 🎯 URL Routes
 
-| Path | Tool | Purpose |
-|------|------|---------|
-| `/formatter` | Formatter | Format messy text into templates |
-| `/summarizer` | Summarizer | Summarize lengthy documents |
-| `/builder` | Builder | Create documents from scratch |
+| Path          | Tool       | Purpose                          |
+| ------------- | ---------- | -------------------------------- |
+| `/formatter`  | Formatter  | Format messy text into templates |
+| `/summarizer` | Summarizer | Summarize lengthy documents      |
+| `/builder`    | Builder    | Create documents from scratch    |
 
 ---
 
@@ -181,7 +193,7 @@ Extract text from PDF/DOCX/TXT files
 ✅ **Manifest** — Native app appearance  
 ✅ **Icons** — 192px & 512px app icons  
 ✅ **Theme Color** — Blue (#2563eb)  
-✅ **Responsive** — Mobile-first design  
+✅ **Responsive** — Mobile-first design
 
 ---
 
@@ -192,19 +204,19 @@ Extract text from PDF/DOCX/TXT files
 ✅ Real-time processing only  
 ✅ HTTPS recommended  
 ✅ API key safely in .env.local  
-✅ Client-side export (no server logs)  
+✅ Client-side export (no server logs)
 
 ---
 
 ## 📊 Performance Benchmarks
 
-| Metric | Value |
-|--------|-------|
-| **First Load** | ~2-3s (with PWA caching) |
-| **Format/Summarize** | 5-15s per request |
-| **Export (PDF/DOCX)** | <1s (client-side) |
-| **Bundle Size** | ~200KB (gzipped) |
-| **Build Time** | ~14s |
+| Metric                | Value                    |
+| --------------------- | ------------------------ |
+| **First Load**        | ~2-3s (with PWA caching) |
+| **Format/Summarize**  | 5-15s per request        |
+| **Export (PDF/DOCX)** | <1s (client-side)        |
+| **Bundle Size**       | ~200KB (gzipped)         |
+| **Build Time**        | ~14s                     |
 
 ---
 
@@ -220,7 +232,7 @@ Extract text from PDF/DOCX/TXT files
 ✅ Service worker registered  
 ✅ Mobile responsive design works  
 ✅ Build completes without errors  
-✅ TypeScript type checking passes  
+✅ TypeScript type checking passes
 
 ---
 
@@ -237,24 +249,25 @@ All documentation is in the repository:
 
 ## 🎓 Technology Highlights
 
-| Feature | Implementation |
-|---------|-----------------|
-| **AI Integration** | Vercel AI SDK + OpenAI GPT-4o-mini |
-| **Streaming** | Server-sent events for real-time output |
-| **Dynamic Prompts** | Separate system prompts per tool |
-| **State Management** | React hooks (useState, useCallback) |
-| **Styling** | Tailwind CSS with shadcn/ui components |
-| **Type Safety** | TypeScript strict mode (100% typed) |
-| **Export** | html2pdf.js (PDF), docx lib (Word) |
-| **File Parsing** | mammoth (DOCX), pdf-parse (PDF) |
-| **PWA** | Next.js manifest + Service Worker |
-| **UI Components** | Custom shadcn-style components |
+| Feature              | Implementation                          |
+| -------------------- | --------------------------------------- |
+| **AI Integration**   | Vercel AI SDK + OpenAI GPT-4o-mini      |
+| **Streaming**        | Server-sent events for real-time output |
+| **Dynamic Prompts**  | Separate system prompts per tool        |
+| **State Management** | React hooks (useState, useCallback)     |
+| **Styling**          | Tailwind CSS with shadcn/ui components  |
+| **Type Safety**      | TypeScript strict mode (100% typed)     |
+| **Export**           | html2pdf.js (PDF), docx lib (Word)      |
+| **File Parsing**     | mammoth (DOCX), pdf-parse (PDF)         |
+| **PWA**              | Next.js manifest + Service Worker       |
+| **UI Components**    | Custom shadcn-style components          |
 
 ---
 
 ## 🚀 Next Steps (Optional)
 
 1. **Deploy to Vercel**
+
    ```bash
    npm install -g vercel
    vercel
@@ -281,7 +294,7 @@ All documentation is in the repository:
 
 **Repository**: https://github.com/Samson-Eniolorunda/PureDraftHR  
 **Documentation**: See README.md in repo  
-**Issues**: GitHub Issues tab  
+**Issues**: GitHub Issues tab
 
 ---
 

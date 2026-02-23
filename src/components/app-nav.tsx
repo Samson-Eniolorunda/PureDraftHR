@@ -2,16 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import dynamic from "next/dynamic";
 import { cn } from "@/lib/utils";
 import { FileText, ClipboardList, PenTool } from "lucide-react";
+
+const ThemeToggleButton = dynamic(
+  () => import("./theme-toggle-button").then((mod) => mod.ThemeToggleButton),
+  { ssr: false }
+);
 
 /* ------------------------------------------------------------------ */
 /*  Navigation items shared between sidebar & bottom tabs              */
 /* ------------------------------------------------------------------ */
 const NAV_ITEMS = [
+  { href: "/builder", label: "Builder", icon: PenTool },
   { href: "/formatter", label: "Formatter", icon: FileText },
   { href: "/summarizer", label: "Summarizer", icon: ClipboardList },
-  { href: "/builder", label: "Builder", icon: PenTool },
 ] as const;
 
 export function AppNav() {
@@ -24,9 +30,11 @@ export function AppNav() {
         {/* Logo */}
         <div className="flex items-center gap-2 px-6 py-5 border-b">
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-            HR
+            PD
           </div>
-          <span className="font-semibold text-lg tracking-tight">HR Docs</span>
+          <span className="font-semibold text-lg tracking-tight">
+            PureDraft HR
+          </span>
         </div>
 
         {/* Links */}
@@ -51,9 +59,12 @@ export function AppNav() {
           })}
         </nav>
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t text-xs text-muted-foreground">
-          Stateless &bull; No data saved
+        {/* Footer with Theme Toggle */}
+        <div className="px-6 py-4 border-t">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs text-muted-foreground">Stateless &bull; No data saved</span>
+            <ThemeToggleButton />
+          </div>
         </div>
       </aside>
 

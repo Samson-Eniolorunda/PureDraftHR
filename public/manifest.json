@@ -1,7 +1,7 @@
 {
-  "name": "HR Document Utility",
-  "short_name": "HR Docs",
-  "description": "3-in-1 HR Document Processing Utility — Format, Summarize, and Build HR documents with AI.",
+  "name": "PureDraft HR",
+  "short_name": "PureDraft",
+  "description": "Enterprise-grade HR document processing with AI-powered formatting, summarization, and creation for HR professionals.",
   "start_url": "/formatter",
   "display": "standalone",
   "background_color": "#0f172a",

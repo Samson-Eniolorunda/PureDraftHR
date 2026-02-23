@@ -32,6 +32,16 @@ const DOC_TYPES = [
   "Code of Conduct",
   "Non-Disclosure Agreement",
   "Promotion Announcement",
+  "Performance Review",
+  "Incident Report",
+  "Training Plan",
+  "Resignation Letter",
+  "Attendance Policy",
+  "Confidentiality Agreement",
+  "FMLA Notice",
+  "Exit Interview Form",
+  "Salary Review Memo",
+  "Succession Plan",
 ] as const;
 
 const TONES = [

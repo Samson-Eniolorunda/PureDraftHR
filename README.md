@@ -11,6 +11,7 @@ An innovative, **100% stateless** web application that empowers HR teams to form
 ### 1. **3-in-1 Document Tools**
 
 #### 📋 **Formatter**
+
 - Convert messy, unstructured HR text into perfectly formatted markdown documents
 - Choose from 5 professional templates:
   - Incident Report
@@ -21,24 +22,28 @@ An innovative, **100% stateless** web application that empowers HR teams to form
 - AI-powered restructuring with semantic understanding
 
 #### 📝 **Summarizer**
+
 - Distill lengthy HR documents into concise, human-sounding summaries
 - **Plagiarism-free intelligence**: AI explicitly avoids common AI-detector buzzwords
 - Varied sentence lengths and conversational professional tone
 - Outputs TL;DR + summary + key takeaways
 
 #### 🏗️ **Builder**
+
 - Create professional HR documents from scratch using a 3-step wizard
 - Select document type, add key details, choose tone
 - 10+ document types supported (Offer Letters, Job Descriptions, Policies, etc)
 - Streaming generation with real-time preview
 
 ### 2. **100% Stateless Architecture**
+
 - ✅ No database, no server-side storage
 - ✅ All file parsing & AI generation happens in-memory
 - ✅ Streamed directly to client (Vercel AI SDK `streamText`)
 - ✅ Perfect for compliance and privacy requirements
 
 ### 3. **Progressive Web App (PWA)**
+
 - 📱 Mobile-first responsive design
 - 🏠 "Add to Home Screen" on iOS & Android
 - 📴 Offline support with service worker
@@ -46,11 +51,13 @@ An innovative, **100% stateless** web application that empowers HR teams to form
 - 🎨 Beautiful light/dark theme with Tailwind CSS
 
 ### 4. **Client-Side Export**
+
 - 📥 **Download as PDF** — Uses html2pdf.js for instant PDF generation
 - 📥 **Download as DOCX** — Uses docx library for Word export
 - ✅ All export happens in the browser (no server processing)
 
 ### 5. **File Import Support**
+
 - 📤 Drag-and-drop upload interface
 - 📄 Supported formats: `.txt`, `.pdf`, `.docx`
 - 🔍 Automatic text extraction via a lightweight extraction API
@@ -59,44 +66,57 @@ An innovative, **100% stateless** web application that empowers HR teams to form
 
 ## 🏗️ Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| **Framework** | Next.js 15 (App Router) |
-| **Styling** | Tailwind CSS + shadcn/ui |
-| **AI/LLM** | Vercel AI SDK + OpenAI (gpt-4o-mini) |
-| **Runtime** | Edge Runtime (API route) |
-| **Export** | html2pdf.js, docx |
-| **File Parsing** | mammoth (DOCX), pdf-parse (PDF) |
-| **Package Manager** | npm |
-| **Language** | TypeScript |
-| **Deployment** | Vercel (recommended) |
+| Layer               | Technology                                          |
+| ------------------- | --------------------------------------------------- |
+| **Framework**       | Next.js 15 (App Router)                             |
+| **Styling**         | Tailwind CSS + shadcn/ui                            |
+| **AI/LLM**          | Vercel AI SDK + Google Gemini 2.5 Flash (100% Free) |
+| **Runtime**         | Edge Runtime (API route)                            |
+| **Export**          | html2pdf.js, docx                                   |
+| **File Parsing**    | mammoth (DOCX), pdf-parse (PDF)                     |
+| **Package Manager** | npm                                                 |
+| **Language**        | TypeScript                                          |
+| **Deployment**      | Vercel (recommended)                                |
 
 ---
 
 ## 📦 Installation & Setup
 
 ### Prerequisites
+
 - Node.js 18+ & npm
-- OpenAI API key (set as `OPENAI_API_KEY` environment variable)
+- Google Gemini API key (100% free, no credit card required)
 
 ### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/Samson-Eniolorunda/PureDraftHR.git
 cd PureDraftHR
 ```
 
 ### 2. Install Dependencies
+
 ```bash
 npm install
 ```
 
 ### 3. Configure Environment Variables
+
 Create a `.env.local` file in the project root:
+
 ```env
-OPENAI_API_KEY=your-openai-api-key-here
+GOOGLE_GENERATIVE_AI_KEY=your-google-gemini-api-key-here
 ```
 
+**Getting a free Gemini API key:**
+
+1. Visit https://ai.google.dev
+2. Click "Get API key" or go to https://makersuite.google.com/app/apikey
+3. Create a new API key (100% free, no credit card required)
+4. Copy the key and paste into `.env.local`
+
 ### 4. Development Server
+
 ```bash
 npm run dev
 ```
@@ -104,6 +124,7 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### 5. Production Build
+
 ```bash
 npm run build
 npm run start
@@ -168,9 +189,11 @@ PureDraftHR/
 ## 🔧 Key API Routes
 
 ### `POST /api/chat`
+
 Streams AI-generated markdown based on the selected tool.
 
 **Request:**
+
 ```json
 {
   "messages": [{ "role": "user", "content": "..." }],
@@ -182,11 +205,13 @@ Streams AI-generated markdown based on the selected tool.
 **Response:** Server-sent events with streamed markdown.
 
 **System Prompts:**
+
 - **Formatter**: Restructures text into professional document templates
 - **Summarizer**: Creates human-sounding summaries (avoids AI buzzwords)
 - **Builder**: Generates complete documents from scratch
 
 ### `POST /api/extract`
+
 Extracts plain text from uploaded files (PDF, DOCX, TXT).
 
 **Request:** FormData with `file` field  
@@ -197,11 +222,13 @@ Extracts plain text from uploaded files (PDF, DOCX, TXT).
 ## 🎨 UI Architecture
 
 ### Desktop (≥768px)
+
 - **Left Sidebar** (fixed, 256px): Navigation + logo
 - **Main Content**: Full width with max-width container
 - **Routes**: /formatter, /summarizer, /builder
 
 ### Mobile (<768px)
+
 - **Bottom Tab Bar** (fixed, 64px): Icon + label navigation
 - **Main Content**: Full width with safe-area padding
 - **Routes**: Same as desktop, responsive layout
@@ -211,6 +238,7 @@ Extracts plain text from uploaded files (PDF, DOCX, TXT).
 ## 💡 Usage Examples
 
 ### Format a Messy Interview
+
 1. Go to `/formatter`
 2. Select "Interview Notes" template
 3. Paste or upload your notes
@@ -218,12 +246,14 @@ Extracts plain text from uploaded files (PDF, DOCX, TXT).
 5. Export as PDF or Word
 
 ### Summarize a Long Policy
+
 1. Go to `/summarizer`
 2. Upload a policy document (.pdf, .docx, .txt)
 3. Click "Summarize"
 4. Get a concise, human-sounding summary in 10-15 seconds
 
 ### Build a New Offer Letter
+
 1. Go to `/builder`
 2. Select "Offer Letter", add employee details
 3. Choose "Friendly" tone
@@ -237,7 +267,7 @@ Extracts plain text from uploaded files (PDF, DOCX, TXT).
 - ✅ **No data persistence**: All processing happens in real-time, nothing is stored
 - ✅ **No tracking**: Fully private by default
 - ✅ **HTTPS recommended**: Use on secure connections
-- ✅ **API key management**: Keep `OPENAI_API_KEY` secure in `.env.local`
+- ✅ **API key management**: Keep `GOOGLE_GENERATIVE_AI_KEY` secure in `.env.local`
 - ✅ **Client-side exports**: PDF/Word generation happens locally
 
 ---
@@ -245,13 +275,16 @@ Extracts plain text from uploaded files (PDF, DOCX, TXT).
 ## 🚀 Deployment
 
 ### Deploy to Vercel (Recommended)
+
 ```bash
 vercel
 ```
 
 ### Deploy to Other Platforms
+
 Ensure these environment variables are set:
-- `OPENAI_API_KEY`: Your OpenAI API key
+
+- `GOOGLE_GENERATIVE_AI_KEY`: Your Google Generative AI API key (free, no credit card required)
 
 The app is optimized for serverless (Vercel, AWS Lambda, etc) thanks to the Edge Runtime on the chat API route.
 
@@ -265,6 +298,7 @@ The app is optimized for serverless (Vercel, AWS Lambda, etc) thanks to the Edge
 - 📱 **Mobile**: Fully optimized, responsive design
 
 ### Core Web Vitals
+
 - LCP: ~2.5s
 - FID: <100ms
 - CLS: <0.1
@@ -274,6 +308,7 @@ The app is optimized for serverless (Vercel, AWS Lambda, etc) thanks to the Edge
 ## 🛠️ Development
 
 ### Available Scripts
+
 ```bash
 npm run dev      # Start development server
 npm run build    # Build for production
@@ -282,12 +317,14 @@ npm run lint     # Run ESLint
 ```
 
 ### Code Quality
+
 - ✅ TypeScript strict mode
 - ✅ ESLint Next.js config
 - ✅ Tailwind CSS classes with `cn()` utility
 - ✅ Server & client components properly separated
 
 ### Adding New Tools
+
 1. Create a new page in `src/app/[toolname]/page.tsx`
 2. Add system prompt to `src/app/api/chat/route.ts`
 3. Use the `DualInput`, `MarkdownRenderer`, `ExportButtons` components
@@ -304,6 +341,7 @@ MIT License — feel free to use this project for personal or commercial purpose
 ## 👤 Author
 
 **Samson Eniolorunda**
+
 - GitHub: [@Samson-Eniolorunda](https://github.com/Samson-Eniolorunda)
 
 ---
@@ -320,16 +358,16 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 A: No — all processing is stateless. Documents are processed in real-time and never stored.
 
 **Q: Can I use this offline?**  
-A: The UI will work offline, but AI generation requires an internet connection and OpenAI API access.
+A: The UI will work offline, but AI generation requires an internet connection and a Google Generative AI API key.
 
 **Q: What happens if I close the browser?**  
 A: All in-progress work is lost (by design, for privacy). This is intentional to maintain stateless architecture.
 
-**Q: Can I use Anthropic Claude instead of OpenAI?**  
-A: Yes! Modify `/api/chat/route.ts` to use `@ai-sdk/anthropic` instead of `@ai-sdk/openai`.
+**Q: Can I use a different AI model?**  
+A: Yes! Modify [src/app/api/chat/route.ts](src/app/api/chat/route.ts) to use any Vercel AI SDK provider (`@ai-sdk/google`, `@ai-sdk/openai`, `@ai-sdk/anthropic`, etc.).
 
 **Q: Is there a cost per request?**  
-A: Yes, you're billed by OpenAI based on tokens used. Typical formatting costs <$0.01 per request.
+A: No! Google Gemini is 100% free for development. No credit card required. Generous free tier limits suitable for production use.
 
 ---
 

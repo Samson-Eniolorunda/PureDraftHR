@@ -26,6 +26,11 @@ const TEMPLATES = [
   { value: "meeting-minutes", label: "Meeting Minutes" },
   { value: "performance-review", label: "Performance Review" },
   { value: "policy-draft", label: "Policy Draft" },
+  { value: "daily-report", label: "Daily Report" },
+  { value: "employee-handbook", label: "Employee Handbook" },
+  { value: "termination-letter", label: "Termination Letter" },
+  { value: "training-summary", label: "Training Summary" },
+  { value: "disciplinary-notice", label: "Disciplinary Notice" },
 ] as const;
 
 /* ------------------------------------------------------------------ */
