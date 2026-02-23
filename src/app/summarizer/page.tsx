@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { DualInput } from "@/components/dual-input";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
+import { DocumentFormFooter } from "@/components/document-form-footer";
 import { Loader2, Send } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -23,12 +24,13 @@ import { Loader2, Send } from "lucide-react";
 /* ------------------------------------------------------------------ */
 export default function SummarizerPage() {
   const [inputText, setInputText] = useState("");
+  const [referenceText, setReferenceText] = useState("");
+  const [isConsented, setIsConsented] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
 
-  // Vercel AI SDK chat hook — sends to /api/chat with tool="summarizer"
   const { messages, isLoading, append, setMessages } = useChat({
     api: "/api/chat",
-    body: { tool: "summarizer" },
+    body: { tool: "summarizer", referenceText: referenceText || undefined },
   });
 
   // Extract the latest assistant message (the streamed summary)
@@ -37,7 +39,7 @@ export default function SummarizerPage() {
 
   /** Submit the user's text to the AI */
   const handleSubmit = useCallback(() => {
-    if (!inputText.trim() || isLoading) return;
+    if (!inputText.trim() || isLoading || !isConsented) return;
 
     // Reset previous conversation and send the new text
     setMessages([]);
@@ -50,7 +52,7 @@ export default function SummarizerPage() {
     setTimeout(() => {
       resultRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 300);
-  }, [inputText, isLoading, append, setMessages]);
+  }, [inputText, isLoading, append, setMessages, isConsented]);
 
   return (
     <div className="space-y-6">
@@ -80,25 +82,15 @@ export default function SummarizerPage() {
             placeholder="Paste the full text of the HR document you want summarized…"
           />
 
-          <div className="flex justify-end">
-            <Button
-              onClick={handleSubmit}
-              disabled={!inputText.trim() || isLoading}
-              className="gap-2"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Summarizing…
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4" />
-                  Summarize
-                </>
-              )}
-            </Button>
-          </div>
+          {/* Consent & Reference Template Footer */}
+          <DocumentFormFooter
+            isLoading={isLoading}
+            isConsented={isConsented}
+            onConsentChange={setIsConsented}
+            onReferenceTextChange={setReferenceText}
+            onSubmit={handleSubmit}
+            submitLabel="Summarize"
+          />
         </CardContent>
       </Card>
 

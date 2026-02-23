@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
+import { DocumentFormFooter } from "@/components/document-form-footer";
 import { Loader2, Wand2 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -62,12 +63,14 @@ export default function BuilderPage() {
   const [docType, setDocType] = useState<string>(DOC_TYPES[0]);
   const [keyDetails, setKeyDetails] = useState("");
   const [tone, setTone] = useState<string>(TONES[0]);
+  const [referenceText, setReferenceText] = useState("");
+  const [isConsented, setIsConsented] = useState(false);
   const [step, setStep] = useState(1); // Wizard step 1-3
   const resultRef = useRef<HTMLDivElement>(null);
 
   const { messages, isLoading, append, setMessages } = useChat({
     api: "/api/chat",
-    body: { tool: "builder" },
+    body: { tool: "builder", referenceText: referenceText || undefined },
   });
 
   const assistantMessage = messages.filter((m) => m.role === "assistant").pop();
@@ -75,7 +78,7 @@ export default function BuilderPage() {
 
   /** Submit the builder form to the AI */
   const handleGenerate = useCallback(() => {
-    if (!keyDetails.trim() || isLoading) return;
+    if (!keyDetails.trim() || isLoading || !isConsented) return;
 
     setMessages([]);
     append({
@@ -90,7 +93,7 @@ Key Details: ${keyDetails}`,
     setTimeout(() => {
       resultRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 300);
-  }, [keyDetails, isLoading, append, setMessages, docType, tone]);
+  }, [keyDetails, isLoading, append, setMessages, docType, tone, isConsented]);
 
   /** Can the user proceed to the next step? */
   const canProceed =
@@ -210,43 +213,41 @@ Key Details: ${keyDetails}`,
             </div>
           )}
 
-          {/* Navigation buttons */}
-          <div className="flex justify-between pt-2">
-            <Button
-              variant="outline"
-              onClick={() => setStep((s) => Math.max(1, s - 1))}
-              disabled={step === 1}
-            >
-              Back
-            </Button>
-
-            {step < 3 ? (
+          {/* Navigation buttons & Final form */}
+          {step < 3 ? (
+            <div className="flex justify-between pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setStep((s) => Math.max(1, s - 1))}
+                disabled={step === 1}
+              >
+                Back
+              </Button>
               <Button
                 onClick={() => setStep((s) => Math.min(3, s + 1))}
                 disabled={!canProceed}
               >
                 Next
               </Button>
-            ) : (
-              <Button
-                onClick={handleGenerate}
-                disabled={!keyDetails.trim() || isLoading}
-                className="gap-2"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Generating…
-                  </>
-                ) : (
-                  <>
-                    <Wand2 className="h-4 w-4" />
-                    Generate Document
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex justify-start">
+                <Button variant="outline" onClick={() => setStep(2)}>
+                  Back
+                </Button>
+              </div>
+              {/* Consent & Reference Template Footer */}
+              <DocumentFormFooter
+                isLoading={isLoading}
+                isConsented={isConsented}
+                onConsentChange={setIsConsented}
+                onReferenceTextChange={setReferenceText}
+                onSubmit={handleGenerate}
+                submitLabel="Generate Document"
+              />
+            </>
+          )}
         </CardContent>
       </Card>
 

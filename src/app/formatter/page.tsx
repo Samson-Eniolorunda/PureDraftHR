@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { DualInput } from "@/components/dual-input";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
+import { DocumentFormFooter } from "@/components/document-form-footer";
 import { Loader2, Send } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -40,6 +41,8 @@ const TEMPLATES = [
 /* ------------------------------------------------------------------ */
 export default function FormatterPage() {
   const [inputText, setInputText] = useState("");
+  const [referenceText, setReferenceText] = useState("");
+  const [isConsented, setIsConsented] = useState(false);
   const [template, setTemplate] = useState<(typeof TEMPLATES)[number]["value"]>(
     TEMPLATES[0].value,
   );
@@ -47,14 +50,18 @@ export default function FormatterPage() {
 
   const { messages, isLoading, append, setMessages } = useChat({
     api: "/api/chat",
-    body: { tool: "formatter", template },
+    body: {
+      tool: "formatter",
+      template,
+      referenceText: referenceText || undefined,
+    },
   });
 
   const assistantMessage = messages.filter((m) => m.role === "assistant").pop();
   const resultContent = assistantMessage?.content ?? "";
 
   const handleSubmit = useCallback(() => {
-    if (!inputText.trim() || isLoading) return;
+    if (!inputText.trim() || isLoading || !isConsented) return;
 
     setMessages([]);
     append({
@@ -65,7 +72,7 @@ export default function FormatterPage() {
     setTimeout(() => {
       resultRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 300);
-  }, [inputText, isLoading, append, setMessages, template]);
+  }, [inputText, isLoading, append, setMessages, template, isConsented]);
 
   return (
     <div className="space-y-6">
@@ -117,25 +124,15 @@ export default function FormatterPage() {
             placeholder="Paste the messy/unstructured text you want formatted…"
           />
 
-          <div className="flex justify-end">
-            <Button
-              onClick={handleSubmit}
-              disabled={!inputText.trim() || isLoading}
-              className="gap-2"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Formatting…
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4" />
-                  Format Document
-                </>
-              )}
-            </Button>
-          </div>
+          {/* Consent & Reference Template Footer */}
+          <DocumentFormFooter
+            isLoading={isLoading}
+            isConsented={isConsented}
+            onConsentChange={setIsConsented}
+            onReferenceTextChange={setReferenceText}
+            onSubmit={handleSubmit}
+            submitLabel="Format Document"
+          />
         </CardContent>
       </Card>
 

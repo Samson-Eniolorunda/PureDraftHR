@@ -4,6 +4,7 @@ import "./globals.css";
 import { AppNav } from "@/components/app-nav";
 import { PwaRegister } from "@/components/pwa-register";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Footer } from "@/components/footer";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -15,6 +16,10 @@ export const metadata: Metadata = {
   description:
     "Enterprise-grade HR document processing with AI-powered formatting, summarization, and creation for HR professionals.",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -45,12 +50,13 @@ export default function RootLayout({
           <AppNav />
 
           {/* Main content area — offset for sidebar on desktop, bottom-bar on mobile */}
-          <main className="md:ml-64 pb-20 md:pb-0 min-h-screen">
-            <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
+          <main className="md:ml-64 pb-20 md:pb-0">
+            <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8 min-h-screen">
               {children}
             </div>
           </main>
 
+          <Footer />
           <PwaRegister />
         </ThemeProvider>
       </body>

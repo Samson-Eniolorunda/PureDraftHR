@@ -72,24 +72,28 @@ WRITING STYLE:
 Output ONLY the document in markdown. No preamble or meta-commentary.`,
 };
 
-/* ------------------------------------------------------------------ */
-/*  POST handler — receives { tool, messages } from the client         */
-/* ------------------------------------------------------------------ */
+/* ────────────────────────────────────────────────────────────────── */
+/*  POST handler — receives { tool, messages, template, referenceText } */
+/* ────────────────────────────────────────────────────────────────── */
 export async function POST(req: Request) {
-  const { messages, tool, template } = await req.json();
+  const { messages, tool, template, referenceText } = await req.json();
 
   // Resolve the system prompt based on which tool page the user is on
-  const systemPrompt = SYSTEM_PROMPTS[tool] ?? SYSTEM_PROMPTS.formatter;
+  let systemPrompt = SYSTEM_PROMPTS[tool] ?? SYSTEM_PROMPTS.formatter;
 
   // For the formatter, prepend the template choice to the system prompt
-  const finalSystem =
-    tool === "formatter" && template
-      ? `${systemPrompt}\n\nThe user has selected the "${template}" template. Format accordingly.`
-      : systemPrompt;
+  if (tool === "formatter" && template) {
+    systemPrompt = `${systemPrompt}\n\nThe user has selected the "${template}" template. Format accordingly.`;
+  }
+
+  // If a reference template was provided, inject instruction to mimic its style
+  if (referenceText && referenceText.trim()) {
+    systemPrompt += `\n\n⚠️ REFERENCE TEMPLATE PROVIDED: You MUST perfectly mimic the structure, tone, layout, and formatting style of the following reference text when generating your output:\n\n---\n${referenceText}\n---\n\nAnalyze this reference carefully and apply its style principles to your output.`;
+  }
 
   const result = streamText({
     model: google("gemini-2.5-flash"),
-    system: finalSystem,
+    system: systemPrompt,
     messages,
   });
 

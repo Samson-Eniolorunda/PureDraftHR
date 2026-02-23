@@ -8,7 +8,7 @@ import { FileText, ClipboardList, PenTool } from "lucide-react";
 
 const ThemeToggleButton = dynamic(
   () => import("./theme-toggle-button").then((mod) => mod.ThemeToggleButton),
-  { ssr: false }
+  { ssr: false },
 );
 
 /* ------------------------------------------------------------------ */
@@ -62,7 +62,9 @@ export function AppNav() {
         {/* Footer with Theme Toggle */}
         <div className="px-6 py-4 border-t">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs text-muted-foreground">Stateless &bull; No data saved</span>
+            <span className="text-xs text-muted-foreground">
+              Stateless &bull; No data saved
+            </span>
             <ThemeToggleButton />
           </div>
         </div>
