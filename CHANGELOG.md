@@ -2,6 +2,33 @@
 
 All notable changes to PureDraft HR will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- 🔧 Service Worker message listener to prevent "message channel closed" errors
+- 📱 Mobile textarea keyboard coverage by adding focus-scroll with delay
+- 🎨 Select dropdown arrow behavior (up when closed, down when open)
+- 🔗 Footer layout on mobile: prevent bottom nav bar overlap (pb-24), center links/social, copyright last
+- ♿ ARIA accessibility violations: convert boolean attributes to strings ("true"/"false")
+- 🔍 Favicon caching on Vercel by adding cache-bust query params (?v=v2)
+
+### Added
+
+- 🎣 `useDevSkeletonPreview` hook for dev-mode skeleton UI testing via ?devSkeletons=true URL param
+- 🪵 Comprehensive console logging with structured prefixes ([API/chat], [SW], [Layout])
+- 📊 Service Worker logging at lifecycle events (install, activate, fetch, message)
+- 🏷️ API request/response logging with validation error traces
+- 🎨 Monitor icon for system theme toggle (lucide-react)
+- 🧩 Skeleton loaders integrated into Builder, Formatter, and Summarizer result sections
+- ✅ Title attributes on form inputs for accessibility
+
+### Changed
+
+- 🔄 Service Worker cache name: v1 → v2 (favicon bust)
+- 📝 Footer structure: now responsive with different layouts for mobile vs desktop
+- 🎛️ Mobile header styling with improved theme toggle positioning
+
 ## [1.0.0] - 2026-02-23
 
 ### Added
@@ -35,7 +62,7 @@ All notable changes to PureDraft HR will be documented in this file.
 - HTTPS recommended for production
 - API key management best practices
 
-## [Unreleased]
+## [Future]
 
 ### Planned Features
 
