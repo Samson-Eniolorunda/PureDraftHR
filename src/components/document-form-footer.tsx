@@ -71,6 +71,7 @@ export function DocumentFormFooter({
               id="reference-file"
               type="file"
               accept=".pdf,.docx,.txt"
+              title="Upload a reference template"
               onChange={handleReferenceUpload}
               disabled={isProcessingRef || isLoading}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"

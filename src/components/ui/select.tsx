@@ -109,7 +109,8 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
           id={id}
           type="button"
           aria-haspopup="listbox"
-          aria-expanded={isOpen}
+          aria-expanded={isOpen ? "true" : "false"}
+          title={selectedLabel}
           disabled={disabled}
           onClick={() => setIsOpen((s) => !s)}
           onKeyDown={handleTriggerKey}
@@ -154,7 +155,7 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
               <div
                 key={o.value}
                 role="option"
-                aria-selected={o.value === selected}
+                aria-selected={o.value === selected ? "true" : "false"}
                 tabIndex={0}
                 ref={(el) => (optionsRef.current[i] = el)}
                 onClick={() => selectValue(o.value)}
