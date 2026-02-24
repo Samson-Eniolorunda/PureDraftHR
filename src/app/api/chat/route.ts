@@ -3,18 +3,14 @@ import { google } from "@ai-sdk/google";
 
 export const maxDuration = 60;
 
-/* ------------------------------------------------------------------ */
-/*  System prompts — one per tool, keyed by the `tool` field           */
-/* ------------------------------------------------------------------ */
 const SYSTEM_PROMPTS: Record<string, string> = {
-  /* ── Formatter ── */
   formatter: `You are an expert HR Document Formatter. Your job is to take messy, unstructured text and restructure it into a perfectly organized markdown document.
 
 Instructions:
 - You will receive a "template" name and raw text.
 - Reformat the raw text to match the structure of the specified template.
 - Use clear markdown headings, bullet points, numbered lists, and tables where appropriate.
-- Do NOT add information that isn't present in the original text — only restructure.
+- Do NOT add information that isn't present in the original text - only restructure.
 - Keep the language professional and clear.
 - Preserve all factual details exactly as provided.
 
@@ -32,16 +28,15 @@ Available templates and their expected structures:
 
 Output ONLY the formatted markdown document. Do not include any preamble or explanation.`,
 
-  /* ── Summarizer ── */
   summarizer: `You are a seasoned HR professional who writes clear, human-sounding summaries of workplace documents. Your goal is to distill lengthy HR text into concise, actionable summaries.
 
-CRITICAL WRITING STYLE RULES — follow these exactly:
+CRITICAL WRITING STYLE RULES - follow these exactly:
 - Write like a real human HR manager typing quickly but thoughtfully.
 - Vary your sentence lengths: mix short punchy sentences with longer, more detailed ones.
-- Use a conversational yet professional tone — the kind you'd use in an email to a colleague.
+- Use a conversational yet professional tone - the kind you'd use in an email to a colleague.
 - NEVER use these AI-giveaway words or phrases: "delve", "tapestry", "crucial", "furthermore", "moreover", "in conclusion", "it's important to note", "landscape", "multifaceted", "nuanced", "paradigm", "synergy", "leverage", "robust", "streamline", "holistic", "comprehensive overview", "in today's world".
 - Prefer plain, direct language. Say "important" not "crucial". Say "also" not "furthermore". Say "look into" not "delve into".
-- Start paragraphs differently — don't begin every paragraph the same way.
+- Start paragraphs differently - don't begin every paragraph the same way.
 - Include specific details from the source text rather than vague generalizations.
 - It's OK to use contractions (don't, isn't, we're) to sound natural.
 
@@ -52,7 +47,6 @@ Output format:
 
 Output ONLY the summary in markdown. No preamble.`,
 
-  /* ── Builder ── */
   builder: `You are an expert HR document writer. You create complete, professional HR documents from scratch based on minimal input.
 
 Instructions:
@@ -72,15 +66,12 @@ WRITING STYLE:
 Output ONLY the document in markdown. No preamble or meta-commentary.`,
 };
 
-/* ────────────────────────────────────────────────────────────────── */
-/*  POST handler — receives { tool, messages, template, referenceText } */
-/* ────────────────────────────────────────────────────────────────── */
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { messages, tool, template, referenceText } = body;
 
-    console.log("[API/chat] ✅ POST received", {
+    console.log("[API/chat] POST received", {
       tool,
       template,
       hasReference: !!referenceText,
@@ -89,14 +80,14 @@ export async function POST(req: Request) {
 
     // Validate
     if (!tool) {
-      console.error("[API/chat] ❌ Missing tool parameter");
+      console.error("[API/chat] Missing tool parameter");
       return new Response(JSON.stringify({ error: "Missing tool parameter" }), {
         status: 400,
       });
     }
 
     if (!Array.isArray(messages) || messages.length === 0) {
-      console.error("[API/chat] ❌ Invalid or empty messages array");
+      console.error("[API/chat] Invalid or empty messages array");
       return new Response(JSON.stringify({ error: "Invalid messages array" }), {
         status: 400,
       });
@@ -115,7 +106,7 @@ export async function POST(req: Request) {
       systemPrompt += `\n\n⚠️ REFERENCE TEMPLATE PROVIDED: You MUST perfectly mimic the structure, tone, layout, and formatting style of the following reference text when generating your output:\n\n---\n${referenceText}\n---\n\nAnalyze this reference carefully and apply its style principles to your output.`;
     }
 
-    console.log("[API/chat] ��� Starting stream for tool:", tool);
+    console.log("[API/chat] Starting stream for tool: " + tool);
 
     const result = streamText({
       model: google("gemini-2.5-flash"),
@@ -123,10 +114,13 @@ export async function POST(req: Request) {
       messages,
     });
 
-    console.log("[API/chat] ✅ Stream initialized successfully");
+    console.log("[API/chat] Stream initialized successfully");
     return result.toDataStreamResponse();
   } catch (err) {
-    console.error("[API/chat] ❌ Error:", err instanceof Error ? err.message : String(err));
+    console.error(
+      "[API/chat] Error:",
+      err instanceof Error ? err.message : String(err),
+    );
     if (err instanceof Error) {
       console.error("[API/chat] Stack trace:", err.stack);
     }
