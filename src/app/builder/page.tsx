@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useChat } from "ai/react";
 import {
   Card,
@@ -82,7 +82,7 @@ export default function BuilderPage() {
   });
 
   // Debug logs for messages & loading
-  React.useEffect(() => {
+  useEffect(() => {
     console.log("Builder useChat state:", { messages, isLoading });
   }, [messages, isLoading]);
 
