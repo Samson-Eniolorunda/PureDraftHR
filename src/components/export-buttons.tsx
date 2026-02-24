@@ -74,7 +74,7 @@ export function ExportButtons({
   if (!content) return null;
 
   return (
-    <div className="flex flex-wrap gap-3 mt-4">
+    <div className="grid grid-cols-2 gap-3 mt-4 sm:flex sm:flex-wrap">
       <Button
         variant="outline"
         size="sm"

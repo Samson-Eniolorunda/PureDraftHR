@@ -1,0 +1,245 @@
+"use client";
+
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Mail, Phone, MapPin } from "lucide-react";
+
+export default function ContactPage() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("loading");
+
+    try {
+      // Send email using a backend service or third-party API
+      // For now, just log and show success
+      console.log("Contact form submitted:", formData);
+
+      // Simulate sending email
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      setStatus("success");
+      setFormData({ name: "", email: "", subject: "", message: "" });
+      setTimeout(() => setStatus("idle"), 3000);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      setStatus("error");
+      setTimeout(() => setStatus("idle"), 3000);
+    }
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+          Contact Us
+        </h1>
+        <p className="mt-2 text-lg text-muted-foreground">
+          Have questions or feedback? We'd love to hear from you. Get in touch
+          with our team.
+        </p>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-6">
+        {/* Contact Information */}
+        <div className="md:col-span-1 space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Get in Touch</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Email */}
+              <div className="flex gap-3">
+                <Mail className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-sm">Email</p>
+                  <a
+                    href="mailto:eniolorundasamson@gmail.com"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    eniolorundasamson@gmail.com
+                  </a>
+                </div>
+              </div>
+
+              {/* GitHub */}
+              <div className="flex gap-3">
+                <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-sm">GitHub</p>
+                  <a
+                    href="https://github.com/Samson-Eniolorunda"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Samson-Eniolorunda
+                  </a>
+                </div>
+              </div>
+
+              {/* Response Time */}
+              <div className="pt-4 border-t">
+                <p className="text-xs text-muted-foreground">
+                  We typically respond within 24-48 hours.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Contact Form */}
+        <div className="md:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Send us a Message</CardTitle>
+              <CardDescription>
+                Fill out the form below and we'll get back to you as soon as
+                possible.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Name */}
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="Your name"
+                    required
+                  />
+                </div>
+
+                {/* Email */}
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="your@email.com"
+                    required
+                  />
+                </div>
+
+                {/* Subject */}
+                <div className="space-y-2">
+                  <Label htmlFor="subject">Subject</Label>
+                  <Input
+                    id="subject"
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    placeholder="What is this about?"
+                    required
+                  />
+                </div>
+
+                {/* Message */}
+                <div className="space-y-2">
+                  <Label htmlFor="message">Message</Label>
+                  <Textarea
+                    id="message"
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
+                    placeholder="Tell us more..."
+                    rows={6}
+                    required
+                  />
+                </div>
+
+                {/* Status Messages */}
+                {status === "success" && (
+                  <p className="text-sm text-green-600 bg-green-50 p-3 rounded-lg">
+                    Thank you! Your message has been sent successfully.
+                  </p>
+                )}
+                {status === "error" && (
+                  <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
+                    Something went wrong. Please try again.
+                  </p>
+                )}
+
+                {/* Submit Button */}
+                <Button
+                  type="submit"
+                  disabled={status === "loading"}
+                  className="w-full"
+                >
+                  {status === "loading" ? "Sending..." : "Send Message"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* FAQ Section */}
+      <Card className="bg-muted/50">
+        <CardHeader>
+          <CardTitle>Frequently Asked Questions</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <h3 className="font-semibold text-sm mb-2">
+              What response time can I expect?
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              We aim to respond to all inquiries within 24-48 hours during
+              business days.
+            </p>
+          </div>
+          <div>
+            <h3 className="font-semibold text-sm mb-2">Can I report a bug?</h3>
+            <p className="text-sm text-muted-foreground">
+              Yes! Please include as much detail as possible about the issue,
+              including steps to reproduce it.
+            </p>
+          </div>
+          <div>
+            <h3 className="font-semibold text-sm mb-2">
+              Do you offer custom features?
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              We'd love to hear your suggestions! Contact us to discuss
+              potential integrations or features.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

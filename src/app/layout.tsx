@@ -16,13 +16,35 @@ const FAVICON_VERSION = "v2";
 /*  Metadata — includes PWA meta tags for iOS & Android                */
 /* ------------------------------------------------------------------ */
 export const metadata: Metadata = {
-  title: "PureDraft HR",
+  title: "PureDraft HR - AI-Powered HR Document Processing",
   description:
-    "Enterprise-grade HR document processing with AI-powered formatting, summarization, and creation for HR professionals.",
+    "Enterprise-grade HR document processing with AI-powered formatting, summarization, and creation for HR professionals. Built with Google Gemini.",
+  keywords: [
+    "HR documents",
+    "AI formatting",
+    "document summarization",
+    "HR tools",
+    "recruitment",
+  ],
   manifest: "/manifest.json",
   icons: {
     icon: `/favicon.svg?v=${FAVICON_VERSION}`,
     shortcut: `/favicon.svg?v=${FAVICON_VERSION}`,
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://puredrafthr.com",
+    title: "PureDraft HR - AI-Powered HR Document Processing",
+    description:
+      "Enterprise-grade HR document processing with AI-powered formatting, summarization, and creation for HR professionals.",
+    siteName: "PureDraft HR",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PureDraft HR - AI-Powered HR Document Processing",
+    description:
+      "Enterprise-grade HR document processing with AI-powered formatting, summarization, and creation for HR professionals.",
   },
   appleWebApp: {
     capable: true,
@@ -61,6 +83,27 @@ export default function RootLayout({
         <link
           rel="preconnect"
           href="https://generativelanguage.googleapis.com"
+        />
+        {/* Structured Data - JSON-LD for Google Search */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "PureDraft HR",
+              url: "https://puredrafthr.com",
+              logo: "https://puredrafthr.com/favicon.svg",
+              description:
+                "Enterprise-grade HR document processing with AI-powered formatting, summarization, and creation for HR professionals.",
+              sameAs: ["https://github.com/Samson-Eniolorunda"],
+              contactPoint: {
+                "@type": "ContactPoint",
+                contactType: "Customer Service",
+                email: "eniolorundasamson@gmail.com",
+              },
+            }),
+          }}
         />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>

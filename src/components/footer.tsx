@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { Mail, Github } from "lucide-react";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -9,7 +8,7 @@ export function Footer() {
   return (
     <footer className="border-t bg-card/50 py-6 px-4 md:ml-64 pb-24 md:pb-6 text-sm text-muted-foreground">
       <div className="mx-auto max-w-4xl">
-        {/* Desktop: 3-column layout (Copyright | Links | Social) */}
+        {/* Desktop: 3-column layout (Copyright | Links | Contact) */}
         <div className="hidden md:flex md:flex-row md:items-center md:justify-between gap-4">
           {/* Copyright & Attribution */}
           <div className="flex flex-col items-start gap-1">
@@ -47,35 +46,19 @@ export function Footer() {
             >
               FAQ
             </Link>
-          </div>
-
-          {/* Social Links */}
-          <div className="flex items-center gap-3">
-            <a
-              href="mailto:eniolorundasamson@gmail.com"
+            <Link
+              href="/contact"
               className="hover:text-foreground transition-colors"
-              title="Email"
-              target="_blank"
-              rel="noopener noreferrer"
             >
-              <Mail className="h-5 w-5" />
-            </a>
-            <a
-              href="https://github.com/Samson-Eniolorunda"
-              className="hover:text-foreground transition-colors"
-              title="GitHub"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Github className="h-5 w-5" />
-            </a>
+              Contact
+            </Link>
           </div>
         </div>
 
-        {/* Mobile: Centered stack (Links | Social | Copyright) */}
+        {/* Mobile: Centered stack (Links | Contact | Copyright) */}
         <div className="md:hidden flex flex-col items-center gap-4">
           {/* Links */}
-          <div className="flex items-center gap-6 justify-center">
+          <div className="flex items-center gap-6 justify-center flex-wrap">
             <Link
               href="/privacy"
               className="hover:text-foreground transition-colors"
@@ -94,28 +77,12 @@ export function Footer() {
             >
               FAQ
             </Link>
-          </div>
-
-          {/* Social Links */}
-          <div className="flex items-center gap-4 justify-center">
-            <a
-              href="mailto:eniolorundasamson@gmail.com"
+            <Link
+              href="/contact"
               className="hover:text-foreground transition-colors"
-              title="Email"
-              target="_blank"
-              rel="noopener noreferrer"
             >
-              <Mail className="h-5 w-5" />
-            </a>
-            <a
-              href="https://github.com/Samson-Eniolorunda"
-              className="hover:text-foreground transition-colors"
-              title="GitHub"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Github className="h-5 w-5" />
-            </a>
+              Contact
+            </Link>
           </div>
 
           {/* Copyright - Last on mobile */}
