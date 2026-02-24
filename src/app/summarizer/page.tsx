@@ -14,6 +14,7 @@ import { DualInput } from "@/components/dual-input";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
 import { DocumentFormFooter } from "@/components/document-form-footer";
+import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
 import { Loader2, Send } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -108,8 +109,17 @@ export default function SummarizerPage() {
               )}
             </CardHeader>
             <CardContent>
-              <MarkdownRenderer content={resultContent} />
-              <ExportButtons content={resultContent} filename="hr-summary" />
+              {isLoading ? (
+                <ResultSkeleton />
+              ) : (
+                <>
+                  <MarkdownRenderer content={resultContent} />
+                  <ExportButtons
+                    content={resultContent}
+                    filename="hr-summary"
+                  />
+                </>
+              )}
             </CardContent>
           </Card>
         )}

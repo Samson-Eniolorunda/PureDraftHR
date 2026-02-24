@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** Root page redirects to the Formatter tool */
+/** Root page redirects to the Builder tool */
 export default function Home() {
-  redirect("/formatter");
+  redirect("/builder");
 }

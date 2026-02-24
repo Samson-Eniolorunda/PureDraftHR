@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
 import { DocumentFormFooter } from "@/components/document-form-footer";
+import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
 import { Loader2, Wand2 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -30,6 +31,7 @@ const DOC_TYPES = [
   "Job Description",
   "Onboarding Checklist",
   "Leave Policy",
+  "Sick Leave Policy",
   "Code of Conduct",
   "Non-Disclosure Agreement",
   "Promotion Announcement",
@@ -43,6 +45,9 @@ const DOC_TYPES = [
   "Exit Interview Form",
   "Salary Review Memo",
   "Succession Plan",
+  "Onboarding Policy",
+  "Learning, Development & Capability Policy",
+  "Performance Management and Review Policy",
 ] as const;
 
 const TONES = [
@@ -265,11 +270,17 @@ Key Details: ${keyDetails}`,
               )}
             </CardHeader>
             <CardContent>
-              <MarkdownRenderer content={resultContent} />
-              <ExportButtons
-                content={resultContent}
-                filename={`hr-${docType.toLowerCase().replace(/\s+/g, "-")}`}
-              />
+              {isLoading ? (
+                <ResultSkeleton />
+              ) : (
+                <>
+                  <MarkdownRenderer content={resultContent} />
+                  <ExportButtons
+                    content={resultContent}
+                    filename={`hr-${docType.toLowerCase().replace(/\s+/g, "-")}`}
+                  />
+                </>
+              )}
             </CardContent>
           </Card>
         )}

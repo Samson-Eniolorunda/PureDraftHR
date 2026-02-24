@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AppNav } from "@/components/app-nav";
+import { MobileHeader } from "@/components/mobile-header";
 import { PwaRegister } from "@/components/pwa-register";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Footer } from "@/components/footer";
@@ -47,10 +48,11 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <ThemeProvider>
+          <MobileHeader />
           <AppNav />
 
-          {/* Main content area — offset for sidebar on desktop, bottom-bar on mobile */}
-          <main className="md:ml-64 pb-20 md:pb-0">
+          {/* Main content area — offset for sidebar on desktop, header+bottom-bar on mobile */}
+          <main className="md:ml-64 pt-16 md:pt-0 pb-20 md:pb-0">
             <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8 min-h-screen">
               {children}
             </div>

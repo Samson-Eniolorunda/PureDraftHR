@@ -55,7 +55,7 @@ export function DocumentFormFooter({
   };
 
   return (
-    <div className="space-y-4 mt-6">
+    <div className="space-y-4 mt-6 pb-4">
       {/* Reference Template Upload (Optional) */}
       <Card className="p-4 bg-muted/50 border-dashed">
         <div className="space-y-2">
