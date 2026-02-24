@@ -148,6 +148,7 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
           <div
             role="listbox"
             tabIndex={-1}
+            title="Select an option"
             className="absolute left-0 right-0 mt-2 z-40 max-h-60 overflow-auto rounded-lg border border-input bg-card shadow-lg p-1"
             aria-activedescendant={selected}
           >
@@ -157,7 +158,9 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
                 role="option"
                 aria-selected={o.value === selected ? "true" : "false"}
                 tabIndex={0}
-                ref={(el) => (optionsRef.current[i] = el)}
+                ref={(el) => {
+                  if (el) optionsRef.current[i] = el;
+                }}
                 onClick={() => selectValue(o.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") selectValue(o.value);

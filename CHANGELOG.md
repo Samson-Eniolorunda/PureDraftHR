@@ -31,7 +31,7 @@ All notable changes to PureDraft HR will be documented in this file.
 
 ## [1.0.0] - 2026-02-23
 
-### Added
+### Features
 
 - ✨ Initial release of PureDraft HR
 - 📋 Document Formatter tool with 5+ templates

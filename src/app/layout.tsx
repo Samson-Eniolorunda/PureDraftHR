@@ -46,12 +46,22 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
-        {/* PWA iOS splash - with cache bust */}
-        <link rel="apple-touch-icon" href={`/icons/icon-192.svg?v=${FAVICON_VERSION}`} />
         {/* Favicon cache buster for all browsers */}
-        <link rel="icon" href={`/favicon.svg?v=${FAVICON_VERSION}`} type="image/svg+xml" />
+        <link
+          rel="icon"
+          href={`/favicon.svg?v=${FAVICON_VERSION}`}
+          type="image/svg+xml"
+        />
+        {/* PWA iOS splash - with cache bust */}
+        <link
+          rel="apple-touch-icon"
+          href={`/icons/icon-192.svg?v=${FAVICON_VERSION}`}
+        />
         {/* Preconnect to Google API for faster AI requests */}
-        <link rel="preconnect" href="https://generativelanguage.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://generativelanguage.googleapis.com"
+        />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <ThemeProvider>
