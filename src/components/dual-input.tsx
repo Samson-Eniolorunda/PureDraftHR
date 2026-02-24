@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { DropZone } from "@/components/drop-zone";
@@ -8,6 +8,7 @@ import { Upload, Type } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /*  DualInput — Tabs component with "Upload File" & "Paste Text"       */
+/*  Mobile: auto-scrolls textarea into view when focused               */
 /* ------------------------------------------------------------------ */
 interface DualInputProps {
   /** Called whenever the user provides text (from file or paste) */
@@ -22,15 +23,34 @@ export function DualInput({
   placeholder = "Paste your text here…",
 }: DualInputProps) {
   const [pastedText, setPastedText] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handlePasteChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const val = e.target.value;
       setPastedText(val);
+      console.log("[DualInput] Text pasted, length:", val.length);
       onTextReady(val);
     },
     [onTextReady],
   );
+
+  const handleTextareaFocus = () => {
+    console.log("[DualInput] Textarea focused");
+    // Scroll textarea into view after a small delay to ensure mobile keyboard adjusts
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+    }, 300);
+  };
+
+  const handleTextareaBlur = () => {
+    console.log("[DualInput] Textarea blurred");
+  };
 
   return (
     <Tabs defaultValue="upload" className="w-full">
@@ -51,9 +71,12 @@ export function DualInput({
 
       <TabsContent value="paste">
         <Textarea
+          ref={textareaRef}
           rows={8}
           value={pastedText}
           onChange={handlePasteChange}
+          onFocus={handleTextareaFocus}
+          onBlur={handleTextareaBlur}
           placeholder={placeholder}
           disabled={disabled}
           className="resize-y min-h-[180px]"

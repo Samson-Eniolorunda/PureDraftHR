@@ -18,6 +18,7 @@ import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
 import { DocumentFormFooter } from "@/components/document-form-footer";
 import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
+import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
 import { Loader2, Wand2 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -65,6 +66,8 @@ const TONES = [
 /*  Wizard UI: Doc Type + Key Details + Tone → complete draft          */
 /* ------------------------------------------------------------------ */
 export default function BuilderPage() {
+  const showSkeletonPreview = useDevSkeletonPreview();
+
   const [docType, setDocType] = useState<string>(DOC_TYPES[0]);
   const [keyDetails, setKeyDetails] = useState("");
   const [tone, setTone] = useState<string>(TONES[0]);
@@ -78,11 +81,24 @@ export default function BuilderPage() {
     body: { tool: "builder", referenceText: referenceText || undefined },
   });
 
+  // Debug logs for messages & loading
+  React.useEffect(() => {
+    console.log("Builder useChat state:", { messages, isLoading });
+  }, [messages, isLoading]);
+
   const assistantMessage = messages.filter((m) => m.role === "assistant").pop();
   const resultContent = assistantMessage?.content ?? "";
+  const displayLoading = isLoading || showSkeletonPreview;
 
   /** Submit the builder form to the AI */
   const handleGenerate = useCallback(() => {
+    console.log("Builder.handleGenerate clicked", {
+      docType,
+      tone,
+      keyDetailsLength: keyDetails.length,
+      isConsented,
+      isLoading,
+    });
     if (!keyDetails.trim() || isLoading || !isConsented) return;
 
     setMessages([]);
@@ -177,6 +193,16 @@ Key Details: ${keyDetails}`,
                 rows={6}
                 value={keyDetails}
                 onChange={(e) => setKeyDetails(e.target.value)}
+                onFocus={(e) =>
+                  setTimeout(
+                    () =>
+                      (e.target as HTMLElement).scrollIntoView({
+                        behavior: "smooth",
+                        block: "center",
+                      }),
+                    300,
+                  )
+                }
                 placeholder={`Example for "${docType}":\n- Employee name: Jane Smith\n- Position: Senior Developer\n- Start date: March 1, 2026\n- Salary: $120,000/year\n- Any other relevant details…`}
                 className="resize-y min-h-[150px]"
               />
@@ -269,8 +295,8 @@ Key Details: ${keyDetails}`,
                 </CardDescription>
               )}
             </CardHeader>
-            <CardContent>
-              {isLoading ? (
+            <CardContent className="space-y-4">
+              {displayLoading ? (
                 <ResultSkeleton />
               ) : (
                 <>

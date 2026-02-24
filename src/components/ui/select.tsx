@@ -4,55 +4,202 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
-/*  Select — modern, styled native select wrapper with animations      */
+/*  Select — accessible custom dropdown (maps <option> children)      */
+/*  - initial arrow faces up (closed)
+   - click/tap toggles open/close
+   - click outside or Escape closes
+   - keyboard navigation: ArrowUp/ArrowDown/Enter/Escape
+*/
 /* ------------------------------------------------------------------ */
 
 export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {}
 
-const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
-  ({ className, children, ...props }, ref) => {
+const Select = React.forwardRef<HTMLDivElement, SelectProps>(
+  (
+    { className, children, value, defaultValue, name, disabled, onChange, id },
+    ref,
+  ) => {
+    // Parse children (expect <option> elements)
+    const options = React.Children.toArray(children)
+      .filter(Boolean)
+      .map((child) => {
+        // @ts-ignore - expect ReactElement
+        const el = child as React.ReactElement<any>;
+        return {
+          value: el.props.value ?? String(el.props.children ?? ""),
+          label: el.props.children ?? el.props.value,
+          disabled: el.props.disabled ?? false,
+        };
+      });
+
+    const isControlled = value !== undefined;
+    const initial = isControlled
+      ? (value as string)
+      : ((defaultValue as string) ?? options[0]?.value ?? "");
+    const [selected, setSelected] = React.useState<string>(initial);
     const [isOpen, setIsOpen] = React.useState(false);
+    const containerRef = React.useRef<HTMLDivElement | null>(null);
+    const optionsRef = React.useRef<Array<HTMLDivElement | null>>([]);
+
+    // Sync controlled value
+    React.useEffect(() => {
+      if (isControlled) setSelected(value as string);
+    }, [value, isControlled]);
+
+    // Close on outside click
+    React.useEffect(() => {
+      const onDoc = (e: MouseEvent) => {
+        if (!containerRef.current) return;
+        if (!containerRef.current.contains(e.target as Node)) setIsOpen(false);
+      };
+      document.addEventListener("mousedown", onDoc);
+      return () => document.removeEventListener("mousedown", onDoc);
+    }, []);
+
+    // Keyboard handling on trigger
+    const handleTriggerKey = (e: React.KeyboardEvent) => {
+      if (disabled) return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setIsOpen(true);
+        requestAnimationFrame(() => optionsRef.current[0]?.focus());
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setIsOpen(true);
+        requestAnimationFrame(() =>
+          optionsRef.current[options.length - 1]?.focus(),
+        );
+      } else if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        setIsOpen((s) => !s);
+      } else if (e.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
+    const selectValue = (val: string) => {
+      if (disabled) return;
+      if (!isControlled) setSelected(val);
+      setIsOpen(false);
+      // Call onChange with a synthetic event similar enough for handlers
+      onChange?.({
+        target: { value: val, name },
+      } as unknown as React.ChangeEvent<HTMLSelectElement>);
+    };
+
+    const selectedLabel =
+      options.find((o) => o.value === selected)?.label ?? selected;
 
     return (
-      <div className="relative inline-block w-full">
-        <select
-          ref={ref}
-          className={cn(
-            "w-full appearance-none rounded-lg border border-input bg-background px-3 py-2.5 pr-10 text-sm ring-offset-background transition-all duration-200",
-            "hover:border-primary/50 hover:shadow-sm cursor-pointer",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:border-primary",
-            "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-input disabled:hover:shadow-none",
-            "font-medium text-foreground",
-            className,
-          )}
-          onFocus={() => setIsOpen(true)}
-          onBlur={() => setIsOpen(false)}
-          onChange={(e) => {
-            setIsOpen(false);
-            props.onChange?.(e);
-          }}
-          {...props}
-        >
-          {children}
-        </select>
+      <div
+        ref={(el) => {
+          containerRef.current = el;
+          // forwardRef support
+          if (typeof ref === "function") ref(el as any);
+          else if (ref)
+            (ref as React.MutableRefObject<HTMLDivElement | null>).current = el;
+        }}
+        className={cn("relative inline-block w-full", className)}
+      >
+        {/* Hidden native input for forms */}
+        {name && <input type="hidden" name={name} value={selected} />}
 
-        {/* Custom animated dropdown arrow */}
-        <svg
+        {/* Trigger */}
+        <button
+          id={id}
+          type="button"
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+          disabled={disabled}
+          onClick={() => setIsOpen((s) => !s)}
+          onKeyDown={handleTriggerKey}
           className={cn(
-            "pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-transform duration-200",
-            isOpen ? "rotate-180" : "rotate-0",
+            "w-full text-left rounded-lg border border-input bg-background px-3 py-2.5 pr-10 text-sm transition-all duration-150",
+            "hover:border-primary/50 hover:shadow-sm",
+            "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+            disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
+            "font-medium text-foreground",
           )}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-          viewBox="0 0 24 24"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M19 13l-7 7m0 0l-7-7m7 7V6"
-          />
-        </svg>
+          <span className="truncate">{selectedLabel}</span>
+
+          {/* Arrow: initial closed -> arrow up (rotate-180); open -> arrow down (rotate-0) */}
+          <svg
+            className={cn(
+              "pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-transform duration-200",
+              isOpen ? "rotate-0" : "rotate-180",
+            )}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </button>
+
+        {/* Options panel */}
+        {isOpen && (
+          <div
+            role="listbox"
+            tabIndex={-1}
+            className="absolute left-0 right-0 mt-2 z-40 max-h-60 overflow-auto rounded-lg border border-input bg-card shadow-lg p-1"
+            aria-activedescendant={selected}
+          >
+            {options.map((o, i) => (
+              <div
+                key={o.value}
+                role="option"
+                aria-selected={o.value === selected}
+                tabIndex={0}
+                ref={(el) => (optionsRef.current[i] = el)}
+                onClick={() => selectValue(o.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") selectValue(o.value);
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    optionsRef.current[
+                      Math.min(i + 1, options.length - 1)
+                    ]?.focus();
+                  }
+                  if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    optionsRef.current[Math.max(i - 1, 0)]?.focus();
+                  }
+                  if (e.key === "Escape") setIsOpen(false);
+                }}
+                className={cn(
+                  "px-3 py-2 rounded-md m-1 text-sm flex items-center justify-between",
+                  o.disabled
+                    ? "opacity-50 cursor-not-allowed"
+                    : "cursor-pointer hover:bg-primary/10",
+                  o.value === selected ? "bg-primary/10 font-semibold" : "",
+                )}
+              >
+                <span className="truncate">{o.label}</span>
+                {o.value === selected && (
+                  <svg
+                    className="h-4 w-4 text-primary"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   },

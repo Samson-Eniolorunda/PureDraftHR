@@ -17,6 +17,7 @@ import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
 import { DocumentFormFooter } from "@/components/document-form-footer";
 import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
+import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
 import { Loader2, Send } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -42,6 +43,7 @@ const TEMPLATES = [
 /* ------------------------------------------------------------------ */
 export default function FormatterPage() {
   const [inputText, setInputText] = useState("");
+  const showSkeletonPreview = useDevSkeletonPreview();
   const [referenceText, setReferenceText] = useState("");
   const [isConsented, setIsConsented] = useState(false);
   const [template, setTemplate] = useState<(typeof TEMPLATES)[number]["value"]>(
@@ -60,8 +62,15 @@ export default function FormatterPage() {
 
   const assistantMessage = messages.filter((m) => m.role === "assistant").pop();
   const resultContent = assistantMessage?.content ?? "";
+  const displayLoading = isLoading || showSkeletonPreview;
 
   const handleSubmit = useCallback(() => {
+    console.log("Formatter.handleSubmit", {
+      template,
+      inputLength: inputText.length,
+      isConsented,
+      isLoading,
+    });
     if (!inputText.trim() || isLoading || !isConsented) return;
 
     setMessages([]);

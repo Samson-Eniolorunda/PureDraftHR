@@ -15,6 +15,7 @@ import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
 import { DocumentFormFooter } from "@/components/document-form-footer";
 import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
+import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
 import { Loader2, Send } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -27,6 +28,7 @@ export default function SummarizerPage() {
   const [inputText, setInputText] = useState("");
   const [referenceText, setReferenceText] = useState("");
   const [isConsented, setIsConsented] = useState(false);
+  const showSkeletonPreview = useDevSkeletonPreview();
   const resultRef = useRef<HTMLDivElement>(null);
 
   const { messages, isLoading, append, setMessages } = useChat({
@@ -37,9 +39,15 @@ export default function SummarizerPage() {
   // Extract the latest assistant message (the streamed summary)
   const assistantMessage = messages.filter((m) => m.role === "assistant").pop();
   const resultContent = assistantMessage?.content ?? "";
+  const displayLoading = isLoading || showSkeletonPreview;
 
   /** Submit the user's text to the AI */
   const handleSubmit = useCallback(() => {
+    console.log("Summarizer.handleSubmit", {
+      inputLength: inputText.length,
+      isConsented,
+      isLoading,
+    });
     if (!inputText.trim() || isLoading || !isConsented) return;
 
     // Reset previous conversation and send the new text

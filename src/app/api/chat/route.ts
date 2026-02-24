@@ -76,26 +76,62 @@ Output ONLY the document in markdown. No preamble or meta-commentary.`,
 /*  POST handler — receives { tool, messages, template, referenceText } */
 /* ────────────────────────────────────────────────────────────────── */
 export async function POST(req: Request) {
-  const { messages, tool, template, referenceText } = await req.json();
+  try {
+    const body = await req.json();
+    const { messages, tool, template, referenceText } = body;
 
-  // Resolve the system prompt based on which tool page the user is on
-  let systemPrompt = SYSTEM_PROMPTS[tool] ?? SYSTEM_PROMPTS.formatter;
+    console.log("[API/chat] ✅ POST received", {
+      tool,
+      template,
+      hasReference: !!referenceText,
+      messagesCount: Array.isArray(messages) ? messages.length : 0,
+    });
 
-  // For the formatter, prepend the template choice to the system prompt
-  if (tool === "formatter" && template) {
-    systemPrompt = `${systemPrompt}\n\nThe user has selected the "${template}" template. Format accordingly.`;
+    // Validate
+    if (!tool) {
+      console.error("[API/chat] ❌ Missing tool parameter");
+      return new Response(JSON.stringify({ error: "Missing tool parameter" }), {
+        status: 400,
+      });
+    }
+
+    if (!Array.isArray(messages) || messages.length === 0) {
+      console.error("[API/chat] ❌ Invalid or empty messages array");
+      return new Response(JSON.stringify({ error: "Invalid messages array" }), {
+        status: 400,
+      });
+    }
+
+    // Resolve the system prompt based on which tool page the user is on
+    let systemPrompt = SYSTEM_PROMPTS[tool] ?? SYSTEM_PROMPTS.formatter;
+
+    // For the formatter, prepend the template choice to the system prompt
+    if (tool === "formatter" && template) {
+      systemPrompt = `${systemPrompt}\n\nThe user has selected the "${template}" template. Format accordingly.`;
+    }
+
+    // If a reference template was provided, inject instruction to mimic its style
+    if (referenceText && referenceText.trim()) {
+      systemPrompt += `\n\n⚠️ REFERENCE TEMPLATE PROVIDED: You MUST perfectly mimic the structure, tone, layout, and formatting style of the following reference text when generating your output:\n\n---\n${referenceText}\n---\n\nAnalyze this reference carefully and apply its style principles to your output.`;
+    }
+
+    console.log("[API/chat] ��� Starting stream for tool:", tool);
+
+    const result = streamText({
+      model: google("gemini-2.5-flash"),
+      system: systemPrompt,
+      messages,
+    });
+
+    console.log("[API/chat] ✅ Stream initialized successfully");
+    return result.toDataStreamResponse();
+  } catch (err) {
+    console.error("[API/chat] ❌ Error:", err instanceof Error ? err.message : String(err));
+    if (err instanceof Error) {
+      console.error("[API/chat] Stack trace:", err.stack);
+    }
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
+      status: 500,
+    });
   }
-
-  // If a reference template was provided, inject instruction to mimic its style
-  if (referenceText && referenceText.trim()) {
-    systemPrompt += `\n\n⚠️ REFERENCE TEMPLATE PROVIDED: You MUST perfectly mimic the structure, tone, layout, and formatting style of the following reference text when generating your output:\n\n---\n${referenceText}\n---\n\nAnalyze this reference carefully and apply its style principles to your output.`;
-  }
-
-  const result = streamText({
-    model: google("gemini-2.5-flash"),
-    system: systemPrompt,
-    messages,
-  });
-
-  return result.toDataStreamResponse();
 }

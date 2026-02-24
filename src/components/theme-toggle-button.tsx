@@ -2,7 +2,7 @@
 
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
-import { Sun, Moon, Smartphone } from "lucide-react";
+import { Sun, Moon, Smartphone, Monitor } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function ThemeToggleButton() {
@@ -39,19 +39,7 @@ export function ThemeToggleButton() {
           )}
           title="System theme"
         >
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
+          <Monitor className="h-4 w-4" />
         </Button>
 
         <Button
