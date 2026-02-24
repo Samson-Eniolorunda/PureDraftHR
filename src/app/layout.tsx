@@ -78,6 +78,7 @@ export default function RootLayout({
         <link
           rel="apple-touch-icon"
           href={`/icons/icon-192.svg?v=${FAVICON_VERSION}`}
+          type="image/svg+xml"
         />
         {/* Preconnect to Google API for faster AI requests */}
         <link
