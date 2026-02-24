@@ -51,14 +51,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const body = await request.json() as ContactFormData;
+    const body = (await request.json()) as ContactFormData;
 
     // Validate form data
     const validationError = validateFormData(body);
     if (validationError) {
       return NextResponse.json(
         { success: false, error: validationError },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
         success: true,
         message: "Thank you for contacting us! We'll get back to you soon.",
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("❌ Contact form error:", error);
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
         success: false,
         error: "Failed to process your message. Please try again later.",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

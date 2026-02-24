@@ -38,7 +38,10 @@ export default function ContactPage() {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json() as { success: boolean; error?: string };
+      const data = (await response.json()) as {
+        success: boolean;
+        error?: string;
+      };
 
       if (!response.ok) {
         setStatus("error");
