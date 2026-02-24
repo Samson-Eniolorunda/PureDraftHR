@@ -75,7 +75,7 @@ export default function ContactPage() {
           Contact Us
         </h1>
         <p className="mt-2 text-lg text-muted-foreground">
-          Have questions or feedback? We'd love to hear from you. Get in touch
+          Have questions or feedback? We&apos;d love to hear from you. Get in touch
           with our team.
         </p>
       </div>
@@ -134,7 +134,7 @@ export default function ContactPage() {
             <CardHeader>
               <CardTitle>Send us a Message</CardTitle>
               <CardDescription>
-                Fill out the form below and we'll get back to you as soon as
+                Fill out the form below and we&apos;ll get back to you as soon as
                 possible.
               </CardDescription>
             </CardHeader>
@@ -247,7 +247,7 @@ export default function ContactPage() {
               Do you offer custom features?
             </h3>
             <p className="text-sm text-muted-foreground">
-              We'd love to hear your suggestions! Contact us to discuss
+              We&apos;d love to hear your suggestions! Contact us to discuss
               potential integrations or features.
             </p>
           </div>

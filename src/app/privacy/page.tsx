@@ -48,7 +48,7 @@ export default function PrivacyPage() {
 
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold">How Your Data is Processed</h2>
-        <p>Open Generative AI (Google Gemini API) processes your documents:</p>
+        <p><strong>Google Gemini AI processes your documents:</strong></p>
         <ul className="list-disc list-inside space-y-2">
           <li>File text is extracted in your browser</li>
           <li>
@@ -60,6 +60,9 @@ export default function PrivacyPage() {
           </li>
           <li>The generated response is returned to your browser</li>
           <li>All communication uses HTTPS encryption</li>
+          <li>
+            <strong>Important:</strong> Gemini AI can make mistakes. Always review AI-generated content for accuracy and completeness
+          </li>
         </ul>
       </section>
 

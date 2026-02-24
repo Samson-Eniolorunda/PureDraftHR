@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Sparkles } from "lucide-react";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -13,8 +14,9 @@ export function Footer() {
           {/* Copyright & Attribution */}
           <div className="flex flex-col items-start gap-1">
             <div>© {currentYear} PureDraft HR. All rights reserved.</div>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground flex items-center gap-1">
               Powered by{" "}
+              <Sparkles className="h-3 w-3 text-blue-500" />
               <a
                 href="https://ai.google.dev"
                 className="hover:text-foreground transition-colors underline"
@@ -88,8 +90,9 @@ export function Footer() {
           {/* Copyright - Last on mobile */}
           <div className="text-xs text-center pt-2 border-t border-border/50 space-y-1">
             <div>© {currentYear} PureDraft HR. All rights reserved.</div>
-            <div>
+            <div className="flex items-center justify-center gap-1">
               Powered by{" "}
+              <Sparkles className="h-3 w-3 text-blue-500" />
               <a
                 href="https://ai.google.dev"
                 className="hover:text-foreground transition-colors underline"

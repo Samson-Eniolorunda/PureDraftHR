@@ -78,7 +78,34 @@ export default function TermsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-2xl font-semibold">4. Disclaimer of Warranties</h2>
+        <h2 className="text-2xl font-semibold">4. Gemini AI Processing & Accuracy Disclaimer</h2>
+        <p>
+          <strong>PureDraft HR uses Google Gemini AI to generate documents.</strong> Please be aware:
+        </p>
+        <ul className="list-disc list-inside space-y-2">
+          <li>
+            <strong>Gemini AI can make mistakes:</strong> Generated content may contain errors, inaccuracies, or incomplete information
+          </li>
+          <li>
+            You are solely responsible for reviewing all AI-generated documents before using them
+          </li>
+          <li>
+            Always verify facts, figures, and legal language with subject matter experts
+          </li>
+          <li>
+            PureDraft HR and Google disclaim liability for errors or omissions in AI-generated output
+          </li>
+          <li>
+            Do not rely solely on AI-generated documents for legal, compliance, or critical HR decisions
+          </li>
+          <li>
+            <strong>Review and edit all output:</strong> Customize generated documents to match your specific organizational needs and policies
+          </li>
+        </ul>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-2xl font-semibold">5. Disclaimer of Warranties</h2>
         <p>
           The materials on PureDraft HR are provided on an 'as is' basis.
           PureDraft HR makes no warranties, expressed or implied, and hereby
@@ -90,7 +117,7 @@ export default function TermsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-2xl font-semibold">5. Limitations of Liability</h2>
+        <h2 className="text-2xl font-semibold">6. Limitations of Liability</h2>
         <p>
           In no event shall PureDraft HR or its suppliers be liable for any
           damages (including, without limitation, damages for loss of data or
@@ -102,7 +129,7 @@ export default function TermsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-2xl font-semibold">6. Accuracy of Materials</h2>
+        <h2 className="text-2xl font-semibold">7. Accuracy of Materials</h2>
         <p>
           The materials appearing on PureDraft HR could include technical,
           typographical, or photographic errors. PureDraft HR does not warrant
@@ -114,7 +141,7 @@ export default function TermsPage() {
 
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold">
-          7. Materials & Content Ownership
+          8. Materials & Content Ownership
         </h2>
         <ul className="list-disc list-inside space-y-2">
           <li>The materials appearing on PureDraft HR are copyrighted</li>
@@ -128,7 +155,7 @@ export default function TermsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-2xl font-semibold">8. Limitations on Use</h2>
+        <h2 className="text-2xl font-semibold">9. Limitations on Use</h2>
         <p>You agree not to:</p>
         <ul className="list-disc list-inside space-y-2">
           <li>Harass or cause distress or inconvenience to any person</li>
@@ -142,7 +169,7 @@ export default function TermsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-2xl font-semibold">9. Governing Law</h2>
+        <h2 className="text-2xl font-semibold">10. Governing Law</h2>
         <p>
           These terms and conditions are governed by and construed in accordance
           with the laws of the jurisdiction where the service is provided, and
@@ -152,7 +179,7 @@ export default function TermsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-2xl font-semibold">10. Changes to Terms</h2>
+        <h2 className="text-2xl font-semibold">11. Changes to Terms</h2>
         <p>
           PureDraft HR reserves the right to change these terms and conditions
           at any time by posting updates on this website. Your continued use of

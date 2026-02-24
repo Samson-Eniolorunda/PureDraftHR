@@ -182,7 +182,10 @@ export default function FormatterPage() {
                     <ResultSkeleton />
                   ) : (
                     <>
-                      <MarkdownRenderer content={resultContent} styling={styling} />
+                      <MarkdownRenderer
+                        content={resultContent}
+                        styling={styling}
+                      />
                       <ExportButtons
                         content={resultContent}
                         filename="hr-formatted-document"

@@ -139,7 +139,10 @@ export default function SummarizerPage() {
                     <ResultSkeleton />
                   ) : (
                     <>
-                      <MarkdownRenderer content={resultContent} styling={styling} />
+                      <MarkdownRenderer
+                        content={resultContent}
+                        styling={styling}
+                      />
                       <ExportButtons
                         content={resultContent}
                         filename="hr-summary"
