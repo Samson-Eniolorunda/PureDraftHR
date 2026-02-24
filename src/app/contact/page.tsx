@@ -30,12 +30,22 @@ export default function ContactPage() {
     setStatus("loading");
 
     try {
-      // Send email using a backend service or third-party API
-      // For now, just log and show success
-      console.log("Contact form submitted:", formData);
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
-      // Simulate sending email
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const data = await response.json() as { success: boolean; error?: string };
+
+      if (!response.ok) {
+        setStatus("error");
+        console.error("Contact form error:", data.error);
+        setTimeout(() => setStatus("idle"), 3000);
+        return;
+      }
 
       setStatus("success");
       setFormData({ name: "", email: "", subject: "", message: "" });
