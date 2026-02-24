@@ -11,8 +11,21 @@ export function Footer() {
       <div className="mx-auto max-w-4xl">
         {/* Desktop: 3-column layout (Copyright | Links | Social) */}
         <div className="hidden md:flex md:flex-row md:items-center md:justify-between gap-4">
-          {/* Copyright */}
-          <div>© {currentYear} PureDraft HR. All rights reserved.</div>
+          {/* Copyright & Attribution */}
+          <div className="flex flex-col items-start gap-1">
+            <div>© {currentYear} PureDraft HR. All rights reserved.</div>
+            <div className="text-xs text-muted-foreground">
+              Powered by{" "}
+              <a
+                href="https://ai.google.dev"
+                className="hover:text-foreground transition-colors underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Google Gemini
+              </a>
+            </div>
+          </div>
 
           {/* Links */}
           <div className="flex items-center gap-6">
@@ -106,8 +119,19 @@ export function Footer() {
           </div>
 
           {/* Copyright - Last on mobile */}
-          <div className="text-xs text-center pt-2 border-t border-border/50">
-            © {currentYear} PureDraft HR. All rights reserved.
+          <div className="text-xs text-center pt-2 border-t border-border/50 space-y-1">
+            <div>© {currentYear} PureDraft HR. All rights reserved.</div>
+            <div>
+              Powered by{" "}
+              <a
+                href="https://ai.google.dev"
+                className="hover:text-foreground transition-colors underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Google Gemini
+              </a>
+            </div>
           </div>
         </div>
       </div>
