@@ -14,8 +14,10 @@ import { DualInput } from "@/components/dual-input";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
 import { DocumentFormFooter } from "@/components/document-form-footer";
+import { DocumentStylingUI } from "@/components/document-styling-ui";
 import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
 import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
+import { useDocumentStyling } from "@/hooks/useDocumentStyling";
 import { Loader2, Send } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -29,6 +31,18 @@ export default function SummarizerPage() {
   const [referenceText, setReferenceText] = useState("");
   const [isConsented, setIsConsented] = useState(false);
   const showSkeletonPreview = useDevSkeletonPreview();
+  const {
+    styling,
+    googleFonts,
+    webSafeFonts,
+    updateFontFamily,
+    updateH1Size,
+    updateH2H3Size,
+    updateBodyTextSize,
+    updateLineSpacing,
+    updateBulletStyle,
+    resetToDefaults,
+  } = useDocumentStyling();
   const resultRef = useRef<HTMLDivElement>(null);
 
   const { messages, isLoading, append, setMessages } = useChat({
@@ -76,61 +90,84 @@ export default function SummarizerPage() {
         </p>
       </div>
 
-      {/* ── Input Section ── */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Input</CardTitle>
-          <CardDescription>
-            Upload a file (.txt, .pdf, .docx) or paste your text directly.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <DualInput
-            onTextReady={setInputText}
-            disabled={isLoading}
-            placeholder="Paste the full text of the HR document you want summarized…"
-          />
-
-          {/* Consent & Reference Template Footer */}
-          <DocumentFormFooter
-            isLoading={isLoading}
-            isConsented={isConsented}
-            onConsentChange={setIsConsented}
-            onReferenceTextChange={setReferenceText}
-            onSubmit={handleSubmit}
-            submitLabel="Summarize"
-          />
-        </CardContent>
-      </Card>
-
-      {/* ── Result Section ── */}
-      <div ref={resultRef}>
-        {(resultContent || isLoading) && (
+      {/* ── Main Layout: Form + Styling Sidebar ── */}
+      <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
+        {/* ── Left: Input & Results ── */}
+        <div className="space-y-6">
+          {/* ── Input Section ── */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Summary</CardTitle>
-              {isLoading && (
-                <CardDescription className="flex items-center gap-2">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  AI is writing…
-                </CardDescription>
-              )}
+              <CardTitle className="text-lg">Input</CardTitle>
+              <CardDescription>
+                Upload a file (.txt, .pdf, .docx) or paste your text directly.
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <ResultSkeleton />
-              ) : (
-                <>
-                  <MarkdownRenderer content={resultContent} />
-                  <ExportButtons
-                    content={resultContent}
-                    filename="hr-summary"
-                  />
-                </>
-              )}
+            <CardContent className="space-y-4">
+              <DualInput
+                onTextReady={setInputText}
+                disabled={isLoading}
+                placeholder="Paste the full text of the HR document you want summarized…"
+              />
+
+              {/* Consent & Reference Template Footer */}
+              <DocumentFormFooter
+                isLoading={isLoading}
+                isConsented={isConsented}
+                onConsentChange={setIsConsented}
+                onReferenceTextChange={setReferenceText}
+                onSubmit={handleSubmit}
+                submitLabel="Summarize"
+              />
             </CardContent>
           </Card>
-        )}
+
+          {/* ── Result Section ── */}
+          <div ref={resultRef}>
+            {(resultContent || isLoading) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Summary</CardTitle>
+                  {isLoading && (
+                    <CardDescription className="flex items-center gap-2">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      AI is writing…
+                    </CardDescription>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  {displayLoading ? (
+                    <ResultSkeleton />
+                  ) : (
+                    <>
+                      <MarkdownRenderer content={resultContent} styling={styling} />
+                      <ExportButtons
+                        content={resultContent}
+                        filename="hr-summary"
+                        styling={styling}
+                      />
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+
+        {/* ── Right: Styling Sidebar (sticky on lg screens) ── */}
+        <div className="lg:sticky lg:top-4 lg:h-fit">
+          <DocumentStylingUI
+            styling={styling}
+            googleFonts={googleFonts}
+            webSafeFonts={webSafeFonts}
+            onFontFamilyChange={updateFontFamily}
+            onH1SizeChange={updateH1Size}
+            onH2H3SizeChange={updateH2H3Size}
+            onBodyTextSizeChange={updateBodyTextSize}
+            onLineSpacingChange={updateLineSpacing}
+            onBulletStyleChange={updateBulletStyle}
+            onResetDefaults={resetToDefaults}
+          />
+        </div>
       </div>
     </div>
   );

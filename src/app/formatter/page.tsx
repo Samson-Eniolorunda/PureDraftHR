@@ -16,8 +16,10 @@ import { DualInput } from "@/components/dual-input";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
 import { DocumentFormFooter } from "@/components/document-form-footer";
+import { DocumentStylingUI } from "@/components/document-styling-ui";
 import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
 import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
+import { useDocumentStyling } from "@/hooks/useDocumentStyling";
 import { Loader2, Send } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -44,6 +46,18 @@ const TEMPLATES = [
 export default function FormatterPage() {
   const [inputText, setInputText] = useState("");
   const showSkeletonPreview = useDevSkeletonPreview();
+  const {
+    styling,
+    googleFonts,
+    webSafeFonts,
+    updateFontFamily,
+    updateH1Size,
+    updateH2H3Size,
+    updateBodyTextSize,
+    updateLineSpacing,
+    updateBulletStyle,
+    resetToDefaults,
+  } = useDocumentStyling();
   const [referenceText, setReferenceText] = useState("");
   const [isConsented, setIsConsented] = useState(false);
   const [template, setTemplate] = useState<(typeof TEMPLATES)[number]["value"]>(
@@ -97,83 +111,106 @@ export default function FormatterPage() {
         </p>
       </div>
 
-      {/* ── Input Section ── */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Input</CardTitle>
-          <CardDescription>
-            Select a template and upload or paste your unstructured text.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Template selector */}
-          <div className="space-y-2">
-            <Label htmlFor="template-select">Document Template</Label>
-            <Select
-              id="template-select"
-              value={template}
-              onChange={(e) =>
-                setTemplate(
-                  e.target.value as (typeof TEMPLATES)[number]["value"],
-                )
-              }
-              disabled={isLoading}
-            >
-              {TEMPLATES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </Select>
-          </div>
-
-          {/* Dual input: upload or paste */}
-          <DualInput
-            onTextReady={setInputText}
-            disabled={isLoading}
-            placeholder="Paste the messy/unstructured text you want formatted…"
-          />
-
-          {/* Consent & Reference Template Footer */}
-          <DocumentFormFooter
-            isLoading={isLoading}
-            isConsented={isConsented}
-            onConsentChange={setIsConsented}
-            onReferenceTextChange={setReferenceText}
-            onSubmit={handleSubmit}
-            submitLabel="Format Document"
-          />
-        </CardContent>
-      </Card>
-
-      {/* ── Result Section ── */}
-      <div ref={resultRef}>
-        {(resultContent || isLoading) && (
+      {/* ── Main Layout: Form + Styling Sidebar ── */}
+      <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
+        {/* ── Left: Input & Results ── */}
+        <div className="space-y-6">
+          {/* ── Input Section ── */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Formatted Document</CardTitle>
-              {isLoading && (
-                <CardDescription className="flex items-center gap-2">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  AI is formatting…
-                </CardDescription>
-              )}
+              <CardTitle className="text-lg">Input</CardTitle>
+              <CardDescription>
+                Select a template and upload or paste your unstructured text.
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <ResultSkeleton />
-              ) : (
-                <>
-                  <MarkdownRenderer content={resultContent} />
-                  <ExportButtons
-                    content={resultContent}
-                    filename="hr-formatted-document"
-                  />
-                </>
-              )}
+            <CardContent className="space-y-4">
+              {/* Template selector */}
+              <div className="space-y-2">
+                <Label htmlFor="template-select">Document Template</Label>
+                <Select
+                  id="template-select"
+                  value={template}
+                  onChange={(e) =>
+                    setTemplate(
+                      e.target.value as (typeof TEMPLATES)[number]["value"],
+                    )
+                  }
+                  disabled={isLoading}
+                >
+                  {TEMPLATES.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              {/* Dual input: upload or paste */}
+              <DualInput
+                onTextReady={setInputText}
+                disabled={isLoading}
+                placeholder="Paste the messy/unstructured text you want formatted…"
+              />
+
+              {/* Consent & Reference Template Footer */}
+              <DocumentFormFooter
+                isLoading={isLoading}
+                isConsented={isConsented}
+                onConsentChange={setIsConsented}
+                onReferenceTextChange={setReferenceText}
+                onSubmit={handleSubmit}
+                submitLabel="Format Document"
+              />
             </CardContent>
           </Card>
-        )}
+
+          {/* ── Result Section ── */}
+          <div ref={resultRef}>
+            {(resultContent || isLoading) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Formatted Document</CardTitle>
+                  {isLoading && (
+                    <CardDescription className="flex items-center gap-2">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      AI is formatting…
+                    </CardDescription>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  {displayLoading ? (
+                    <ResultSkeleton />
+                  ) : (
+                    <>
+                      <MarkdownRenderer content={resultContent} styling={styling} />
+                      <ExportButtons
+                        content={resultContent}
+                        filename="hr-formatted-document"
+                        styling={styling}
+                      />
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+
+        {/* ── Right: Styling Sidebar (sticky on lg screens) ── */}
+        <div className="lg:sticky lg:top-4 lg:h-fit">
+          <DocumentStylingUI
+            styling={styling}
+            googleFonts={googleFonts}
+            webSafeFonts={webSafeFonts}
+            onFontFamilyChange={updateFontFamily}
+            onH1SizeChange={updateH1Size}
+            onH2H3SizeChange={updateH2H3Size}
+            onBodyTextSizeChange={updateBodyTextSize}
+            onLineSpacingChange={updateLineSpacing}
+            onBulletStyleChange={updateBulletStyle}
+            onResetDefaults={resetToDefaults}
+          />
+        </div>
       </div>
     </div>
   );
