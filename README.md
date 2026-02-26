@@ -2,24 +2,20 @@
 
 **Enterprise-grade Next.js 15 PWA for Human Resources**
 
-An innovative, **100% stateless** web application that empowers HR teams to format, summarize, and generate professional HR documents with AI. Built with Next.js 15, Tailwind CSS, Vercel AI SDK, and shadcn/ui.
+An innovative, **100% stateless** web application that empowers HR teams to format, summarize, and generate professional HR documents with AI. Built with Next.js 15, Tailwind CSS, Vercel AI SDK, Google Gemini AI, and shadcn/ui.
 
 ---
 
 ## 🚀 Features
 
-### 1. **3-in-1 Document Tools**
+### 1. **4-in-1 Document Tools**
 
 #### 📋 **Formatter**
 
 - Convert messy, unstructured HR text into perfectly formatted markdown documents
-- Choose from 5 professional templates:
-  - Incident Report
-  - Interview Notes
-  - Meeting Minutes
-  - Performance Review
-  - Policy Draft
+- Choose from 5 professional templates + **"Other (Custom)"** option for freeform template names
 - AI-powered restructuring with semantic understanding
+- Reference template cloning for exact layout mirroring
 
 #### 📝 **Summarizer**
 
@@ -32,35 +28,98 @@ An innovative, **100% stateless** web application that empowers HR teams to form
 
 - Create professional HR documents from scratch using a 3-step wizard
 - Select document type, add key details, choose tone
-- 10+ document types supported (Offer Letters, Job Descriptions, Policies, etc)
+- **25 document types** supported (Offer Letters, Job Descriptions, Policies, Contracts, and more) + **"Other (Custom)"** option
+- **Dynamic placeholder examples** — context-aware suggestions for each document type
+- **Bulk CSV Generation** — upload a CSV file to batch-generate multiple documents at once with progress tracking
 - Streaming generation with real-time preview
+- Minimum skeleton loading duration (1.5s) for smooth UX
 
-### 2. **100% Stateless Architecture**
+#### 💬 **Assistant** _(NEW)_
+
+- Freeform **HR Copilot** — ask HR questions, draft workplace emails, get policy advice
+- **Chat with a Document** — upload a PDF, DOCX, or TXT file and ask questions about its contents
+- Styled output with full document styling modal support
+- Quick-send (Enter) or styled-send (Wand icon) modes
+- **Smart Meeting Scheduler** — ask the AI to schedule a meeting and get a beautiful Meeting Card with "Add to Google Calendar" and "Download Outlook Invite (.ics)" buttons
+- Full export support (PDF, DOCX, Copy)
+
+### 2. **Document Styling System (Modal)**
+
+- 🎨 **Font Family Selector** — 7 web-safe fonts + 7 Google Fonts with dynamic loading
+- 📏 **Font Size Dropdowns** in MS Word standard points (pt):
+  - Heading 1 (H1): 18–36pt (dropdown selector)
+  - Subheading (H2/H3): 14–24pt (dropdown selector)
+  - Body Text: 10–14pt (dropdown selector)
+- 📐 **Line Spacing** — 1.0, 1.15, 1.5, 2.0
+- 🔘 **Bullet Styles** — None, Dot, Circle, Square, Diamond, Arrow, Checkmark
+- 🪟 **Styling Modal Flow** — Submit → choose styling in a modal popup → "Confirm & Generate"
+- 👁️ **Live Preview** — CSS variables injected in real-time into the markdown renderer
+- 📤 **Style-aware Export** — PDF, DOCX, and clipboard exports preserve all user styling selections
+- 🔄 **Reset to Defaults** — One-click reset button
+
+### 3. **100% Stateless Architecture**
 
 - ✅ No database, no server-side storage
 - ✅ All file parsing & AI generation happens in-memory
 - ✅ Streamed directly to client (Vercel AI SDK `streamText`)
 - ✅ Perfect for compliance and privacy requirements
 
-### 3. **Progressive Web App (PWA)**
+### 4. **Progressive Web App (PWA)**
 
 - 📱 Mobile-first responsive design
 - 🏠 "Add to Home Screen" on iOS & Android
 - 📴 Offline support with service worker
 - ⚡ Desktop sidebar + mobile bottom-tab navigation
-- 🎨 Beautiful light/dark theme with Tailwind CSS
+- 🎨 Beautiful light/dark theme with system/manual toggle
 
-### 4. **Client-Side Export**
+### 5. **Client-Side Export**
 
-- 📥 **Download as PDF** — Uses html2pdf.js for instant PDF generation
-- 📥 **Download as DOCX** — Uses docx library for Word export
+- 📥 **Download as PDF** — Uses html2pdf.js with inline font, size, and spacing styles
+- 📥 **Download as DOCX** — Uses docx library with proper font mapping and half-point line spacing
+- 📋 **Copy to Clipboard** — One-click plain-text copy with 2-second "Copied!" confirmation
+- 🏷️ **Dynamic Filenames** — Exports auto-named from the document's H1 heading (fallback: timestamped)
 - ✅ All export happens in the browser (no server processing)
+- ✅ Exports preserve document styling selections (font, sizes, spacing, bullets)
+- ✅ Bullet symbols rendered inline in both PDF and DOCX (not CSS pseudo-elements)
 
-### 5. **File Import Support**
+### 6. **Multi-Language Translation**
 
-- 📤 Drag-and-drop upload interface
+- 🌍 Output language selector on all 4 tools (Formatter, Summarizer, Builder, Assistant)
+- 8 supported languages: English, Spanish, French, German, Mandarin Chinese, Portuguese, Arabic, Hindi
+- Language instruction injected into AI system prompt for accurate translation
+- Default: English (no extra instruction overhead)
+
+### 7. **My Templates Library**
+
+- 📂 Save reference text snippets as reusable templates
+- Templates stored in `localStorage` (persistent across sessions, no server needed)
+- One-click load from saved templates dropdown
+- Delete unwanted templates with confirmation
+- Integrated into the `DocumentFormFooter` component (available on Formatter, Builder, Summarizer)
+
+### 8. **File Import Support**
+
+- 📤 Drag-and-drop upload interface with success state (green checkmark + filename)
 - 📄 Supported formats: `.txt`, `.pdf`, `.docx`
 - 🔍 Automatic text extraction via a lightweight extraction API
+- 📝 **Plain text reference input** — Textarea alternative to file upload for pasting reference templates
+- ❌ One-click file removal button to clear uploaded files
+
+### 9. **AI Transparency & Disclaimers**
+
+- ⚠️ AI disclaimer under generate buttons: "Gemini AI can make mistakes"
+- 📄 Dedicated Terms of Service page with Gemini AI disclosure (Section 4)
+- 🔒 Privacy Policy page with Gemini AI processing information
+- 🔗 "Powered by Google Gemini" attribution in footer with Sparkles icon
+
+### 10. **Smart Meeting Scheduler**
+
+- 📅 Ask the Assistant to schedule a meeting, interview, or appointment
+- AI outputs structured JSON that is automatically intercepted and parsed
+- Beautiful **Meeting Card** UI rendered in place of raw JSON — shows title, date, time, and description
+- **"Add to Google Calendar"** — generates a Google Calendar template URL and opens it in a new tab
+- **"Download Outlook Invite (.ics)"** — generates a standards-compliant `.ics` file and downloads it to the browser
+- No OAuth or backend calendar integration required — works entirely client-side
 
 ---
 
@@ -70,12 +129,15 @@ An innovative, **100% stateless** web application that empowers HR teams to form
 | ------------------- | --------------------------------------------------- |
 | **Framework**       | Next.js 15 (App Router)                             |
 | **Styling**         | Tailwind CSS + shadcn/ui                            |
+| **Theming**         | next-themes (light/dark/system toggle)              |
 | **AI/LLM**          | Vercel AI SDK + Google Gemini 2.5 Flash (100% Free) |
 | **Runtime**         | Edge Runtime (API route)                            |
-| **Export**          | html2pdf.js, docx                                   |
+| **Export**          | html2pdf.js, docx, file-saver                       |
 | **File Parsing**    | mammoth (DOCX), pdf-parse (PDF)                     |
+| **Icons**           | lucide-react                                        |
+| **Markdown**        | react-markdown                                      |
 | **Package Manager** | npm                                                 |
-| **Language**        | TypeScript                                          |
+| **Language**        | TypeScript (strict mode)                            |
 | **Deployment**      | Vercel (recommended)                                |
 
 ---
@@ -145,32 +207,58 @@ PureDraftHR/
 │
 ├── src/
 │   ├── app/
-│   │   ├── layout.tsx         # Root layout with PWA registration
+│   │   ├── layout.tsx         # Root layout with PWA registration & theme
 │   │   ├── page.tsx           # Redirect to /formatter
+│   │   ├── globals.css        # Global styles
 │   │   ├── api/
 │   │   │   ├── chat/route.ts  # AI streaming (dynamic system prompts)
-│   │   │   └── extract/route.ts  # File text extraction
+│   │   │   ├── contact/route.ts # Contact form API
+│   │   │   └── extract/route.ts # File text extraction
+│   │   ├── builder/page.tsx   # Document builder wizard (25 types + custom)
 │   │   ├── formatter/page.tsx # Document formatter tool
 │   │   ├── summarizer/page.tsx# Document summarizer tool
-│   │   └── builder/page.tsx   # Document builder wizard
+│   │   ├── assistant/page.tsx # HR Assistant copilot + chat with document
+│   │   ├── contact/page.tsx   # Contact page with form
+│   │   ├── faq/page.tsx       # FAQ page
+│   │   ├── terms/page.tsx     # Terms of Service (Gemini AI disclosure)
+│   │   └── privacy/page.tsx   # Privacy Policy (Gemini AI processing)
 │   │
 │   ├── components/
 │   │   ├── app-nav.tsx        # Sidebar + mobile bottom tabs
-│   │   ├── dual-input.tsx     # Upload/Paste tabs
+│   │   ├── document-form-footer.tsx # Consent text + AI disclaimer
+│   │   ├── document-styling-ui.tsx  # Styling modal controls
 │   │   ├── drop-zone.tsx      # Drag-and-drop upload
-│   │   ├── export-buttons.tsx # PDF & DOCX download
-│   │   ├── markdown-renderer.tsx # Renders AI output
+│   │   ├── dual-input.tsx     # Upload/Paste tabs
+│   │   ├── export-buttons.tsx # Style-aware PDF & DOCX download
+│   │   ├── footer.tsx         # App footer with Gemini attribution
+│   │   ├── language-selector.tsx # Multi-language output selector
+│   │   ├── markdown-renderer.tsx # Renders AI output with styling
+│   │   ├── meeting-card.tsx   # Smart Meeting Scheduler card + .ics generation
+│   │   ├── template-library.tsx  # Saved templates library (localStorage)
+│   │   ├── mobile-header.tsx  # Mobile header with theme toggle
 │   │   ├── pwa-register.tsx   # Service worker registration
+│   │   ├── theme-provider.tsx # Light/dark/system theme provider
+│   │   ├── theme-toggle-button.tsx # Theme toggle button
 │   │   └── ui/                # shadcn-style components
 │   │       ├── button.tsx
 │   │       ├── card.tsx
+│   │       ├── checkbox.tsx
 │   │       ├── input.tsx
 │   │       ├── label.tsx
+│   │       ├── modal.tsx
 │   │       ├── select.tsx
+│   │       ├── skeleton.tsx
+│   │       ├── skeleton-loaders.tsx
 │   │       ├── tabs.tsx
 │   │       └── textarea.tsx
 │   │
+│   ├── hooks/
+│   │   ├── useDevSkeletonPreview.ts  # Dev-mode skeleton testing
+│   │   ├── useDocumentStyling.ts     # Document styling state management
+│   │   └── useTemplateLibrary.ts     # Saved templates hook (localStorage)
+│   │
 │   ├── lib/
+│   │   ├── document-styling.ts # CSS generation & injection utilities
 │   │   └── utils.ts           # cn() utility for class merging
 │   │
 │   └── types/
@@ -181,6 +269,7 @@ PureDraftHR/
 ├── tsconfig.json
 ├── package.json
 ├── next.config.js
+├── CHANGELOG.md
 └── .gitignore
 ```
 
@@ -197,8 +286,9 @@ Streams AI-generated markdown based on the selected tool.
 ```json
 {
   "messages": [{ "role": "user", "content": "..." }],
-  "tool": "formatter|summarizer|builder",
-  "template": "incident-report" // optional, for formatter
+  "tool": "formatter|summarizer|builder|assistant",
+  "template": "incident-report", // optional, for formatter
+  "language": "Spanish" // optional, default English
 }
 ```
 
@@ -206,32 +296,70 @@ Streams AI-generated markdown based on the selected tool.
 
 **System Prompts:**
 
-- **Formatter**: Restructures text into professional document templates
+- **Formatter**: Restructures text into professional document templates with reference template cloning
 - **Summarizer**: Creates human-sounding summaries (avoids AI buzzwords)
-- **Builder**: Generates complete documents from scratch
+- **Builder**: Generates complete documents from scratch with strict typography rules
+- **Assistant**: Freeform HR Copilot for Q&A, personal drafting, and document chat
+- **All prompts include**: Aggressive table recovery from destroyed PDF/DOCX data, human tone enforcement with banned AI buzzword list
+- **Language injection**: When a non-English language is selected, a mandatory language instruction is appended to the system prompt
+
+**AI Typography Rules (enforced in all prompts):**
+
+- Double line breaks between sections
+- Heading hierarchy enforcement
+- Address block formatting
+- Aggressive Markdown table reconstruction from comma-separated text
+- Signatory blocks with 3–4 empty lines for signatures
+- Key term bolding for document scannability
+- Human tone: varied sentence lengths, no AI buzzwords (delve, furthermore, tapestry, etc.)
 
 ### `POST /api/extract`
 
 Extracts plain text from uploaded files (PDF, DOCX, TXT).
 
-**Request:** FormData with `file` field  
+**Request:** FormData with `file` field
 **Response:** `{ "text": "..." }`
+
+### `POST /api/contact`
+
+Handles contact form submissions with validation.
+
+**Request:**
+
+```json
+{
+  "name": "...",
+  "email": "...",
+  "subject": "...",
+  "message": "..."
+}
+```
+
+**Response:** `{ "success": true }`
 
 ---
 
 ## 🎨 UI Architecture
 
-### Desktop (≥768px)
+### Desktop (≥1024px)
 
 - **Left Sidebar** (fixed, 256px): Navigation + logo
-- **Main Content**: Full width with max-width container
-- **Routes**: /formatter, /summarizer, /builder
+- **Main Content**: Responsive grid layout with max-width container
+- **Styling Modal**: Popup modal for document styling (replaces sidebar)
+- **Routes**: /formatter, /summarizer, /builder, /assistant, /contact, /faq, /terms, /privacy
+
+### Tablet (768px–1023px)
+
+- **Left Sidebar**: Collapsed navigation
+- **Main Content**: Full width, max-w-3xl
+- **Styling Modal**: Same modal popup as desktop
 
 ### Mobile (<768px)
 
+- **Mobile Header** (fixed, top): Logo + theme toggle
 - **Bottom Tab Bar** (fixed, 64px): Icon + label navigation
-- **Main Content**: Full width with safe-area padding
-- **Routes**: Same as desktop, responsive layout
+- **Main Content**: Full width with safe-area padding (pb-24 to avoid bottom nav overlap)
+- **Styling Modal**: Same modal popup as desktop
 
 ---
 
@@ -242,23 +370,52 @@ Extracts plain text from uploaded files (PDF, DOCX, TXT).
 1. Go to `/formatter`
 2. Select "Interview Notes" template
 3. Paste or upload your notes
-4. Click "Format Document"
-5. Export as PDF or Word
+4. Click "Format Document" → a **Styling Modal** opens
+5. Adjust font family, sizes, spacing, and bullet style
+6. Click **"Confirm & Generate"**
+7. Export as PDF, Word, or copy to clipboard
 
 ### Summarize a Long Policy
 
 1. Go to `/summarizer`
 2. Upload a policy document (.pdf, .docx, .txt)
-3. Click "Summarize"
-4. Get a concise, human-sounding summary in 10-15 seconds
+3. Click "Summarize" → choose styling in the modal
+4. Click **"Confirm & Generate"**
+5. Get a concise, human-sounding summary in 10–15 seconds
+6. Export or copy to clipboard
 
 ### Build a New Offer Letter
 
 1. Go to `/builder`
-2. Select "Offer Letter", add employee details
-3. Choose "Friendly" tone
-4. Click "Generate Document"
-5. Download as Word (.docx) for final editing
+2. Select "Offer Letter" — see dynamic placeholder suggestions
+3. Add employee details, choose "Friendly" tone
+4. Click "Generate Document" → a **Styling Modal** opens
+5. Customize font, sizes, and spacing, then click **"Confirm & Generate"**
+6. Download as Word (.docx), PDF, or copy to clipboard — filename auto-set from H1
+
+### Bulk Generate Documents from CSV
+
+1. Go to `/builder`
+2. Select a document type (e.g., "Offer Letter")
+3. Toggle **"Enable Bulk CSV Mode"**
+4. Upload a CSV where each row has employee-specific details (e.g., name, role, salary)
+5. Click "Generate N Docs" → watch the progress bar as each document is generated
+6. Export individual documents or download all as a combined file
+
+### Chat with an HR Document
+
+1. Go to `/assistant`
+2. Upload a document (PDF, DOCX, TXT) — e.g., an employee handbook
+3. Ask a question: "What is the bereavement leave policy?"
+4. Get an instant, contextual answer from the AI
+5. Export the response as PDF or DOCX if needed
+
+### Ask an HR Question
+
+1. Go to `/assistant`
+2. Type: "Write a sick leave email to my manager for tomorrow"
+3. Press Enter (quick send) or click Styled (for formatted output)
+4. Export or copy the result
 
 ---
 
@@ -269,6 +426,8 @@ Extracts plain text from uploaded files (PDF, DOCX, TXT).
 - ✅ **HTTPS recommended**: Use on secure connections
 - ✅ **API key management**: Keep `GOOGLE_GENERATIVE_AI_KEY` secure in `.env.local`
 - ✅ **Client-side exports**: PDF/Word generation happens locally
+- ✅ **AI transparency**: Clear disclaimers about Gemini AI usage and limitations
+- ✅ **Legal pages**: Dedicated Terms of Service and Privacy Policy with Gemini AI disclosures
 
 ---
 
@@ -319,16 +478,19 @@ npm run lint     # Run ESLint
 ### Code Quality
 
 - ✅ TypeScript strict mode
-- ✅ ESLint Next.js config
+- ✅ ESLint Next.js config (strict — enforced on Vercel builds)
 - ✅ Tailwind CSS classes with `cn()` utility
 - ✅ Server & client components properly separated
+- ✅ HTML entities for apostrophes (ESLint `react/no-unescaped-entities`)
 
 ### Adding New Tools
 
 1. Create a new page in `src/app/[toolname]/page.tsx`
 2. Add system prompt to `src/app/api/chat/route.ts`
 3. Use the `DualInput`, `MarkdownRenderer`, `ExportButtons` components
-4. Add navigation item in `src/components/app-nav.tsx`
+4. Integrate `useDocumentStyling` hook and `DocumentStylingUI` in a `Modal`
+5. Add `DocumentFormFooter` for consent text and AI disclaimer
+6. Add navigation item in `src/components/app-nav.tsx`
 
 ---
 
@@ -354,20 +516,41 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## ❓ FAQ
 
-**Q: Does this app store my documents?**  
+**Q: Does this app store my documents?**
 A: No — all processing is stateless. Documents are processed in real-time and never stored.
 
-**Q: Can I use this offline?**  
+**Q: What AI model does PureDraft HR use?**
+A: Google Gemini 2.5 Flash via the Vercel AI SDK. Gemini AI can make mistakes — always review generated content before using.
+
+**Q: Can I customize the document styling?**
+A: Yes! When you click Generate/Format/Summarize, a Styling Modal opens where you can adjust font family, heading/body sizes, line spacing, and bullet styles. Click "Confirm & Generate" to proceed. All styling is preserved when exporting to PDF, DOCX, or copying to clipboard.
+
+**Q: Can I use this offline?**
 A: The UI will work offline, but AI generation requires an internet connection and a Google Generative AI API key.
 
-**Q: What happens if I close the browser?**  
+**Q: What happens if I close the browser?**
 A: All in-progress work is lost (by design, for privacy). This is intentional to maintain stateless architecture.
 
-**Q: Can I use a different AI model?**  
+**Q: Can I use a different AI model?**
 A: Yes! Modify [src/app/api/chat/route.ts](src/app/api/chat/route.ts) to use any Vercel AI SDK provider (`@ai-sdk/google`, `@ai-sdk/openai`, `@ai-sdk/anthropic`, etc.).
 
-**Q: Is there a cost per request?**  
+**Q: Is there a cost per request?**
 A: No! Google Gemini is 100% free for development. No credit card required. Generous free tier limits suitable for production use.
+
+**Q: How many document types does the Builder support?**
+A: 25 document types including Offer Letters, Job Descriptions, Company Policies, Employment Contracts, Termination Letters, Warning Letters, and more — plus an "Other (Custom)" option for any document type not listed. Each type has context-aware placeholder examples.
+
+**Q: Can I generate documents in other languages?**
+A: Yes! All 4 tools support multi-language output. Choose from English, Spanish, French, German, Mandarin Chinese, Portuguese, Arabic, and Hindi via the language selector.
+
+**Q: What is the Assistant page?**
+A: The Assistant is a freeform HR Copilot. You can ask HR questions, draft workplace emails, or upload a document and ask questions about its contents ("Chat with a Document").
+
+**Q: Can I generate multiple documents at once?**
+A: Yes! The Builder supports Bulk CSV Generation. Upload a CSV file where each row contains document-specific details, and the Builder will generate one document per row with progress tracking.
+
+**Q: Does PureDraft HR save my templates?**
+A: The "My Templates" Library stores reference text snippets in your browser's localStorage. Templates persist across sessions but are local to your browser — nothing is sent to a server.
 
 ---
 

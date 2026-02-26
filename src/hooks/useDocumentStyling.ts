@@ -20,7 +20,7 @@ export interface DocumentStyling {
 const DEFAULT_STYLING: DocumentStyling = {
   fontFamily: "Arial",
   h1SizePt: 24,
-  h2h3SizePt: 14,
+  h2h3SizePt: 18,
   bodyTextSizePt: 12,
   lineSpacing: "1.5",
   bulletStyle: "dot",
@@ -102,7 +102,7 @@ export function useDocumentStyling() {
   const updateH2H3Size = useCallback((size: number) => {
     setStyling((prev) => ({
       ...prev,
-      h2h3SizePt: Math.max(14, Math.min(18, size)),
+      h2h3SizePt: Math.max(14, Math.min(24, size)),
     }));
   }, []);
 

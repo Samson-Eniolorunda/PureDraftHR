@@ -7,7 +7,7 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t bg-card/50 py-6 px-4 md:ml-64 pb-24 md:pb-6 text-sm text-muted-foreground">
+    <footer className="border-t bg-card/50 py-6 px-4 md:ml-64 pb-24 md:pb-6 text-sm text-muted-foreground md:fixed md:bottom-0 md:left-0 md:right-0 md:z-40">
       <div className="mx-auto max-w-4xl">
         {/* Desktop: 3-column layout (Copyright | Links | Contact) */}
         <div className="hidden md:flex md:flex-row md:items-center md:justify-between gap-4">
@@ -15,8 +15,7 @@ export function Footer() {
           <div className="flex flex-col items-start gap-1">
             <div>© {currentYear} PureDraft HR. All rights reserved.</div>
             <div className="text-xs text-muted-foreground flex items-center gap-1">
-              Powered by{" "}
-              <Sparkles className="h-3 w-3 text-blue-500" />
+              Powered by <Sparkles className="h-3 w-3 text-blue-500" />
               <a
                 href="https://ai.google.dev"
                 className="hover:text-foreground transition-colors underline"
@@ -91,8 +90,7 @@ export function Footer() {
           <div className="text-xs text-center pt-2 border-t border-border/50 space-y-1">
             <div>© {currentYear} PureDraft HR. All rights reserved.</div>
             <div className="flex items-center justify-center gap-1">
-              Powered by{" "}
-              <Sparkles className="h-3 w-3 text-blue-500" />
+              Powered by <Sparkles className="h-3 w-3 text-blue-500" />
               <a
                 href="https://ai.google.dev"
                 className="hover:text-foreground transition-colors underline"

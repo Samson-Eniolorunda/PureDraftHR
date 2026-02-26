@@ -11,17 +11,22 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
 import { DocumentFormFooter } from "@/components/document-form-footer";
 import { DocumentStylingUI } from "@/components/document-styling-ui";
+import {
+  LanguageSelector,
+  type LanguageValue,
+} from "@/components/language-selector";
+import { Modal } from "@/components/ui/modal";
 import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
 import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
 import { useDocumentStyling } from "@/hooks/useDocumentStyling";
-import { Loader2, Wand2 } from "lucide-react";
+import { Loader2, Wand2, Upload, FileSpreadsheet } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /*  Configuration options for the Builder wizard                       */
@@ -51,6 +56,7 @@ const DOC_TYPES = [
   "Onboarding Policy",
   "Learning, Development & Capability Policy",
   "Performance Management and Review Policy",
+  "Other (Custom)",
 ] as const;
 
 const TONES = [
@@ -117,6 +123,47 @@ const DOC_TYPE_PLACEHOLDERS: Record<string, string> = {
 };
 
 /* ------------------------------------------------------------------ */
+/*  CSV parsing helper for Bulk Generation                             */
+/* ------------------------------------------------------------------ */
+function parseCSV(text: string): {
+  headers: string[];
+  rows: Record<string, string>[];
+} {
+  const lines = text.split("\n").filter((l) => l.trim());
+  if (lines.length < 2) return { headers: [], rows: [] };
+
+  const parseRow = (line: string) => {
+    const result: string[] = [];
+    let current = "";
+    let inQuotes = false;
+    for (const char of line) {
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === "," && !inQuotes) {
+        result.push(current.trim());
+        current = "";
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    return result;
+  };
+
+  const headers = parseRow(lines[0]);
+  const rows = lines.slice(1).map((line) => {
+    const values = parseRow(line);
+    const record: Record<string, string> = {};
+    headers.forEach((h, i) => {
+      record[h] = values[i] ?? "";
+    });
+    return record;
+  });
+
+  return { headers, rows };
+}
+
+/* ------------------------------------------------------------------ */
 /*  /builder — AI-powered HR document builder (from scratch)           */
 /*                                                                     */
 /*  Wizard UI: Doc Type + Key Details + Tone → complete draft          */
@@ -137,17 +184,45 @@ export default function BuilderPage() {
   } = useDocumentStyling();
 
   const [docType, setDocType] = useState<string>(DOC_TYPES[0]);
+  const [customDocumentType, setCustomDocumentType] = useState("");
   const [keyDetails, setKeyDetails] = useState("");
   const [tone, setTone] = useState<string>(TONES[0]);
+  const [language, setLanguage] = useState<LanguageValue>("English");
   const [referenceText, setReferenceText] = useState("");
   const [isConsented, setIsConsented] = useState(false);
   const [step, setStep] = useState(1); // Wizard step 1-3
-  const [minSkeletonDuration, setMinSkeletonDuration] = useState(false); // Ensure skeleton shows for minimum time
+  const [minSkeletonDuration, setMinSkeletonDuration] = useState(false);
+  const [showStylingModal, setShowStylingModal] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
+
+  // Bulk CSV state
+  const [bulkMode, setBulkMode] = useState(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [csvData, setCsvData] = useState<{
+    headers: string[];
+    rows: Record<string, string>[];
+  } | null>(null);
+  const [bulkResults, setBulkResults] = useState<string[]>([]);
+  const [bulkProgress, setBulkProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
+
+  /** Resolved document type — custom string or dropdown value */
+  const resolvedDocType =
+    docType === "Other (Custom)" && customDocumentType.trim()
+      ? customDocumentType.trim()
+      : docType === "Other (Custom)"
+        ? "Custom HR Document"
+        : docType;
 
   const { messages, isLoading, append, setMessages } = useChat({
     api: "/api/chat",
-    body: { tool: "builder", referenceText: referenceText || undefined },
+    body: {
+      tool: "builder",
+      referenceText: referenceText || undefined,
+      language: language !== "English" ? language : undefined,
+    },
   });
 
   // Debug logs for messages & loading
@@ -169,23 +244,29 @@ export default function BuilderPage() {
   const displayLoading =
     (isLoading || showSkeletonPreview) && minSkeletonDuration;
 
-  /** Submit the builder form to the AI */
-  const handleGenerate = useCallback(() => {
-    console.log("Builder.handleGenerate clicked", {
-      docType,
+  /** Open styling modal instead of generating directly */
+  const handleGenerateClick = useCallback(() => {
+    if (!keyDetails.trim() || isLoading || !isConsented) return;
+    setShowStylingModal(true);
+  }, [keyDetails, isLoading, isConsented]);
+
+  /** Confirm styling and trigger the AI stream */
+  const handleConfirmGenerate = useCallback(() => {
+    setShowStylingModal(false);
+
+    console.log("Builder.handleConfirmGenerate", {
+      docType: resolvedDocType,
       tone,
       keyDetailsLength: keyDetails.length,
-      isConsented,
-      isLoading,
+      language,
     });
-    if (!keyDetails.trim() || isLoading || !isConsented) return;
 
     setMessages([]);
     append({
       role: "user",
       content: `Please create the following HR document from scratch:
 
-Document Type: ${docType}
+Document Type: ${resolvedDocType}
 Tone: ${tone}
 Key Details: ${keyDetails}`,
     });
@@ -193,7 +274,98 @@ Key Details: ${keyDetails}`,
     setTimeout(() => {
       resultRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 300);
-  }, [keyDetails, isLoading, append, setMessages, docType, tone, isConsented]);
+  }, [keyDetails, append, setMessages, resolvedDocType, tone, language]);
+
+  /** Handle CSV file upload */
+  const handleCsvUpload = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setCsvFile(file);
+      const text = await file.text();
+      const parsed = parseCSV(text);
+      setCsvData(parsed);
+    },
+    [],
+  );
+
+  /** Bulk generate documents from CSV rows */
+  const handleBulkGenerate = useCallback(async () => {
+    if (!csvData || csvData.rows.length === 0) return;
+    setShowStylingModal(false);
+    setBulkResults([]);
+    setBulkProgress({ current: 0, total: csvData.rows.length });
+
+    const results: string[] = [];
+
+    for (let i = 0; i < csvData.rows.length; i++) {
+      setBulkProgress({ current: i + 1, total: csvData.rows.length });
+      const row = csvData.rows[i];
+      const rowDetails = Object.entries(row)
+        .map(([k, v]) => `- ${k}: ${v}`)
+        .join("\n");
+
+      const combinedDetails = keyDetails.trim()
+        ? `${keyDetails}\n\n--- Row ${i + 1} Data ---\n${rowDetails}`
+        : rowDetails;
+
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: [
+              {
+                role: "user",
+                content: `Please create the following HR document from scratch:\n\nDocument Type: ${resolvedDocType}\nTone: ${tone}\nKey Details: ${combinedDetails}`,
+              },
+            ],
+            tool: "builder",
+            referenceText: referenceText || undefined,
+            language: language !== "English" ? language : undefined,
+          }),
+        });
+
+        // Read the streaming response fully
+        const reader = res.body?.getReader();
+        const decoder = new TextDecoder();
+        let fullText = "";
+
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            // Parse Vercel AI SDK data stream format
+            const lines = chunk.split("\n");
+            for (const line of lines) {
+              if (line.startsWith("0:")) {
+                try {
+                  fullText += JSON.parse(line.slice(2));
+                } catch {
+                  // skip non-JSON lines
+                }
+              }
+            }
+          }
+        }
+
+        results.push(
+          fullText || `[Error generating document for row ${i + 1}]`,
+        );
+      } catch (err) {
+        console.error(`Bulk generation error for row ${i + 1}:`, err);
+        results.push(`[Error generating document for row ${i + 1}]`);
+      }
+    }
+
+    setBulkResults(results);
+    setBulkProgress(null);
+
+    setTimeout(() => {
+      resultRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 300);
+  }, [csvData, keyDetails, resolvedDocType, tone, referenceText, language]);
 
   /** Can the user proceed to the next step? */
   const canProceed =
@@ -212,51 +384,53 @@ Key Details: ${keyDetails}`,
         </p>
       </div>
 
-      {/* ── Main Layout: Form + Styling Sidebar ── */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
-        {/* ── Left: Wizard Form ── */}
-        <div className="space-y-6">
-          {/* ── Wizard Card ── */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">
-                Step {step} of 3 —{" "}
-                {step === 1
-                  ? "Document Type"
-                  : step === 2
-                    ? "Key Details"
-                    : "Tone & Generate"}
-              </CardTitle>
-              <CardDescription>
-                {step === 1 && "What kind of HR document do you need?"}
-                {step === 2 &&
-                  "Provide the key information to include in the document."}
-                {step === 3 &&
-                  "Choose the writing tone and generate your document."}
-              </CardDescription>
+      {/* ── Wizard Form ── */}
+      <div className="space-y-6 max-w-3xl">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">
+              Step {step} of 3 —{" "}
+              {step === 1
+                ? "Document Type"
+                : step === 2
+                  ? "Key Details"
+                  : "Tone & Generate"}
+            </CardTitle>
+            <CardDescription>
+              {step === 1 && "What kind of HR document do you need?"}
+              {step === 2 &&
+                "Provide the key information to include in the document."}
+              {step === 3 &&
+                "Choose the writing tone and generate your document."}
+            </CardDescription>
 
-              {/* Step indicator */}
-              <div className="flex gap-2 pt-2">
-                {[1, 2, 3].map((s) => (
-                  <div
-                    key={s}
-                    className={`h-1.5 flex-1 rounded-full transition-colors ${
-                      s <= step ? "bg-primary" : "bg-muted"
-                    }`}
-                  />
-                ))}
-              </div>
-            </CardHeader>
+            {/* Step indicator */}
+            <div className="flex gap-2 pt-2">
+              {[1, 2, 3].map((s) => (
+                <div
+                  key={s}
+                  className={`h-1.5 flex-1 rounded-full transition-colors ${
+                    s <= step ? "bg-primary" : "bg-muted"
+                  }`}
+                />
+              ))}
+            </div>
+          </CardHeader>
 
-            <CardContent className="space-y-4">
-              {/* Step 1: Document Type */}
-              {step === 1 && (
+          <CardContent className="space-y-4">
+            {/* Step 1: Document Type */}
+            {step === 1 && (
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="doc-type">Document Type</Label>
                   <Select
                     id="doc-type"
                     value={docType}
-                    onChange={(e) => setDocType(e.target.value)}
+                    onChange={(e) => {
+                      setDocType(e.target.value);
+                      if (e.target.value !== "Other (Custom)")
+                        setCustomDocumentType("");
+                    }}
                   >
                     {DOC_TYPES.map((dt) => (
                       <option key={dt} value={dt}>
@@ -265,160 +439,348 @@ Key Details: ${keyDetails}`,
                     ))}
                   </Select>
                 </div>
-              )}
 
-              {/* Step 2: Key Details */}
-              {step === 2 && (
-                <div className="space-y-2">
-                  <Label htmlFor="key-details">Key Details</Label>
-                  <Textarea
-                    id="key-details"
-                    rows={6}
-                    value={keyDetails}
-                    onChange={(e) => setKeyDetails(e.target.value)}
-                    onFocus={(e) =>
-                      setTimeout(
-                        () =>
-                          (e.target as HTMLElement).scrollIntoView({
-                            behavior: "smooth",
-                            block: "center",
-                          }),
-                        300,
-                      )
-                    }
-                    placeholder={`Example for "${docType}":\n${
-                      DOC_TYPE_PLACEHOLDERS[docType] ||
-                      "- Provide relevant details for the document…"
-                    }`}
-                    className="resize-y min-h-[150px]"
-                  />
-                </div>
-              )}
-
-              {/* Step 3: Tone */}
-              {step === 3 && (
-                <div className="space-y-4">
+                {/* Custom document type input */}
+                {docType === "Other (Custom)" && (
                   <div className="space-y-2">
-                    <Label htmlFor="tone-select">Writing Tone</Label>
-                    <Select
-                      id="tone-select"
-                      value={tone}
-                      onChange={(e) => setTone(e.target.value)}
+                    <Label htmlFor="custom-doc-type">
+                      Custom Document Title
+                    </Label>
+                    <Input
+                      id="custom-doc-type"
+                      type="text"
+                      value={customDocumentType}
+                      onChange={(e) => setCustomDocumentType(e.target.value)}
+                      placeholder="Enter custom document title (e.g., Exit Interview Form)..."
+                      className="text-sm"
+                    />
+                  </div>
+                )}
+
+                {/* Language selector */}
+                <LanguageSelector
+                  value={language}
+                  onChange={setLanguage}
+                  disabled={isLoading}
+                />
+
+                {/* Bulk mode toggle */}
+                <div className="rounded-lg border border-dashed p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FileSpreadsheet className="h-4 w-4 text-muted-foreground" />
+                      <Label className="text-sm font-medium">
+                        Bulk Generation (CSV)
+                      </Label>
+                    </div>
+                    <Button
+                      type="button"
+                      variant={bulkMode ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        setBulkMode(!bulkMode);
+                        if (bulkMode) {
+                          setCsvFile(null);
+                          setCsvData(null);
+                          setBulkResults([]);
+                        }
+                      }}
                     >
-                      {TONES.map((t) => (
-                        <option key={t} value={t}>
-                          {t}
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
-
-                  {/* Review summary */}
-                  <div className="rounded-lg bg-muted/50 p-4 text-sm space-y-1">
-                    <p>
-                      <span className="font-medium">Type:</span> {docType}
-                    </p>
-                    <p>
-                      <span className="font-medium">Details:</span>{" "}
-                      {keyDetails.slice(0, 120)}
-                      {keyDetails.length > 120 ? "…" : ""}
-                    </p>
-                    <p>
-                      <span className="font-medium">Tone:</span> {tone}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Navigation buttons & Final form */}
-              {step < 3 ? (
-                <div className="flex justify-between pt-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setStep((s) => Math.max(1, s - 1))}
-                    disabled={step === 1}
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    onClick={() => setStep((s) => Math.min(3, s + 1))}
-                    disabled={!canProceed}
-                  >
-                    Next
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <div className="flex justify-start">
-                    <Button variant="outline" onClick={() => setStep(2)}>
-                      Back
+                      {bulkMode ? "Enabled" : "Enable"}
                     </Button>
                   </div>
-                  {/* Consent & Reference Template Footer */}
-                  <DocumentFormFooter
-                    isLoading={isLoading}
-                    isConsented={isConsented}
-                    onConsentChange={setIsConsented}
-                    onReferenceTextChange={setReferenceText}
-                    onSubmit={handleGenerate}
-                    submitLabel="Generate Document"
-                  />
-                </>
-              )}
-            </CardContent>
-          </Card>
 
-          {/* ── Result Section ── */}
-          <div ref={resultRef}>
-            {(resultContent || isLoading) && (
+                  {bulkMode && (
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">
+                        Upload a CSV with a header row (e.g., Name, Role,
+                        Salary, Start Date). A document will be generated for
+                        each row.
+                      </p>
+                      <div className="relative">
+                        <input
+                          type="file"
+                          accept=".csv"
+                          title="Upload CSV file for bulk generation"
+                          onChange={handleCsvUpload}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-full gap-2"
+                        >
+                          <Upload className="h-4 w-4" />
+                          {csvFile ? csvFile.name : "Choose CSV File"}
+                        </Button>
+                      </div>
+                      {csvData && (
+                        <p className="text-xs text-green-600 dark:text-green-400">
+                          Parsed {csvData.rows.length} rows with columns:{" "}
+                          {csvData.headers.join(", ")}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Key Details */}
+            {step === 2 && (
+              <div className="space-y-2">
+                <Label htmlFor="key-details">Key Details</Label>
+                <Textarea
+                  id="key-details"
+                  rows={6}
+                  value={keyDetails}
+                  onChange={(e) => setKeyDetails(e.target.value)}
+                  onFocus={(e) =>
+                    setTimeout(
+                      () =>
+                        (e.target as HTMLElement).scrollIntoView({
+                          behavior: "smooth",
+                          block: "center",
+                        }),
+                      300,
+                    )
+                  }
+                  placeholder={`Example for "${resolvedDocType}":\n${
+                    DOC_TYPE_PLACEHOLDERS[resolvedDocType] ||
+                    "- Provide relevant details for the document\u2026"
+                  }`}
+                  className="resize-y min-h-[150px]"
+                />
+              </div>
+            )}
+
+            {/* Step 3: Tone */}
+            {step === 3 && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="tone-select">Writing Tone</Label>
+                  <Select
+                    id="tone-select"
+                    value={tone}
+                    onChange={(e) => setTone(e.target.value)}
+                  >
+                    {TONES.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+
+                {/* Review summary */}
+                <div className="rounded-lg bg-muted/50 p-4 text-sm space-y-1">
+                  <p>
+                    <span className="font-medium">Type:</span> {resolvedDocType}
+                  </p>
+                  <p>
+                    <span className="font-medium">Details:</span>{" "}
+                    {keyDetails.slice(0, 120)}
+                    {keyDetails.length > 120 ? "\u2026" : ""}
+                  </p>
+                  <p>
+                    <span className="font-medium">Tone:</span> {tone}
+                  </p>
+                  {language !== "English" && (
+                    <p>
+                      <span className="font-medium">Language:</span> {language}
+                    </p>
+                  )}
+                  {bulkMode && csvData && (
+                    <p>
+                      <span className="font-medium">Bulk:</span>{" "}
+                      {csvData.rows.length} rows from CSV
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Navigation buttons & Final form */}
+            {step < 3 ? (
+              <div className="flex justify-between pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setStep((s) => Math.max(1, s - 1))}
+                  disabled={step === 1}
+                >
+                  Back
+                </Button>
+                <Button
+                  onClick={() => setStep((s) => Math.min(3, s + 1))}
+                  disabled={!canProceed}
+                >
+                  Next
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="flex justify-start">
+                  <Button variant="outline" onClick={() => setStep(2)}>
+                    Back
+                  </Button>
+                </div>
+                {/* Consent & Reference Template Footer */}
+                <DocumentFormFooter
+                  isLoading={isLoading || !!bulkProgress}
+                  isConsented={isConsented}
+                  onConsentChange={setIsConsented}
+                  onReferenceTextChange={setReferenceText}
+                  onSubmit={handleGenerateClick}
+                  submitLabel={
+                    bulkMode && csvData
+                      ? `Generate ${csvData.rows.length} Documents`
+                      : "Generate Document"
+                  }
+                />
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* ── Result Section ── */}
+        <div ref={resultRef}>
+          {/* Bulk progress indicator */}
+          {bulkProgress && (
+            <Card>
+              <CardContent className="py-6">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  <div>
+                    <p className="font-medium">
+                      Generating document {bulkProgress.current} of{" "}
+                      {bulkProgress.total}...
+                    </p>
+                    <div className="mt-2 h-2 w-full rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full bg-primary rounded-full transition-all duration-300"
+                        style={{
+                          width: `${(bulkProgress.current / bulkProgress.total) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Bulk results */}
+          {bulkResults.length > 0 && (
+            <div className="space-y-4">
+              {bulkResults.map((result, idx) => (
+                <Card key={idx}>
+                  <CardHeader>
+                    <CardTitle className="text-lg">
+                      Document {idx + 1} of {bulkResults.length}
+                      {csvData?.rows[idx] &&
+                        ` — ${Object.values(csvData.rows[idx])[0] || ""}`}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <MarkdownRenderer content={result} styling={styling} />
+                    <ExportButtons
+                      content={result}
+                      filename={`hr-${resolvedDocType.toLowerCase().replace(/\s+/g, "-")}-${idx + 1}`}
+                      styling={styling}
+                    />
+                  </CardContent>
+                </Card>
+              ))}
+              {/* Export all as combined */}
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Generated Document</CardTitle>
-                  {isLoading && (
-                    <CardDescription className="flex items-center gap-2">
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      AI is drafting…
-                    </CardDescription>
-                  )}
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {displayLoading ? (
-                    <ResultSkeleton />
-                  ) : (
-                    <>
-                      <MarkdownRenderer
-                        content={resultContent}
-                        styling={styling}
-                      />
-                      <ExportButtons
-                        content={resultContent}
-                        filename={`hr-${docType.toLowerCase().replace(/\s+/g, "-")}`}
-                        styling={styling}
-                      />
-                    </>
-                  )}
+                <CardContent className="py-4">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Export all {bulkResults.length} documents combined:
+                  </p>
+                  <ExportButtons
+                    content={bulkResults.join("\n\n---\n\n# ---\n\n")}
+                    filename={`hr-bulk-${resolvedDocType.toLowerCase().replace(/\s+/g, "-")}`}
+                    styling={styling}
+                  />
                 </CardContent>
               </Card>
-            )}
-          </div>
-        </div>
+            </div>
+          )}
 
-        {/* ── Right: Styling Sidebar (sticky on lg screens) ── */}
-        <div className="lg:sticky lg:top-4 lg:h-fit">
-          <DocumentStylingUI
-            styling={styling}
-            googleFonts={googleFonts}
-            webSafeFonts={webSafeFonts}
-            onFontFamilyChange={updateFontFamily}
-            onH1SizeChange={updateH1Size}
-            onH2H3SizeChange={updateH2H3Size}
-            onBodyTextSizeChange={updateBodyTextSize}
-            onLineSpacingChange={updateLineSpacing}
-            onBulletStyleChange={updateBulletStyle}
-            onResetDefaults={resetToDefaults}
-          />
+          {/* Single result */}
+          {!bulkMode && (resultContent || isLoading) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Generated Document</CardTitle>
+                {isLoading && (
+                  <CardDescription className="flex items-center gap-2">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    AI is drafting…
+                  </CardDescription>
+                )}
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {displayLoading ? (
+                  <ResultSkeleton />
+                ) : (
+                  <>
+                    <MarkdownRenderer
+                      content={resultContent}
+                      styling={styling}
+                    />
+                    <ExportButtons
+                      content={resultContent}
+                      filename={`hr-${resolvedDocType.toLowerCase().replace(/\s+/g, "-")}`}
+                      styling={styling}
+                    />
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
+
+      {/* ── Document Styling Modal ── */}
+      <Modal
+        open={showStylingModal}
+        onClose={() => setShowStylingModal(false)}
+        title="Document Styling"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => setShowStylingModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={
+                bulkMode && csvData ? handleBulkGenerate : handleConfirmGenerate
+              }
+            >
+              <Wand2 className="h-4 w-4 mr-2" />
+              {bulkMode && csvData
+                ? `Generate ${csvData.rows.length} Docs`
+                : "Confirm & Generate"}
+            </Button>
+          </>
+        }
+      >
+        <DocumentStylingUI
+          styling={styling}
+          googleFonts={googleFonts}
+          webSafeFonts={webSafeFonts}
+          onFontFamilyChange={updateFontFamily}
+          onH1SizeChange={updateH1Size}
+          onH2H3SizeChange={updateH2H3Size}
+          onBodyTextSizeChange={updateBodyTextSize}
+          onLineSpacingChange={updateLineSpacing}
+          onBulletStyleChange={updateBulletStyle}
+          onResetDefaults={resetToDefaults}
+        />
+      </Modal>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { cn } from "@/lib/utils";
-import { FileText, ClipboardList, PenTool } from "lucide-react";
+import { FileText, ClipboardList, PenTool, MessageCircle } from "lucide-react";
 
 const ThemeToggleButton = dynamic(
   () => import("./theme-toggle-button").then((mod) => mod.ThemeToggleButton),
@@ -15,6 +15,7 @@ const ThemeToggleButton = dynamic(
 /*  Navigation items shared between sidebar & bottom tabs              */
 /* ------------------------------------------------------------------ */
 const NAV_ITEMS = [
+  { href: "/assistant", label: "Assistant", icon: MessageCircle },
   { href: "/builder", label: "Builder", icon: PenTool },
   { href: "/formatter", label: "Formatter", icon: FileText },
   { href: "/summarizer", label: "Summarizer", icon: ClipboardList },
@@ -28,7 +29,7 @@ export function AppNav() {
       {/* ── Desktop Sidebar ── */}
       <aside className="hidden md:flex flex-col w-64 border-r bg-card min-h-screen fixed left-0 top-0 z-30">
         {/* Logo */}
-        <Link href="/builder" className="hover:opacity-80 transition-opacity">
+        <Link href="/assistant" className="hover:opacity-80 transition-opacity">
           <div className="flex items-center gap-2 px-6 py-5 border-b">
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
               PD

@@ -11,16 +11,22 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DualInput } from "@/components/dual-input";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
 import { DocumentFormFooter } from "@/components/document-form-footer";
 import { DocumentStylingUI } from "@/components/document-styling-ui";
+import {
+  LanguageSelector,
+  type LanguageValue,
+} from "@/components/language-selector";
+import { Modal } from "@/components/ui/modal";
 import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
 import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
 import { useDocumentStyling } from "@/hooks/useDocumentStyling";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Wand2 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /*  Template options for the formatter                                 */
@@ -36,6 +42,7 @@ const TEMPLATES = [
   { value: "termination-letter", label: "Termination Letter" },
   { value: "training-summary", label: "Training Summary" },
   { value: "disciplinary-notice", label: "Disciplinary Notice" },
+  { value: "other-custom", label: "Other (Custom)" },
 ] as const;
 
 /* ------------------------------------------------------------------ */
@@ -60,17 +67,25 @@ export default function FormatterPage() {
   } = useDocumentStyling();
   const [referenceText, setReferenceText] = useState("");
   const [isConsented, setIsConsented] = useState(false);
-  const [template, setTemplate] = useState<(typeof TEMPLATES)[number]["value"]>(
-    TEMPLATES[0].value,
-  );
+  const [template, setTemplate] = useState<string>(TEMPLATES[0].value);
+  const [customTemplate, setCustomTemplate] = useState("");
+  const [language, setLanguage] = useState<LanguageValue>("English");
+  const [showStylingModal, setShowStylingModal] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
+
+  /** Resolved template — custom string or dropdown value */
+  const resolvedTemplate =
+    template === "other-custom" && customTemplate.trim()
+      ? customTemplate.trim()
+      : template;
 
   const { messages, isLoading, append, setMessages } = useChat({
     api: "/api/chat",
     body: {
       tool: "formatter",
-      template,
+      template: resolvedTemplate,
       referenceText: referenceText || undefined,
+      language: language !== "English" ? language : undefined,
     },
   });
 
@@ -78,25 +93,26 @@ export default function FormatterPage() {
   const resultContent = assistantMessage?.content ?? "";
   const displayLoading = isLoading || showSkeletonPreview;
 
-  const handleSubmit = useCallback(() => {
-    console.log("Formatter.handleSubmit", {
-      template,
-      inputLength: inputText.length,
-      isConsented,
-      isLoading,
-    });
+  /** Open the styling modal before generating */
+  const handleFormatClick = useCallback(() => {
     if (!inputText.trim() || isLoading || !isConsented) return;
+    setShowStylingModal(true);
+  }, [inputText, isLoading, isConsented]);
+
+  /** Confirm styling and trigger the AI stream */
+  const handleConfirmGenerate = useCallback(() => {
+    setShowStylingModal(false);
 
     setMessages([]);
     append({
       role: "user",
-      content: `Template: ${template}\n\nRaw text to format:\n\n${inputText}`,
+      content: `Template: ${resolvedTemplate}\n\nRaw text to format:\n\n${inputText}`,
     });
 
     setTimeout(() => {
       resultRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 300);
-  }, [inputText, isLoading, append, setMessages, template, isConsented]);
+  }, [inputText, append, setMessages, resolvedTemplate]);
 
   return (
     <div className="space-y-6">
@@ -111,110 +127,146 @@ export default function FormatterPage() {
         </p>
       </div>
 
-      {/* ── Main Layout: Form + Styling Sidebar ── */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
-        {/* ── Left: Input & Results ── */}
-        <div className="space-y-6">
-          {/* ── Input Section ── */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Input</CardTitle>
-              <CardDescription>
-                Select a template and upload or paste your unstructured text.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Template selector */}
-              <div className="space-y-2">
-                <Label htmlFor="template-select">Document Template</Label>
-                <Select
-                  id="template-select"
-                  value={template}
-                  onChange={(e) =>
-                    setTemplate(
-                      e.target.value as (typeof TEMPLATES)[number]["value"],
-                    )
-                  }
-                  disabled={isLoading}
-                >
-                  {TEMPLATES.map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-
-              {/* Dual input: upload or paste */}
-              <DualInput
-                onTextReady={setInputText}
+      {/* ── Form & Results ── */}
+      <div className="space-y-6 max-w-3xl">
+        {/* ── Input Section ── */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Input</CardTitle>
+            <CardDescription>
+              Select a template and upload or paste your unstructured text.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Template selector */}
+            <div className="space-y-2">
+              <Label htmlFor="template-select">Document Template</Label>
+              <Select
+                id="template-select"
+                value={template}
+                onChange={(e) => {
+                  setTemplate(e.target.value);
+                  if (e.target.value !== "other-custom") setCustomTemplate("");
+                }}
                 disabled={isLoading}
-                placeholder="Paste the messy/unstructured text you want formatted…"
-              />
+              >
+                {TEMPLATES.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
 
-              {/* Consent & Reference Template Footer */}
-              <DocumentFormFooter
-                isLoading={isLoading}
-                isConsented={isConsented}
-                onConsentChange={setIsConsented}
-                onReferenceTextChange={setReferenceText}
-                onSubmit={handleSubmit}
-                submitLabel="Format Document"
-              />
-            </CardContent>
-          </Card>
-
-          {/* ── Result Section ── */}
-          <div ref={resultRef}>
-            {(resultContent || isLoading) && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Formatted Document</CardTitle>
-                  {isLoading && (
-                    <CardDescription className="flex items-center gap-2">
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      AI is formatting…
-                    </CardDescription>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  {displayLoading ? (
-                    <ResultSkeleton />
-                  ) : (
-                    <>
-                      <MarkdownRenderer
-                        content={resultContent}
-                        styling={styling}
-                      />
-                      <ExportButtons
-                        content={resultContent}
-                        filename="hr-formatted-document"
-                        styling={styling}
-                      />
-                    </>
-                  )}
-                </CardContent>
-              </Card>
+            {/* Custom template input */}
+            {template === "other-custom" && (
+              <div className="space-y-2">
+                <Label htmlFor="custom-template">Custom Template Title</Label>
+                <Input
+                  id="custom-template"
+                  type="text"
+                  value={customTemplate}
+                  onChange={(e) => setCustomTemplate(e.target.value)}
+                  placeholder="Enter custom document template name (e.g., Weekly Status Report)..."
+                  className="text-sm"
+                />
+              </div>
             )}
-          </div>
-        </div>
 
-        {/* ── Right: Styling Sidebar (sticky on lg screens) ── */}
-        <div className="lg:sticky lg:top-4 lg:h-fit">
-          <DocumentStylingUI
-            styling={styling}
-            googleFonts={googleFonts}
-            webSafeFonts={webSafeFonts}
-            onFontFamilyChange={updateFontFamily}
-            onH1SizeChange={updateH1Size}
-            onH2H3SizeChange={updateH2H3Size}
-            onBodyTextSizeChange={updateBodyTextSize}
-            onLineSpacingChange={updateLineSpacing}
-            onBulletStyleChange={updateBulletStyle}
-            onResetDefaults={resetToDefaults}
-          />
+            {/* Language selector */}
+            <LanguageSelector
+              value={language}
+              onChange={setLanguage}
+              disabled={isLoading}
+            />
+
+            {/* Dual input: upload or paste */}
+            <DualInput
+              onTextReady={setInputText}
+              disabled={isLoading}
+              placeholder="Paste the messy/unstructured text you want formatted…"
+            />
+
+            {/* Consent & Reference Template Footer */}
+            <DocumentFormFooter
+              isLoading={isLoading}
+              isConsented={isConsented}
+              onConsentChange={setIsConsented}
+              onReferenceTextChange={setReferenceText}
+              onSubmit={handleFormatClick}
+              submitLabel="Format Document"
+            />
+          </CardContent>
+        </Card>
+
+        {/* ── Result Section ── */}
+        <div ref={resultRef}>
+          {(resultContent || isLoading) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Formatted Document</CardTitle>
+                {isLoading && (
+                  <CardDescription className="flex items-center gap-2">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    AI is formatting…
+                  </CardDescription>
+                )}
+              </CardHeader>
+              <CardContent>
+                {displayLoading ? (
+                  <ResultSkeleton />
+                ) : (
+                  <>
+                    <MarkdownRenderer
+                      content={resultContent}
+                      styling={styling}
+                    />
+                    <ExportButtons
+                      content={resultContent}
+                      filename="hr-formatted-document"
+                      styling={styling}
+                    />
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
+
+      {/* ── Document Styling Modal ── */}
+      <Modal
+        open={showStylingModal}
+        onClose={() => setShowStylingModal(false)}
+        title="Document Styling"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => setShowStylingModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmGenerate}>
+              <Wand2 className="h-4 w-4 mr-2" />
+              Confirm &amp; Generate
+            </Button>
+          </>
+        }
+      >
+        <DocumentStylingUI
+          styling={styling}
+          googleFonts={googleFonts}
+          webSafeFonts={webSafeFonts}
+          onFontFamilyChange={updateFontFamily}
+          onH1SizeChange={updateH1Size}
+          onH2H3SizeChange={updateH2H3Size}
+          onBodyTextSizeChange={updateBodyTextSize}
+          onLineSpacingChange={updateLineSpacing}
+          onBulletStyleChange={updateBulletStyle}
+          onResetDefaults={resetToDefaults}
+        />
+      </Modal>
     </div>
   );
 }

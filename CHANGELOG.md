@@ -4,6 +4,36 @@ All notable changes to PureDraft HR will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- 💬 **HR Assistant page** (`/assistant`): Freeform HR Copilot for Q&A, drafting workplace emails, and policy guidance — with file upload, styled send, quick send (Enter key), and full export support
+- 📄 **Chat with a Document**: Upload a PDF, DOCX, or TXT to the Assistant page and ask questions about its contents; document text injected as reference context for the AI
+- 🌍 **Multi-Language Translation**: Output language selector on all 4 tools (Formatter, Summarizer, Builder, Assistant) supporting 8 languages — English, Spanish, French, German, Mandarin Chinese, Portuguese, Arabic, Hindi
+- 📂 **My Templates Library**: Save, load, and delete reference text snippets using `localStorage`; integrated into DocumentFormFooter for Builder, Formatter, and Summarizer
+- ✏️ **Custom Document Type ("Other (Custom)")**: Builder and Formatter now include an "Other (Custom)" option with a freeform text input for unlisted document/template types
+- 📊 **Bulk CSV Generation** (Builder): Toggle bulk mode, upload a CSV file, and batch-generate one document per row with a live progress bar; supports per-document and combined export
+- 🔧 `useTemplateLibrary` hook for localStorage-based template persistence
+- 🧩 `LanguageSelector` component with Globe icon and 8-language dropdown
+- 🧩 `TemplateLibrary` component for saved template management UI (save/load/delete)
+- 📄 `assistant` system prompt in API route — knowledgeable HR Assistant for personal drafts and document Q&A
+- 🌐 Language parameter support in API `/api/chat` route — appends mandatory language instruction to system prompt when non-English selected
+- 🧭 "Assistant" navigation item with MessageCircle icon in sidebar and mobile tabs
+- 📅 **Smart Meeting Scheduler** (Assistant): Ask the AI to schedule a meeting — response is intercepted and rendered as a Meeting Card with "Add to Google Calendar" (URL template) and "Download Outlook Invite (.ics)" (generated file) buttons
+- 🧩 `MeetingCard` component with `parseMeetingFromResponse()` utility for detecting structured meeting JSON in AI responses
+- 📆 Google Calendar URL generation (`calendar.google.com/calendar/render?action=TEMPLATE`) with ISO 8601 → GCal date format conversion
+- 📥 `.ics` file generation with `BEGIN:VCALENDAR`/`VEVENT` spec-compliant output and browser download trigger
+
+### Changed
+
+- 🔢 Builder DOC_TYPES expanded from 24 to 25 types (+ "Other (Custom)")
+- 📋 Formatter template list now includes "Other (Custom)" option with conditional text input
+- 🧭 Navigation updated: 4 tools (Formatter, Summarizer, Builder, Assistant) — Builder icon changed from FileText to PenTool
+- 🧭 **Navigation reordered**: Assistant is now the first nav item; default landing page changed from `/builder` to `/assistant`
+- 🪟 **Modal overflow fix**: Changed modal panel from `overflow-auto` to `overflow-visible` with scrollable body (`max-h-[60vh] overflow-y-auto`) so dropdown `<select>` menus are no longer clipped
+- 📄 **Privacy Policy page rewritten**: Explicit light/dark mode text colors (`text-gray-900 dark:text-gray-100`), updated to cover all 4 tools, Saved Templates, Meeting Scheduler; removed hardcoded email — replaced with `/contact` link
+- 📜 **Terms of Service page rewritten**: Proper contrast classes, detailed "Description of Service" section covering all features (Assistant, Builder, Formatter, Summarizer, Bulk CSV, Meeting Scheduler, Multi-Language); removed hardcoded email — replaced with `/contact` link
+- ❓ **FAQ page rewritten**: 18 questions covering all current features (Smart Meeting Scheduler, Bulk CSV, Custom Doc Types, My Templates Library, Multi-Language, Document Styling); removed hardcoded email and GitHub links — replaced with `/contact` link; proper light/dark mode styling
+
 ### Fixed
 
 - 🔧 Service Worker message listener to prevent "message channel closed" errors
@@ -14,6 +44,10 @@ All notable changes to PureDraft HR will be documented in this file.
 - 🔍 Favicon caching on Vercel by adding cache-bust query params (?v=v2)
 - 📝 Escaped apostrophes in contact/page.tsx for ESLint compliance (Lines 78, 137, 250)
 - 🔤 UTF-8 encoding issues in API routes by removing special Unicode characters
+- 🧩 **Font Family dropdown bug**: `<optgroup>` children were flattened into a single option — added recursive `parseChildren()` parser to handle groups correctly with styled separator headers
+- 📋 **PDF bullet export**: html2pdf.js ignores CSS `::before` pseudo-elements — now injects bullet character directly into `<li>` text content
+- 📋 **DOCX bullet export**: `docx` library's `bullet: { level: 0 }` ignores custom symbols — now prepends bullet character as text with `indent: { left: 360 }`
+- 📤 **File upload UI state**: file input reverted to "Choose File" after upload — now shows green success state with CheckCircle icon, filename, and X remove button
 
 ### Added
 
@@ -58,20 +92,27 @@ All notable changes to PureDraft HR will be documented in this file.
 - 📄 Terms of Service page with Google Gemini AI disclosure
 - 🔒 Privacy Policy page with Google Gemini AI processing information
 - ⚠️ AI disclaimer under generate buttons stating "Gemini AI can make mistakes"
+- 🧩 **Modal component** (`ui/modal.tsx`): Accessible dialog with backdrop, Escape key handling, scroll lock, header/body/footer slots
+- 📋 **Copy to Clipboard**: One-click plain-text copy with "Copied!" feedback (2-second timeout), added as 3rd export button alongside PDF & DOCX
+- 🏷️ **Dynamic export filenames**: Extracts H1 heading from generated markdown → sanitized filename; falls back to timestamped `{prefix}_YYYY-MM-DD_HHMM`
+- 📝 **Plain text reference input**: Textarea in `DocumentFormFooter` for pasting reference template text as an alternative to file upload; merges with uploaded file text
+- 🗃️ **Aggressive table recovery**: All 3 AI system prompts now include "CRITICAL DATA RECOVERY & TABLE RECONSTRUCTION" section instructing the AI to reconstruct markdown tables from comma-separated text patterns (common in PDF/DOCX extraction)
+- 🗣️ **Human tone enforcement**: All 3 system prompts now include "HUMAN TONE AND AUTHENTICITY" section with expanded banned AI buzzword list (delve, furthermore, testament, tapestry, beacon, dynamic, multifaceted, nuanced, paradigm, synergy, leverage, robust, streamline, holistic, etc.), sentence rhythm variation rules, and "BE DIRECT" instructions
 
 ### Changed
 
 - 🔄 Service Worker cache name: v1 → v2 (favicon bust)
 - 📝 Footer structure: now responsive with different layouts for mobile vs desktop
 - 🎛️ Mobile header styling with improved theme toggle positioning
-- 🏗️ Builder, Formatter, and Summarizer pages now use responsive grid layout:
-  - Main content on left (1fr)
-  - Sticky styling sidebar on right (280px) on lg screens
-  - Sidebar stacks below on mobile screens
 - 📝 API chat route: reference templates now injected into system prompt
 - 🎨 Export buttons now styled as responsive grid (side-by-side on mobile)
 - 🔵 Footer now displays "Powered by Google Gemini" attribution with clickable link
 - 🗑️ Removed nested PureDraftHR directory and git submodule reference
+- 🪟 **Document Styling moved from sidebar to Modal**: Submit/Generate buttons now open a styling modal popup with "Cancel" and "Confirm & Generate" actions — replaces the old `grid lg:grid-cols-[1fr_280px]` sidebar layout on all 3 pages (Builder, Formatter, Summarizer)
+- 🔢 **Font size controls changed from number inputs to dropdown selectors**: H1 (18-36pt), H2/H3 (14-24pt, expanded range), Body (10-14pt) — consistent with MS Word standard sizes
+- 📊 **Export buttons layout**: Changed from 2-column to 3-column grid (PDF / Word / Copy) with shorter labels
+- 🏗️ **H2/H3 default size**: Changed from 14pt to 18pt; max range expanded from 18pt to 24pt
+- 📐 **Document Styling UI**: Removed Card wrapper (now renders as plain div for modal embedding)
 
 ## [1.0.0] - 2026-02-23
 
@@ -110,8 +151,6 @@ All notable changes to PureDraft HR will be documented in this file.
 
 ### Planned Features
 
-- [ ] Multi-language support
-- [ ] Template customization UI
 - [ ] Document history (optional client-side storage)
 - [ ] Collab edit links with temporary storage
 - [ ] AI-powered grammar and tone adjustment

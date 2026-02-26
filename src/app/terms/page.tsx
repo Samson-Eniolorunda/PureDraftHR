@@ -1,5 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 
+import Link from "next/link";
+
 export const metadata = {
   title: "Terms of Service | PureDraft HR",
   description: "PureDraft HR Terms of Service",
@@ -7,190 +9,255 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="space-y-6 prose prose-invert max-w-none dark:prose-invert">
-      <h1 className="text-3xl font-bold">Terms of Service</h1>
+    <div className="max-w-3xl mx-auto space-y-8 text-gray-900 dark:text-gray-100">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Terms of Service</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          Last updated: February 26, 2026
+        </p>
+      </div>
 
+      {/* 1 */}
       <section className="space-y-3">
-        <h2 className="text-2xl font-semibold">1. Agreement to Terms</h2>
-        <p>
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+          1. Agreement to Terms
+        </h2>
+        <p className="leading-relaxed">
           By accessing and using PureDraft HR, you accept and agree to be bound
-          by the terms and provision of this agreement. If you do not agree to
-          abide by the above, please leave this website.
+          by these Terms of Service. If you do not agree, please discontinue use
+          of the application immediately.
         </p>
       </section>
 
+      {/* 2 */}
       <section className="space-y-3">
-        <h2 className="text-2xl font-semibold">2. Use License</h2>
-        <p>
-          Permission is granted to temporarily download one copy of the
-          materials (information or software) on PureDraft HR for personal,
-          non-commercial transitory viewing only. This is the grant of a
-          license, not a transfer of title, and under this license you may not:
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+          2. Description of Service
+        </h2>
+        <p className="leading-relaxed">
+          PureDraft HR is a stateless, AI-powered web application for
+          generating, formatting, summarizing, and managing HR documents. The
+          platform includes the following core tools:
         </p>
-        <ul className="list-disc list-inside space-y-2">
-          <li>Modify or copy the materials</li>
+        <ul className="list-disc list-inside space-y-2 leading-relaxed">
           <li>
-            Use the materials for any commercial purpose or for any public
-            display
-          </li>
-          <li>Attempt to decompile or reverse engineer any software</li>
-          <li>
-            Remove any copyright or other proprietary notations from the
-            materials
+            <strong>Assistant (HR Copilot)</strong> — Ask HR questions, draft
+            workplace emails, chat with uploaded documents, and use the Smart
+            Meeting Scheduler to create calendar events.
           </li>
           <li>
-            Transferring the materials to another person or "mirroring" the
-            materials on any other server
+            <strong>Builder</strong> — Generate complete HR documents from
+            scratch across 25+ document types with optional Bulk CSV generation.
+          </li>
+          <li>
+            <strong>Formatter</strong> — Restructure messy text into
+            professionally formatted documents using AI-powered reference
+            template cloning.
+          </li>
+          <li>
+            <strong>Summarizer</strong> — Condense lengthy HR documents into
+            concise, human-sounding summaries.
           </li>
         </ul>
+        <p className="leading-relaxed">
+          Additional features include multi-language translation (8 languages),
+          a My Templates Library (localStorage-based), customizable document
+          styling, and client-side export to PDF, DOCX, and clipboard.
+        </p>
       </section>
 
+      {/* 3 */}
       <section className="space-y-3">
-        <h2 className="text-2xl font-semibold">
-          3. Stateless Processing & No Storage
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+          3. Stateless Processing &amp; No Storage
         </h2>
-        <p>
-          <strong>
-            Critical: PureDraft HR is a stateless utility application.
-          </strong>
+        <p className="leading-relaxed">
+          <strong>PureDraft HR is architecturally stateless.</strong>
         </p>
-        <ul className="list-disc list-inside space-y-2">
+        <ul className="list-disc list-inside space-y-2 leading-relaxed">
           <li>
             No employee data, uploaded files, or generated text is ever stored
-            on any server or database
+            on any server or database.
           </li>
           <li>
-            All data processing occurs temporarily and only in-memory during
-            your session
+            All data processing occurs temporarily, in-memory, during your
+            active session only.
           </li>
           <li>
-            Once your browser session ends, all data is permanently erased
+            When your browser session ends, all data is permanently erased.
           </li>
           <li>
-            We do not maintain backups or historical records of your uploads or
-            outputs
-          </li>
-          <li>
-            You are solely responsible for retaining copies of any generated
-            documents
+            You are solely responsible for saving copies of any generated
+            documents via the export buttons (PDF, DOCX, Copy).
           </li>
         </ul>
       </section>
 
+      {/* 4 */}
       <section className="space-y-3">
-        <h2 className="text-2xl font-semibold">4. Gemini AI Processing & Accuracy Disclaimer</h2>
-        <p>
-          <strong>PureDraft HR uses Google Gemini AI to generate documents.</strong> Please be aware:
-        </p>
-        <ul className="list-disc list-inside space-y-2">
-          <li>
-            <strong>Gemini AI can make mistakes:</strong> Generated content may contain errors, inaccuracies, or incomplete information
-          </li>
-          <li>
-            You are solely responsible for reviewing all AI-generated documents before using them
-          </li>
-          <li>
-            Always verify facts, figures, and legal language with subject matter experts
-          </li>
-          <li>
-            PureDraft HR and Google disclaim liability for errors or omissions in AI-generated output
-          </li>
-          <li>
-            Do not rely solely on AI-generated documents for legal, compliance, or critical HR decisions
-          </li>
-          <li>
-            <strong>Review and edit all output:</strong> Customize generated documents to match your specific organizational needs and policies
-          </li>
-        </ul>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-2xl font-semibold">5. Disclaimer of Warranties</h2>
-        <p>
-          The materials on PureDraft HR are provided on an 'as is' basis.
-          PureDraft HR makes no warranties, expressed or implied, and hereby
-          disclaims and negates all other warranties including, without
-          limitation, implied warranties or conditions of merchantability,
-          fitness for a particular purpose, or non-infringement of intellectual
-          property or other violation of rights.
-        </p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-2xl font-semibold">6. Limitations of Liability</h2>
-        <p>
-          In no event shall PureDraft HR or its suppliers be liable for any
-          damages (including, without limitation, damages for loss of data or
-          profit, or due to business interruption) arising out of the use or
-          inability to use the materials on PureDraft HR, even if we or our
-          authorized representative has been notified orally or in writing of
-          the possibility of such damage.
-        </p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-2xl font-semibold">7. Accuracy of Materials</h2>
-        <p>
-          The materials appearing on PureDraft HR could include technical,
-          typographical, or photographic errors. PureDraft HR does not warrant
-          that any of the materials on its website are accurate, complete, or
-          current. PureDraft HR may make changes to the materials contained on
-          its website at any time without notice.
-        </p>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-2xl font-semibold">
-          8. Materials & Content Ownership
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+          4. Google Gemini AI Processing &amp; Accuracy Disclaimer
         </h2>
-        <ul className="list-disc list-inside space-y-2">
-          <li>The materials appearing on PureDraft HR are copyrighted</li>
-          <li>You retain all rights to any documents you upload or generate</li>
+        <p className="leading-relaxed">
+          <strong>
+            PureDraft HR uses the Google Gemini API (Gemini 2.5 Flash)
+          </strong>{" "}
+          to power all AI features across the Assistant, Builder, Formatter, and
+          Summarizer tools. Please be aware:
+        </p>
+        <ul className="list-disc list-inside space-y-2 leading-relaxed">
           <li>
-            By using this tool, you grant us permission to temporarily process
-            your content only for the purpose of generating the requested output
+            <strong>Gemini AI can make mistakes.</strong> Generated content may
+            contain errors, inaccuracies, or incomplete information.
           </li>
-          <li>We do not claim ownership of any documents you create</li>
+          <li>
+            You are solely responsible for reviewing all AI-generated documents
+            before using them for any purpose.
+          </li>
+          <li>
+            Always verify facts, figures, dates, and legal language with
+            qualified subject matter experts.
+          </li>
+          <li>
+            PureDraft HR and Google disclaim liability for errors or omissions
+            in AI-generated output.
+          </li>
+          <li>
+            Do not rely solely on AI-generated documents for legal, compliance,
+            or critical HR decisions.
+          </li>
+          <li>
+            The Smart Meeting Scheduler generates calendar links and .ics files
+            based on AI-extracted dates — always verify the event details before
+            sending invites.
+          </li>
         </ul>
       </section>
 
+      {/* 5 */}
       <section className="space-y-3">
-        <h2 className="text-2xl font-semibold">9. Limitations on Use</h2>
-        <p>You agree not to:</p>
-        <ul className="list-disc list-inside space-y-2">
-          <li>Harass or cause distress or inconvenience to any person</li>
-          <li>Transmit obscene, offensive or inflammatory material</li>
-          <li>Disrupt the normal flow of dialogue within our website</li>
-          <li>Use any unlawful means to generate documents</li>
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+          5. Use License
+        </h2>
+        <p className="leading-relaxed">
+          Permission is granted to use PureDraft HR for personal and
+          professional HR document generation. Under this license you may not:
+        </p>
+        <ul className="list-disc list-inside space-y-2 leading-relaxed">
           <li>
-            Use the app for illegal activities or in violation of any laws
+            Attempt to reverse engineer, decompile, or extract source code from
+            the hosted service.
+          </li>
+          <li>
+            Use the application for unlawful purposes or to generate content
+            that violates applicable laws.
+          </li>
+          <li>Redistribute or resell the service without authorization.</li>
+        </ul>
+      </section>
+
+      {/* 6 */}
+      <section className="space-y-3">
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+          6. Disclaimer of Warranties
+        </h2>
+        <p className="leading-relaxed">
+          PureDraft HR is provided on an &quot;as is&quot; and &quot;as
+          available&quot; basis. We make no warranties, expressed or implied,
+          regarding merchantability, fitness for a particular purpose, or
+          non-infringement.
+        </p>
+      </section>
+
+      {/* 7 */}
+      <section className="space-y-3">
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+          7. Limitations of Liability
+        </h2>
+        <p className="leading-relaxed">
+          In no event shall PureDraft HR or its contributors be liable for any
+          damages — including loss of data, profit, or business interruption —
+          arising from the use or inability to use the application, even if
+          advised of the possibility of such damage.
+        </p>
+      </section>
+
+      {/* 8 */}
+      <section className="space-y-3">
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+          8. Content Ownership
+        </h2>
+        <ul className="list-disc list-inside space-y-2 leading-relaxed">
+          <li>
+            You retain all rights to any documents you upload or generate.
+          </li>
+          <li>
+            By using PureDraft HR, you grant us temporary permission to process
+            your content solely for generating the requested output.
+          </li>
+          <li>We do not claim ownership of any documents you create.</li>
+        </ul>
+      </section>
+
+      {/* 9 */}
+      <section className="space-y-3">
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+          9. Limitations on Use
+        </h2>
+        <p className="leading-relaxed">You agree not to:</p>
+        <ul className="list-disc list-inside space-y-2 leading-relaxed">
+          <li>
+            Use the application to generate harassing, obscene, or
+            discriminatory content.
+          </li>
+          <li>Disrupt the normal operation of the service.</li>
+          <li>
+            Use the app for illegal activities or in violation of any applicable
+            laws.
           </li>
         </ul>
       </section>
 
+      {/* 10 */}
       <section className="space-y-3">
-        <h2 className="text-2xl font-semibold">10. Governing Law</h2>
-        <p>
-          These terms and conditions are governed by and construed in accordance
-          with the laws of the jurisdiction where the service is provided, and
-          you irrevocably submit to the exclusive jurisdiction of the courts in
-          that location.
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+          10. Governing Law
+        </h2>
+        <p className="leading-relaxed">
+          These Terms are governed by and construed in accordance with the laws
+          of the jurisdiction where the service is provided, and you irrevocably
+          submit to the exclusive jurisdiction of the courts in that location.
         </p>
       </section>
 
+      {/* 11 */}
       <section className="space-y-3">
-        <h2 className="text-2xl font-semibold">11. Changes to Terms</h2>
-        <p>
-          PureDraft HR reserves the right to change these terms and conditions
-          at any time by posting updates on this website. Your continued use of
-          the site following the posting of revised Terms means that you accept
-          and agree to the changes.
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+          11. Changes to Terms
+        </h2>
+        <p className="leading-relaxed">
+          PureDraft HR reserves the right to update these Terms at any time.
+          Your continued use of the application following any changes
+          constitutes acceptance of the revised Terms.
         </p>
       </section>
 
-      <p className="text-sm italic">
-        Last updated: {new Date().toLocaleDateString()}
-      </p>
+      {/* 12 ── Contact */}
+      <section className="space-y-3">
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+          12. Contact
+        </h2>
+        <p className="leading-relaxed">
+          If you have any questions about these Terms, please{" "}
+          <Link
+            href="/contact"
+            className="text-primary hover:underline font-medium"
+          >
+            Contact Us
+          </Link>
+          .
+        </p>
+      </section>
     </div>
   );
 }

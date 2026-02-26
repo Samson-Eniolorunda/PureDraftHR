@@ -5,12 +5,52 @@ import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
 /*  Select — accessible custom dropdown (maps <option> children)      */
-/*  - initial arrow faces up (closed)
-   - click/tap toggles open/close
-   - click outside or Escape closes
-   - keyboard navigation: ArrowUp/ArrowDown/Enter/Escape
-*/
+/*  - Supports <option> and <optgroup> children                       */
+/*  - initial arrow faces up (closed)                                  */
+/*  - click/tap toggles open/close                                     */
+/*  - click outside or Escape closes                                   */
+/*  - keyboard navigation: ArrowUp/ArrowDown/Enter/Escape              */
 /* ------------------------------------------------------------------ */
+
+interface ParsedOption {
+  value: string;
+  label: string;
+  disabled: boolean;
+  group?: string;
+}
+
+/** Recursively parse <option> and <optgroup> children into flat list */
+function parseChildren(children: React.ReactNode): ParsedOption[] {
+  const result: ParsedOption[] = [];
+  React.Children.forEach(children, (child) => {
+    if (!React.isValidElement(child)) return;
+    const el = child as React.ReactElement<any>;
+
+    if (el.type === "optgroup") {
+      const groupLabel = el.props.label ?? "";
+      React.Children.forEach(
+        el.props.children,
+        (groupChild: React.ReactNode) => {
+          if (!React.isValidElement(groupChild)) return;
+          const opt = groupChild as React.ReactElement<any>;
+          result.push({
+            value: opt.props.value ?? String(opt.props.children ?? ""),
+            label: String(opt.props.children ?? opt.props.value ?? ""),
+            disabled: opt.props.disabled ?? false,
+            group: groupLabel,
+          });
+        },
+      );
+    } else {
+      result.push({
+        value: el.props.value ?? String(el.props.children ?? ""),
+        label: String(el.props.children ?? el.props.value ?? ""),
+        disabled: el.props.disabled ?? false,
+      });
+    }
+  });
+  return result;
+}
 
 export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {}
 
@@ -19,18 +59,8 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
     { className, children, value, defaultValue, name, disabled, onChange, id },
     ref,
   ) => {
-    // Parse children (expect <option> elements)
-    const options = React.Children.toArray(children)
-      .filter(Boolean)
-      .map((child) => {
-        // @ts-ignore - expect ReactElement
-        const el = child as React.ReactElement<any>;
-        return {
-          value: el.props.value ?? String(el.props.children ?? ""),
-          label: el.props.children ?? el.props.value,
-          disabled: el.props.disabled ?? false,
-        };
-      });
+    // Parse children — supports both <option> and <optgroup>
+    const options = parseChildren(children);
 
     const isControlled = value !== undefined;
     const initial = isControlled
@@ -152,56 +182,73 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
             className="absolute left-0 right-0 mt-2 z-40 max-h-60 overflow-auto rounded-lg border border-input bg-card shadow-lg p-1"
             aria-activedescendant={selected}
           >
-            {options.map((o, i) => (
-              <div
-                key={o.value}
-                role="option"
-                aria-selected={o.value === selected ? "true" : "false"}
-                tabIndex={0}
-                ref={(el) => {
-                  if (el) optionsRef.current[i] = el;
-                }}
-                onClick={() => selectValue(o.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") selectValue(o.value);
-                  if (e.key === "ArrowDown") {
-                    e.preventDefault();
-                    optionsRef.current[
-                      Math.min(i + 1, options.length - 1)
-                    ]?.focus();
-                  }
-                  if (e.key === "ArrowUp") {
-                    e.preventDefault();
-                    optionsRef.current[Math.max(i - 1, 0)]?.focus();
-                  }
-                  if (e.key === "Escape") setIsOpen(false);
-                }}
-                className={cn(
-                  "px-3 py-2 rounded-md m-1 text-sm flex items-center justify-between",
-                  o.disabled
-                    ? "opacity-50 cursor-not-allowed"
-                    : "cursor-pointer hover:bg-primary/10",
-                  o.value === selected ? "bg-primary/10 font-semibold" : "",
-                )}
-              >
-                <span className="truncate">{o.label}</span>
-                {o.value === selected && (
-                  <svg
-                    className="h-4 w-4 text-primary"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                )}
-              </div>
-            ))}
+            {(() => {
+              let lastGroup: string | undefined;
+              let flatIdx = 0;
+              return options.map((o, i) => {
+                const showGroupHeader = o.group && o.group !== lastGroup;
+                lastGroup = o.group;
+                const idx = flatIdx++;
+                return (
+                  <React.Fragment key={`${o.group ?? ""}-${o.value}-${i}`}>
+                    {showGroupHeader && (
+                      <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1 first:mt-0">
+                        {o.group}
+                      </div>
+                    )}
+                    <div
+                      role="option"
+                      aria-selected={o.value === selected ? "true" : "false"}
+                      tabIndex={0}
+                      ref={(el) => {
+                        if (el) optionsRef.current[idx] = el;
+                      }}
+                      onClick={() => selectValue(o.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") selectValue(o.value);
+                        if (e.key === "ArrowDown") {
+                          e.preventDefault();
+                          optionsRef.current[
+                            Math.min(idx + 1, options.length - 1)
+                          ]?.focus();
+                        }
+                        if (e.key === "ArrowUp") {
+                          e.preventDefault();
+                          optionsRef.current[Math.max(idx - 1, 0)]?.focus();
+                        }
+                        if (e.key === "Escape") setIsOpen(false);
+                      }}
+                      className={cn(
+                        "px-3 py-2 rounded-md m-1 text-sm flex items-center justify-between",
+                        o.disabled
+                          ? "opacity-50 cursor-not-allowed"
+                          : "cursor-pointer hover:bg-primary/10",
+                        o.value === selected
+                          ? "bg-primary/10 font-semibold"
+                          : "",
+                      )}
+                    >
+                      <span className="truncate">{o.label}</span>
+                      {o.value === selected && (
+                        <svg
+                          className="h-4 w-4 text-primary"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                  </React.Fragment>
+                );
+              });
+            })()}
           </div>
         )}
       </div>
