@@ -129,7 +129,7 @@ export function DocumentFormFooter({
               <input
                 id="reference-file"
                 type="file"
-                accept=".pdf,.docx,.txt"
+                accept=".pdf,.docx,.txt,.csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
                 title="Upload a reference template"
                 onChange={handleReferenceUpload}
                 disabled={isProcessingRef || isLoading}

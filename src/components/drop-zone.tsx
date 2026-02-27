@@ -5,21 +5,46 @@ import { Upload, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
-/*  DropZone — drag-and-drop + click-to-upload for .txt, .pdf, .docx   */
+/*  DropZone — drag-and-drop + click-to-upload for documents & sheets  */
 /* ------------------------------------------------------------------ */
 interface DropZoneProps {
   onTextExtracted: (text: string) => void;
   disabled?: boolean;
 }
 
+const SPREADSHEET_EXTENSIONS = [".csv", ".xlsx", ".xls"];
+const SPREADSHEET_MIME_TYPES = [
+  "text/csv",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-excel",
+];
+
+function isSpreadsheet(file: File): boolean {
+  const name = file.name.toLowerCase();
+  return (
+    SPREADSHEET_EXTENSIONS.some((ext) => name.endsWith(ext)) ||
+    SPREADSHEET_MIME_TYPES.includes(file.type)
+  );
+}
+
 /**
  * Extracts plain text from an uploaded file.
- * Supports: .txt (native), .pdf and .docx (via server extraction endpoint).
+ * Supports: .txt (native), .csv/.xlsx/.xls (via xlsx lib), .pdf and .docx (via server extraction endpoint).
  */
 async function extractText(file: File): Promise<string> {
   // Plain text — read directly
   if (file.type === "text/plain" || file.name.endsWith(".txt")) {
     return file.text();
+  }
+
+  // Spreadsheets — parse client-side with xlsx
+  if (isSpreadsheet(file)) {
+    const XLSX = await import("xlsx");
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: "array" });
+    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+    if (!firstSheet) throw new Error("Spreadsheet has no sheets");
+    return XLSX.utils.sheet_to_csv(firstSheet);
   }
 
   // For PDF/DOCX, send to our lightweight extraction API
@@ -47,8 +72,12 @@ export function DropZone({ onTextExtracted, disabled }: DropZoneProps) {
       try {
         const text = await extractText(file);
         onTextExtracted(text);
-      } catch {
-        setError("Could not extract text. Try pasting instead.");
+      } catch (err) {
+        const msg =
+          err instanceof Error && err.message
+            ? err.message
+            : "Could not extract text. Try pasting instead.";
+        setError(msg);
       } finally {
         setLoading(false);
       }
@@ -86,7 +115,7 @@ export function DropZone({ onTextExtracted, disabled }: DropZoneProps) {
       <input
         ref={inputRef}
         type="file"
-        accept=".txt,.pdf,.docx"
+        accept=".txt,.pdf,.docx,.csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0];
@@ -113,7 +142,7 @@ export function DropZone({ onTextExtracted, disabled }: DropZoneProps) {
             Drop a file here or click to upload
           </p>
           <p className="text-xs text-muted-foreground">
-            Supported: .txt, .pdf, .docx
+            Supported: .txt, .pdf, .docx, .xlsx, .csv
           </p>
         </>
       )}

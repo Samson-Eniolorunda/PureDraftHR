@@ -104,17 +104,38 @@ export default function AssistantPage() {
 
       setIsProcessingFile(true);
       try {
-        const formData = new FormData();
-        formData.append("file", file);
+        let text: string;
+        const name = file.name.toLowerCase();
+        const isSpreadsheet =
+          name.endsWith(".csv") ||
+          name.endsWith(".xlsx") ||
+          name.endsWith(".xls") ||
+          file.type === "text/csv" ||
+          file.type ===
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+          file.type === "application/vnd.ms-excel";
 
-        const response = await fetch("/api/extract", {
-          method: "POST",
-          body: formData,
-        });
+        if (isSpreadsheet) {
+          const XLSX = await import("xlsx");
+          const buffer = await file.arrayBuffer();
+          const workbook = XLSX.read(buffer, { type: "array" });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          if (!firstSheet) throw new Error("Spreadsheet has no sheets");
+          text = XLSX.utils.sheet_to_csv(firstSheet);
+        } else {
+          const formData = new FormData();
+          formData.append("file", file);
 
-        if (!response.ok) throw new Error("Failed to extract text");
+          const response = await fetch("/api/extract", {
+            method: "POST",
+            body: formData,
+          });
 
-        const { text } = await response.json();
+          if (!response.ok) throw new Error("Failed to extract text");
+          const data = await response.json();
+          text = data.text ?? "";
+        }
+
         setUploadedFileName(file.name);
         setReferenceText(text);
       } catch (error) {
@@ -257,7 +278,7 @@ export default function AssistantPage() {
                 <div className="relative">
                   <input
                     type="file"
-                    accept=".pdf,.docx,.txt"
+                    accept=".pdf,.docx,.txt,.csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
                     title="Upload a document to chat with"
                     onChange={handleDocumentUpload}
                     disabled={isProcessingFile || isLoading}
