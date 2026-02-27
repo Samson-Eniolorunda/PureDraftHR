@@ -70,6 +70,7 @@ export default function AssistantPage() {
   const [isProcessingFile, setIsProcessingFile] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { messages, isLoading, append, setMessages, stop } = useChat({
     api: "/api/chat",
@@ -153,6 +154,7 @@ export default function AssistantPage() {
   const handleRemoveDocument = useCallback(() => {
     setUploadedFileName(null);
     setReferenceText("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }, []);
 
   /** Open styling modal before sending */
@@ -253,8 +255,8 @@ export default function AssistantPage() {
                 Chat with a Document (Optional)
               </Label>
               <p className="text-xs text-muted-foreground">
-                Upload a PDF, DOCX, or TXT file to ask questions about its
-                content.
+                Upload a PDF, DOCX, TXT, XLSX, or CSV file to ask questions
+                about its content.
               </p>
 
               {uploadedFileName ? (
@@ -277,6 +279,7 @@ export default function AssistantPage() {
               ) : (
                 <div className="relative">
                   <input
+                    ref={fileInputRef}
                     type="file"
                     accept=".pdf,.docx,.txt,.csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
                     title="Upload a document to chat with"
@@ -294,7 +297,7 @@ export default function AssistantPage() {
                     <Upload className="h-4 w-4" />
                     {isProcessingFile
                       ? "Processing..."
-                      : "Upload Document (PDF, DOCX, TXT)"}
+                      : "Upload Document (PDF, DOCX, TXT, XLSX, CSV)"}
                   </Button>
                 </div>
               )}
