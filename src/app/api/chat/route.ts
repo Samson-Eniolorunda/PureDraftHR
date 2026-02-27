@@ -282,16 +282,63 @@ export async function POST(req: Request) {
       content: safeTruncate(sanitizeString(m.content), MAX_MESSAGE_CHARS),
     })) as CoreMessage[];
 
-    console.log("[API/chat] Starting stream for tool: " + tool);
+    // Total payload sanity check (system prompt + all message content)
+    const totalChars =
+      systemPrompt.length +
+      safeMessages.reduce(
+        (sum, m) => sum + (typeof m.content === "string" ? m.content.length : 0),
+        0,
+      );
+    console.log("[API/chat] Starting stream for tool:", tool, "| total chars:", totalChars);
+
+    if (totalChars > 120_000) {
+      console.error("[API/chat] Payload too large:", totalChars, "chars");
+      return new Response(
+        JSON.stringify({
+          error:
+            "The uploaded content is too large for the AI to process. Please shorten the text or upload a smaller file.",
+        }),
+        { status: 413, headers: { "Content-Type": "application/json" } },
+      );
+    }
 
     const result = streamText({
       model: google("gemini-2.5-flash"),
       system: systemPrompt,
       messages: safeMessages,
+      onError: ({ error }) => {
+        // This fires for errors that occur DURING streaming (after
+        // the response headers are already sent), which the outer
+        // try/catch cannot intercept.
+        console.error("[API/chat] Stream error:", error);
+        if (error instanceof Error) {
+          console.error("[API/chat] Stream stack:", error.stack);
+        }
+      },
     });
 
     console.log("[API/chat] Stream initialized successfully");
-    return result.toDataStreamResponse();
+
+    return result.toDataStreamResponse({
+      getErrorMessage: (error: unknown) => {
+        // This controls the error string sent to the client inside
+        // the SSE stream instead of the default "An error occurred".
+        const msg =
+          error instanceof Error ? error.message : String(error);
+        console.error("[API/chat] Client-facing stream error:", msg);
+
+        if (msg.includes("too large") || msg.includes("payload") || msg.includes("Token"))
+          return "The document is too large for the AI to process. Please shorten it and try again.";
+        if (msg.includes("quota") || msg.includes("429") || msg.includes("RATE"))
+          return "API rate limit reached. Please wait a moment and try again.";
+        if (msg.includes("timeout") || msg.includes("DEADLINE"))
+          return "The request timed out. Please try again with shorter content.";
+        if (msg.includes("SAFETY") || msg.includes("blocked"))
+          return "The AI flagged this content. Please revise and try again.";
+
+        return `Generation failed: ${msg.slice(0, 200)}`;
+      },
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[API/chat] Error:", message);
