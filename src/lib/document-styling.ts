@@ -1,6 +1,20 @@
 import type { DocumentStyling } from "@/hooks/useDocumentStyling";
 
 /**
+ * Sanitize a font family string for safe CSS injection.
+ * Wraps multi-word fonts in quotes and strips dangerous chars.
+ */
+function sanitizeFontFamily(font: string): string {
+  // Strip anything that could break a CSS rule
+  const clean = font.replace(/[;{}\\<>]/g, "").trim();
+  // If it contains spaces / special chars, wrap in quotes
+  if (/\s/.test(clean) && !clean.startsWith('"') && !clean.startsWith("'")) {
+    return `"${clean}"`;
+  }
+  return clean;
+}
+
+/**
  * Generate CSS for document styling using CSS variables
  * This is used in the markdown renderer to style the output dynamically
  */
@@ -16,10 +30,11 @@ export function getDocumentStylesCSS(styling: DocumentStyling): string {
   };
 
   const bulletContent = bulletSymbols[styling.bulletStyle] || "'•'";
+  const safeFont = sanitizeFontFamily(styling.fontFamily);
 
   return `
     :root {
-      --font-family: ${styling.fontFamily};
+      --font-family: ${safeFont};
       --h1-size-pt: ${styling.h1SizePt}pt;
       --h2-h3-size-pt: ${styling.h2h3SizePt}pt;
       --body-text-size-pt: ${styling.bodyTextSizePt}pt;

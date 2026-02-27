@@ -1,4 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+/** Escape HTML special chars to prevent XSS in email templates */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
 interface ContactFormData {
   name: string;
@@ -40,17 +53,6 @@ function validateFormData(data: ContactFormData): string | null {
 
 export async function POST(request: NextRequest) {
   try {
-    // Add CORS headers for preflight requests
-    if (request.method === "OPTIONS") {
-      return new NextResponse(null, {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
-        },
-      });
-    }
-
     const body = (await request.json()) as ContactFormData;
 
     // Validate form data
@@ -62,35 +64,52 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Log the contact form submission (in production, send email here)
-    console.log("📧 Contact form submission received:", {
-      timestamp: new Date().toISOString(),
-      name: body.name,
-      email: body.email,
-      subject: body.subject,
-      message: body.message,
+    // Guard against missing env var
+    const contactEmail = process.env.CONTACT_EMAIL;
+    if (!contactEmail) {
+      console.error("❌ CONTACT_EMAIL env var is not set");
+      return NextResponse.json(
+        { success: false, error: "Server misconfigured. Please try again later." },
+        { status: 500 },
+      );
+    }
+
+    // Escape user-supplied values to prevent HTML injection
+    const safeName = escapeHtml(body.name);
+    const safeEmail = escapeHtml(body.email);
+    const safeSubject = escapeHtml(body.subject);
+    const safeMessage = escapeHtml(body.message).replace(/\n/g, "<br>");
+
+    // Send email via Resend
+    const { error: sendError } = await resend.emails.send({
+      from: "Acme <onboarding@resend.dev>",
+      to: contactEmail,
+      subject: `New Contact Form Submission - HR App: ${body.subject}`,
+      html: `
+        <h2>New Contact Form Submission</h2>
+        <hr />
+        <p><strong>Name:</strong> ${safeName}</p>
+        <p><strong>Email:</strong> <a href="mailto:${safeEmail}">${safeEmail}</a></p>
+        <p><strong>Subject:</strong> ${safeSubject}</p>
+        <p><strong>Message:</strong></p>
+        <p>${safeMessage}</p>
+        <hr />
+        <p style="color: #888; font-size: 12px;">Sent from PureDraftHR Contact Form at ${new Date().toISOString()}</p>
+      `,
     });
 
-    // TODO: Integrate with email service like:
-    // - Resend (recommended for Next.js)
-    // - SendGrid
-    // - Nodemailer
-    // - AWS SES
-    //
-    // Example with Resend:
-    // const { data, error } = await resend.emails.send({
-    //   from: "noreply@puredrafthr.com",
-    //   to: "eniolorundasamson@gmail.com",
-    //   subject: `New Contact Form: ${body.subject}`,
-    //   html: `
-    //     <h2>New Contact Form Submission</h2>
-    //     <p><strong>Name:</strong> ${body.name}</p>
-    //     <p><strong>Email:</strong> ${body.email}</p>
-    //     <p><strong>Subject:</strong> ${body.subject}</p>
-    //     <p><strong>Message:</strong></p>
-    //     <p>${body.message.replace(/\n/g, "<br>")}</p>
-    //   `,
-    // });
+    if (sendError) {
+      console.error("❌ Resend API error:", sendError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Failed to send your message. Please try again later.",
+        },
+        { status: 500 },
+      );
+    }
+
+    console.log("📧 Contact form email sent successfully to", process.env.CONTACT_EMAIL);
 
     return NextResponse.json(
       {

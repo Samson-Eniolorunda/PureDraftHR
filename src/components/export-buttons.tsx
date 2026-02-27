@@ -1,18 +1,14 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Download, Copy, Check } from "lucide-react";
-import {
-  Document,
-  Packer,
-  Paragraph,
-  TextRun,
-  HeadingLevel,
-  AlignmentType,
-} from "docx";
-import { saveAs } from "file-saver";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Download, Copy, Check, FileSpreadsheet, Pencil } from "lucide-react";
 import type { DocumentStyling } from "@/hooks/useDocumentStyling";
+
+/** Lazy-loaded docx module type */
+type DocxModule = typeof import("docx");
 
 /* ------------------------------------------------------------------ */
 /*  Bullet symbol mapping (shared across PDF and DOCX)                 */
@@ -65,8 +61,18 @@ export function ExportButtons({
   styling,
 }: ExportButtonsProps) {
   const [copied, setCopied] = useState(false);
+  const [exportFileName, setExportFileName] = useState("");
 
   const dynamicFilename = extractFilename(content, filename);
+
+  // Initialize the editable filename from the smart default when content changes
+  useEffect(() => {
+    setExportFileName(dynamicFilename);
+  }, [dynamicFilename]);
+
+  /** The actual filename used for exports (user-edited or smart default) */
+  const resolvedFilename =
+    exportFileName.trim().replace(/\.[^.]+$/, "") || dynamicFilename;
 
   /* ── Copy to Clipboard ── */
   const handleCopy = useCallback(async () => {
@@ -112,20 +118,78 @@ export function ExportButtons({
 
     const opt = {
       margin: [10, 10, 10, 10],
-      filename: `${dynamicFilename}.pdf`,
+      filename: `${resolvedFilename}.pdf`,
       image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
     };
 
     html2pdf().set(opt).from(container).save();
-  }, [content, dynamicFilename, styling]);
+  }, [content, resolvedFilename, styling]);
 
-  /* ── DOCX Export via the docx library ── */
+  /* ── Excel Export via xlsx (lazy loaded) ── */
+  const hasTable = /^\|.+\|$/m.test(content);
+
+  const handleExcelExport = useCallback(async () => {
+    const XLSX = await import("xlsx");
+    const wb = XLSX.utils.book_new();
+
+    // Try to extract markdown tables
+    const tableRegex = /^(\|.+\|)\n(\|[-:\s|]+\|)\n((?:\|.+\|\n?)*)/gm;
+    let match: RegExpExecArray | null;
+    let sheetIndex = 0;
+
+    while ((match = tableRegex.exec(content)) !== null) {
+      const headerRow = match[1]
+        .split("|")
+        .filter((c) => c.trim())
+        .map((c) => c.trim());
+      const bodyRows = match[3]
+        .trim()
+        .split("\n")
+        .map((r) =>
+          r
+            .split("|")
+            .filter((c) => c.trim())
+            .map((c) => c.trim()),
+        );
+
+      const data = [headerRow, ...bodyRows];
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      // Auto-size columns
+      ws["!cols"] = headerRow.map((_, i) => ({
+        wch: Math.max(...data.map((row) => (row[i] ? row[i].length : 10)), 10),
+      }));
+      const sheetName = sheetIndex === 0 ? "Sheet1" : `Sheet${sheetIndex + 1}`;
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      sheetIndex++;
+    }
+
+    // If no tables found, export the full text as a single-cell sheet
+    if (sheetIndex === 0) {
+      const plainText = content
+        .replace(/^#{1,6}\s+/gm, "")
+        .replace(/\*\*(.+?)\*\*/g, "$1")
+        .replace(/\*(.+?)\*/g, "$1")
+        .trim();
+      const ws = XLSX.utils.aoa_to_sheet([[plainText]]);
+      ws["!cols"] = [{ wch: 80 }];
+      XLSX.utils.book_append_sheet(wb, ws, "Document");
+    }
+
+    XLSX.writeFile(wb, `${resolvedFilename}.xlsx`);
+  }, [content, resolvedFilename]);
+
+  /* ── DOCX Export via the docx library (lazy-loaded) ── */
   const handleDocxExport = useCallback(async () => {
-    const paragraphs = markdownToDocxParagraphs(content, styling);
+    const [docx, { saveAs }] = await Promise.all([
+      import("docx"),
+      import("file-saver"),
+    ]);
 
-    const doc = new Document({
+    const paragraphs = markdownToDocxParagraphs(docx, content, styling);
+
+    const doc = new docx.Document({
       sections: [
         {
           properties: {},
@@ -134,14 +198,32 @@ export function ExportButtons({
       ],
     });
 
-    const blob = await Packer.toBlob(doc);
-    saveAs(blob, `${dynamicFilename}.docx`);
-  }, [content, dynamicFilename, styling]);
+    const blob = await docx.Packer.toBlob(doc);
+    saveAs(blob, `${resolvedFilename}.docx`);
+  }, [content, resolvedFilename, styling]);
 
   if (!content) return null;
 
   return (
-    <div className="grid grid-cols-3 gap-3 mt-4 sm:flex sm:flex-wrap">
+    <div className="space-y-3 mt-4">
+      {/* Editable filename input */}
+      <div className="flex items-center gap-2">
+        <Label htmlFor="export-filename" className="text-xs text-muted-foreground whitespace-nowrap flex items-center gap-1">
+          <Pencil className="h-3 w-3" />
+          File Name
+        </Label>
+        <Input
+          id="export-filename"
+          type="text"
+          value={exportFileName}
+          onChange={(e) => setExportFileName(e.target.value)}
+          placeholder={dynamicFilename}
+          className="h-8 text-sm flex-1 max-w-xs"
+        />
+      </div>
+
+      {/* Export buttons */}
+      <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
       <Button
         variant="outline"
         size="sm"
@@ -163,6 +245,16 @@ export function ExportButtons({
       <Button
         variant="outline"
         size="sm"
+        onClick={handleExcelExport}
+        className="gap-2"
+        title={hasTable ? "Export table data to Excel" : "Export text to Excel"}
+      >
+        <FileSpreadsheet className="h-4 w-4" />
+        Excel
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
         onClick={handleCopy}
         className="gap-2"
       >
@@ -178,6 +270,7 @@ export function ExportButtons({
           </>
         )}
       </Button>
+      </div>
     </div>
   );
 }
@@ -202,6 +295,8 @@ function markdownToHtml(md: string, styling?: DocumentStyling): string {
 
   return (
     md
+      // Pre-process: normalize asterisk bullets to dash bullets before inline formatting
+      .replace(/^\* /gm, "- ")
       // Headings with styling
       .replace(
         /^#### (.+)$/gm,
@@ -283,13 +378,15 @@ function markdownToHtml(md: string, styling?: DocumentStyling): string {
   );
 }
 
-/**  Convert markdown to docx Paragraph nodes with styling support */
+/**  Convert markdown to docx Paragraph/Table nodes with styling support */
 function markdownToDocxParagraphs(
+  docx: DocxModule,
   md: string,
   styling?: DocumentStyling,
-): Paragraph[] {
+): (InstanceType<DocxModule["Paragraph"]> | InstanceType<DocxModule["Table"]>)[] {
+  const { Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } = docx;
   const lines = md.split("\n");
-  const paragraphs: Paragraph[] = [];
+  const paragraphs: (InstanceType<typeof Paragraph> | InstanceType<typeof Table>)[] = [];
 
   // Convert pt to half-points (docx uses half-points for font size)
   const h1Size = (styling?.h1SizePt || 24) * 2;
@@ -309,56 +406,76 @@ function markdownToDocxParagraphs(
 
   const flushTable = () => {
     if (tableHeaders.length > 0) {
+      const columnCount = tableHeaders.length;
+      const cellWidth = Math.floor(9000 / columnCount);
+
+      const borderConfig = {
+        top: { style: BorderStyle.SINGLE, size: 1, color: "999999" },
+        bottom: { style: BorderStyle.SINGLE, size: 1, color: "999999" },
+        left: { style: BorderStyle.SINGLE, size: 1, color: "999999" },
+        right: { style: BorderStyle.SINGLE, size: 1, color: "999999" },
+      };
+
       // Header row
-      const headerCells = tableHeaders.map(
-        (h) =>
-          new TextRun({
-            text: h,
-            bold: true,
-            font: fontFamily,
-            size: bodySize,
-          }),
-      );
-      paragraphs.push(
-        new Paragraph({
-          children: headerCells.flatMap((cell, i) =>
-            i < headerCells.length - 1
-              ? [
-                  cell,
-                  new TextRun({
-                    text: "  |  ",
-                    font: fontFamily,
-                    size: bodySize,
-                  }),
-                ]
-              : [cell],
-          ),
-          spacing: lineSpacing,
-        }),
-      );
-      // Body rows
-      for (const row of tableRows) {
-        const cells = row.map(
-          (c) => new TextRun({ text: c, font: fontFamily, size: bodySize }),
-        );
-        paragraphs.push(
-          new Paragraph({
-            children: cells.flatMap((cell, i) =>
-              i < cells.length - 1
-                ? [
-                    cell,
+      const headerRow = new TableRow({
+        tableHeader: true,
+        children: tableHeaders.map(
+          (h) =>
+            new TableCell({
+              borders: borderConfig,
+              width: { size: cellWidth, type: WidthType.DXA },
+              shading: { fill: "E8E8E8" },
+              children: [
+                new Paragraph({
+                  children: [
                     new TextRun({
-                      text: "  |  ",
+                      text: h,
+                      bold: true,
                       font: fontFamily,
                       size: bodySize,
                     }),
-                  ]
-                : [cell],
+                  ],
+                  spacing: lineSpacing,
+                }),
+              ],
+            }),
+        ),
+      });
+
+      // Body rows
+      const bodyDocxRows = tableRows.map(
+        (row) =>
+          new TableRow({
+            children: row.map(
+              (cell, idx) =>
+                new TableCell({
+                  borders: borderConfig,
+                  width: {
+                    size: idx < columnCount ? cellWidth : cellWidth,
+                    type: WidthType.DXA,
+                  },
+                  children: [
+                    new Paragraph({
+                      children: parseInlineFormatting(
+                        TextRun,
+                        cell,
+                        fontFamily,
+                        bodySize,
+                      ),
+                      spacing: lineSpacing,
+                    }),
+                  ],
+                }),
             ),
-            spacing: lineSpacing,
           }),
-        );
-      }
+      );
+
+      paragraphs.push(
+        new Table({
+          rows: [headerRow, ...bodyDocxRows],
+          width: { size: 9000, type: WidthType.DXA },
+        }),
+      );
     }
     tableHeaders = [];
     tableRows = [];
@@ -456,7 +573,7 @@ function markdownToDocxParagraphs(
       const bulletText = bulletChar ? `${bulletChar} ${bullet[1]}` : bullet[1];
       paragraphs.push(
         new Paragraph({
-          children: parseInlineFormatting(bulletText, fontFamily, bodySize),
+          children: parseInlineFormatting(TextRun, bulletText, fontFamily, bodySize),
           indent: { left: 360 },
           spacing: lineSpacing,
         }),
@@ -470,7 +587,7 @@ function markdownToDocxParagraphs(
       const numText = `${numbered[1]}. ${numbered[2]}`;
       paragraphs.push(
         new Paragraph({
-          children: parseInlineFormatting(numText, fontFamily, bodySize),
+          children: parseInlineFormatting(TextRun, numText, fontFamily, bodySize),
           indent: { left: 360 },
           spacing: lineSpacing,
         }),
@@ -482,7 +599,7 @@ function markdownToDocxParagraphs(
     paragraphs.push(
       new Paragraph({
         alignment: AlignmentType.LEFT,
-        children: parseInlineFormatting(trimmed, fontFamily, bodySize),
+        children: parseInlineFormatting(TextRun, trimmed, fontFamily, bodySize),
         spacing: { ...lineSpacing, after: 240 },
       }),
     );
@@ -496,11 +613,12 @@ function markdownToDocxParagraphs(
 
 /** Parse **bold** and *italic* inline formatting into TextRun nodes */
 function parseInlineFormatting(
+  TextRun: DocxModule["TextRun"],
   text: string,
   fontFamily?: string,
   fontSize?: number,
-): TextRun[] {
-  const runs: TextRun[] = [];
+): InstanceType<DocxModule["TextRun"]>[] {
+  const runs: InstanceType<typeof TextRun>[] = [];
   const regex = /(\*\*\*(.+?)\*\*\*|\*\*(.+?)\*\*|\*(.+?)\*|([^*]+))/g;
   let match: RegExpExecArray | null;
 

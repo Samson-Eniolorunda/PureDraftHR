@@ -1,7 +1,26 @@
-import { streamText } from "ai";
+import { streamText, type CoreMessage } from "ai";
 import { google } from "@ai-sdk/google";
 
 export const maxDuration = 60;
+
+/* ── Safe text truncation to prevent Vercel/Gemini payload limits ── */
+const MAX_REFERENCE_CHARS = 30_000; // ~7,500 tokens
+const MAX_MESSAGE_CHARS = 40_000;
+
+function safeTruncate(text: string, max: number): string {
+  if (!text || text.length <= max) return text;
+  return (
+    text.slice(0, max) + "\n\n[... content truncated for processing safety ...]"
+  );
+}
+
+/** Strip characters that break CSS injection or JSON payloads */
+function sanitizeString(str: string): string {
+  return str
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, "") // control chars
+    .replace(/`/g, "'") // backticks
+    .trim();
+}
 
 const SYSTEM_PROMPTS: Record<string, string> = {
   formatter: `You are an expert HR Document Formatter. Your job is to take messy, unstructured text and restructure it into a perfectly organized markdown document.
@@ -36,6 +55,15 @@ The Reference text was extracted from a PDF/DOCX, which completely destroyed its
 If you see data formatted this way, or repeating daily/weekly reporting patterns, YOU MUST RECONSTRUCT IT INTO A MARKDOWN TABLE.
 Do not output raw comma-separated text. You must intelligently interpret the broken grid and draw a clean Markdown table (using | and -) to represent it.
 
+CRITICAL DIRECTIVE: MANDATORY TABLE RECONSTRUCTION
+When the user uploads a reference document that contains a clear list of items, daily reports, or staff tasks (e.g., 'Monday', 'ZIZI', 'Tasks Completed'), YOU MUST OUTPUT A MARKDOWN TABLE.
+Do not output standard paragraphs or comma-separated lists if the original data was clearly structured by Day, Name, or Category.
+If the data resembles a Weekly Staff Report, you MUST use this exact Markdown table structure:
+| Day & Date | Staff Name | Task Description |
+| :--- | :--- | :--- |
+| [Extract Day] | [Extract Name] | [Extract Tasks] |
+You are strictly forbidden from outputting flattened text for data that belongs in a grid.
+
 **Available templates and their expected structures:**
 1. "Incident Report": Title, Date/Time, Location, Parties Involved, Description, Witnesses, Actions Taken, Follow-Up.
 2. "Interview Notes": Candidate, Position, Date, Interviewer(s), Q&A (numbered), Impression, Recommendation.
@@ -62,6 +90,15 @@ CRITICAL DATA RECOVERY & TABLE RECONSTRUCTION:
 The input text may have been extracted from a PDF/DOCX, which can destroy visual tables. The tables may appear as messy, comma-separated quoted strings (e.g., 'Monday', 'ZIZI', 'Tasks Completed').
 If you see data formatted this way, or repeating daily/weekly reporting patterns, YOU MUST RECONSTRUCT IT INTO A MARKDOWN TABLE.
 Do not output raw comma-separated text. Intelligently interpret the broken grid and draw a clean Markdown table (using | and -) to represent it.
+
+CRITICAL DIRECTIVE: MANDATORY TABLE RECONSTRUCTION
+When the user uploads a reference document that contains a clear list of items, daily reports, or staff tasks (e.g., 'Monday', 'ZIZI', 'Tasks Completed'), YOU MUST OUTPUT A MARKDOWN TABLE.
+Do not output standard paragraphs or comma-separated lists if the original data was clearly structured by Day, Name, or Category.
+If the data resembles a Weekly Staff Report, you MUST use this exact Markdown table structure:
+| Day & Date | Staff Name | Task Description |
+| :--- | :--- | :--- |
+| [Extract Day] | [Extract Name] | [Extract Tasks] |
+You are strictly forbidden from outputting flattened text for data that belongs in a grid.
 
 CRITICAL WRITING STYLE RULES - follow these exactly:
 - Write like a real human HR manager typing quickly but thoughtfully.
@@ -104,6 +141,15 @@ If the user provides data extracted from a PDF/DOCX, the tables may have been de
 If you see data formatted this way, or repeating daily/weekly reporting patterns, YOU MUST RECONSTRUCT IT INTO A MARKDOWN TABLE.
 Do not output raw comma-separated text. Intelligently interpret the broken grid and draw a clean Markdown table.
 
+CRITICAL DIRECTIVE: MANDATORY TABLE RECONSTRUCTION
+When the user uploads a reference document that contains a clear list of items, daily reports, or staff tasks (e.g., 'Monday', 'ZIZI', 'Tasks Completed'), YOU MUST OUTPUT A MARKDOWN TABLE.
+Do not output standard paragraphs or comma-separated lists if the original data was clearly structured by Day, Name, or Category.
+If the data resembles a Weekly Staff Report, you MUST use this exact Markdown table structure:
+| Day & Date | Staff Name | Task Description |
+| :--- | :--- | :--- |
+| [Extract Day] | [Extract Name] | [Extract Tasks] |
+You are strictly forbidden from outputting flattened text for data that belongs in a grid.
+
 **C. HUMAN TONE AND AUTHENTICITY:**
 1. NO AI BUZZWORDS: You are strictly forbidden from using common AI filler words such as: delve, furthermore, testament, crucial, tapestry, beacon, dynamic, multifaceted, nuanced, paradigm, synergy, leverage, robust, streamline, holistic, comprehensive overview, in today's world, it's important to note.
 2. HUMAN RHYTHM: Write with a natural, human rhythm. Vary your sentence lengths. Use clear, direct, and professional business English without sounding overly academic or robotic.
@@ -142,6 +188,7 @@ IF A REFERENCE DOCUMENT IS PROVIDED:
 - Use it as context to answer questions about its content.
 - If the user asks about a specific policy, procedure, or section, search the reference text and provide a clear, direct answer.
 - Always cite or reference the relevant section when answering.
+- CRITICAL DIRECTIVE: MANDATORY TABLE RECONSTRUCTION — When the user uploads a reference document that contains a clear list of items, daily reports, or staff tasks (e.g., 'Monday', 'ZIZI', 'Tasks Completed'), YOU MUST OUTPUT A MARKDOWN TABLE. Do not output standard paragraphs or comma-separated lists if the original data was clearly structured by Day, Name, or Category. If the data resembles a Weekly Staff Report, use: | Day & Date | Staff Name | Task Description | header format. You are strictly forbidden from outputting flattened text for data that belongs in a grid.
 
 SMART MEETING SCHEDULER:
 If the user asks you to schedule a meeting, interview, or appointment, you must extract the details and output a strictly formatted JSON code block exactly like this, ensuring dates are in ISO 8601 format:
@@ -161,14 +208,34 @@ Output in markdown. No meta-commentary or preamble unless needed for clarificati
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { messages, tool, template, referenceText, language } = body;
+    let body: Record<string, unknown>;
+    try {
+      body = await req.json();
+    } catch {
+      console.error("[API/chat] Failed to parse request body");
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON in request body" }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
+    const { messages, tool, template, referenceText, language } = body as {
+      messages: {
+        role: "user" | "assistant" | "system" | "tool";
+        content: string;
+      }[];
+      tool: string;
+      template?: string;
+      referenceText?: string;
+      language?: string;
+    };
 
     console.log("[API/chat] POST received", {
       tool,
       template,
       language,
       hasReference: !!referenceText,
+      referenceLength: referenceText?.length ?? 0,
       messagesCount: Array.isArray(messages) ? messages.length : 0,
     });
 
@@ -197,34 +264,54 @@ export async function POST(req: Request) {
 
     // If a reference template was provided, inject instruction to mimic its style
     if (referenceText && referenceText.trim()) {
-      systemPrompt += `\n\n⚠️ REFERENCE TEMPLATE PROVIDED: You MUST perfectly mimic the structure, tone, layout, and formatting style of the following reference text when generating your output:\n\n---\n${referenceText}\n---\n\nAnalyze this reference carefully and apply its style principles to your output.`;
+      const safeRef = safeTruncate(
+        sanitizeString(referenceText),
+        MAX_REFERENCE_CHARS,
+      );
+      systemPrompt += `\n\n⚠️ REFERENCE TEMPLATE PROVIDED: You MUST perfectly mimic the structure, tone, layout, and formatting style of the following reference text when generating your output:\n\n---\n${safeRef}\n---\n\nAnalyze this reference carefully and apply its style principles to your output.`;
     }
 
     // Multi-language support: if a non-English language is selected, append instruction
     if (language && language !== "English") {
-      systemPrompt += `\n\nMANDATORY LANGUAGE INSTRUCTION: You MUST generate the final output entirely in ${language}, maintaining a highly professional, native-level business tone. All headings, body text, labels, and formatting should be in ${language}. Do not mix languages.`;
+      systemPrompt += `\n\nMANDATORY LANGUAGE INSTRUCTION: You MUST generate the final output entirely in ${sanitizeString(language)}, maintaining a highly professional, native-level business tone. All headings, body text, labels, and formatting should be in ${sanitizeString(language)}. Do not mix languages.`;
     }
+
+    // Truncate user messages to prevent payload overflow
+    const safeMessages = (messages ?? []).map((m) => ({
+      ...m,
+      content: safeTruncate(sanitizeString(m.content), MAX_MESSAGE_CHARS),
+    })) as CoreMessage[];
 
     console.log("[API/chat] Starting stream for tool: " + tool);
 
     const result = streamText({
       model: google("gemini-2.5-flash"),
       system: systemPrompt,
-      messages,
+      messages: safeMessages,
     });
 
     console.log("[API/chat] Stream initialized successfully");
     return result.toDataStreamResponse();
   } catch (err) {
-    console.error(
-      "[API/chat] Error:",
-      err instanceof Error ? err.message : String(err),
-    );
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[API/chat] Error:", message);
     if (err instanceof Error) {
       console.error("[API/chat] Stack trace:", err.stack);
     }
-    return new Response(JSON.stringify({ error: "Internal server error" }), {
+
+    // Return a user-readable error
+    const userMessage =
+      message.includes("too large") || message.includes("payload")
+        ? "Document too large. Please shorten the text and try again."
+        : message.includes("quota") || message.includes("429")
+          ? "API rate limit reached. Please wait a moment and try again."
+          : message.includes("timeout")
+            ? "The request timed out. Please try again."
+            : `API Error: ${message.slice(0, 200)}`;
+
+    return new Response(JSON.stringify({ error: userMessage }), {
       status: 500,
+      headers: { "Content-Type": "application/json" },
     });
   }
 }

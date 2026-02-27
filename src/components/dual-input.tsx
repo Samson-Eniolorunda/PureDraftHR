@@ -29,14 +29,12 @@ export function DualInput({
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const val = e.target.value;
       setPastedText(val);
-      console.log("[DualInput] Text pasted, length:", val.length);
       onTextReady(val);
     },
     [onTextReady],
   );
 
   const handleTextareaFocus = () => {
-    console.log("[DualInput] Textarea focused");
     // Scroll textarea into view after a small delay to ensure mobile keyboard adjusts
     setTimeout(() => {
       if (textareaRef.current) {
@@ -49,7 +47,7 @@ export function DualInput({
   };
 
   const handleTextareaBlur = () => {
-    console.log("[DualInput] Textarea blurred");
+    // no-op — reserved for future use
   };
 
   return (

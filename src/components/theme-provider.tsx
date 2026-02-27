@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 type ThemeValue = "dark" | "light" | "system";
 type ResolvedTheme = "dark" | "light";
@@ -19,6 +19,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeValue>("system");
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("dark");
   const [mounted, setMounted] = useState(false);
+  const themeRef = useRef<ThemeValue>("system");
 
   // Determine actual theme based on system preference
   const getResolvedTheme = (t: ThemeValue): ResolvedTheme => {
@@ -36,6 +37,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem("theme") as ThemeValue | null;
     const initialTheme = saved || "system";
     setThemeState(initialTheme);
+    themeRef.current = initialTheme;
     const resolved = getResolvedTheme(initialTheme);
     setResolvedTheme(resolved);
     applyTheme(resolved);
@@ -43,7 +45,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Listen for system theme changes
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleChange = () => {
-      if (initialTheme === "system") {
+      if (themeRef.current === "system") {
         const newResolved = getResolvedTheme("system");
         setResolvedTheme(newResolved);
         applyTheme(newResolved);
@@ -61,6 +63,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const setTheme = (newTheme: ThemeValue) => {
     setThemeState(newTheme);
+    themeRef.current = newTheme;
     localStorage.setItem("theme", newTheme);
     const resolved = getResolvedTheme(newTheme);
     setResolvedTheme(resolved);

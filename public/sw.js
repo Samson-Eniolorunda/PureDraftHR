@@ -1,6 +1,12 @@
 // Service Worker for PWA offline caching
 const CACHE_NAME = "hr-doc-utility-v2";
-const STATIC_ASSETS = ["/formatter", "/summarizer", "/builder", "/icons/icon-192.svg"];
+const STATIC_ASSETS = [
+  "/assistant",
+  "/formatter",
+  "/summarizer",
+  "/builder",
+  "/icons/icon-192.svg",
+];
 
 console.log("[SW] Service Worker loaded with cache:", CACHE_NAME);
 
@@ -18,33 +24,29 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   console.log("[SW] Activating...");
   event.waitUntil(
-    caches
-      .keys()
-      // Service Worker for PWA offline caching
-      const CACHE_NAME = "hr-doc-utility-v2"; // bump to force update when deployed
-      const STATIC_ASSETS = ["/formatter", "/summarizer", "/builder", "/icons/icon-192.svg"];
-      .then((keys) => {
-        console.log("[SW] Found caches:", keys);
-        console.log('[SW] Installing...');
-          keys.filter((k) => k !== CACHE_NAME).map((k) => {
+    caches.keys().then((keys) => {
+      console.log("[SW] Found caches:", keys);
+      return Promise.all(
+        keys
+          .filter((k) => k !== CACHE_NAME)
+          .map((k) => {
             console.log("[SW] Deleting old cache:", k);
-            console.log('sw install, caching static assets', STATIC_ASSETS);
+            return caches.delete(k);
           }),
-        );
-      }),
+      );
+    }),
   );
   self.clients.claim();
 });
 
-        console.log('sw activate, clearing old caches if any');
 self.addEventListener("message", (event) => {
   console.log("[SW] Message received:", event.data);
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
-               console.log('[SW] Found caches:', keys);
+  }
   // Always respond to prevent "message channel closed" error
   if (event.ports && event.ports[0]) {
-                   console.log('[SW] Deleting old cache:', k);
+    event.ports[0].postMessage({ type: "SW_ACK" });
   }
 });
 
@@ -59,11 +61,7 @@ self.addEventListener("fetch", (event) => {
     fetch(event.request)
       .then((response) => {
         const clone = response.clone();
-        caches
-        // Debug logging
-        // console.log('sw fetch:', event.request.url);
-          .open(CACHE_NAME)
-          .then((cache) => cache.put(event.request, clone));
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         return response;
       })
       .catch(() => caches.match(event.request)),

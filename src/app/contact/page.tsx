@@ -24,6 +24,7 @@ export default function ContactPage() {
   const [status, setStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,8 +46,13 @@ export default function ContactPage() {
 
       if (!response.ok) {
         setStatus("error");
-        console.error("Contact form error:", data.error);
-        setTimeout(() => setStatus("idle"), 3000);
+        setErrorMessage(
+          data.error || "Something went wrong. Please try again.",
+        );
+        setTimeout(() => {
+          setStatus("idle");
+          setErrorMessage(null);
+        }, 5000);
         return;
       }
 
@@ -56,7 +62,13 @@ export default function ContactPage() {
     } catch (error) {
       console.error("Error sending message:", error);
       setStatus("error");
-      setTimeout(() => setStatus("idle"), 3000);
+      setErrorMessage(
+        "Network error. Please check your connection and try again.",
+      );
+      setTimeout(() => {
+        setStatus("idle");
+        setErrorMessage(null);
+      }, 5000);
     }
   };
 
@@ -201,8 +213,8 @@ export default function ContactPage() {
                   </p>
                 )}
                 {status === "error" && (
-                  <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
-                    Something went wrong. Please try again.
+                  <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-3 rounded-lg">
+                    {errorMessage || "Something went wrong. Please try again."}
                   </p>
                 )}
 

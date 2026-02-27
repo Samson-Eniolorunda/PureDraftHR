@@ -30,6 +30,7 @@ export function DocumentFormFooter({
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [uploadedFileText, setUploadedFileText] = useState<string>("");
   const [pastedRefText, setPastedRefText] = useState<string>("");
+  const [refUploadError, setRefUploadError] = useState<string | null>(null);
 
   /** Combine file + pasted reference: pasted text takes priority, or combine */
   const updateCombinedReference = (fileText: string, pastedText: string) => {
@@ -53,6 +54,7 @@ export function DocumentFormFooter({
     if (!file) return;
 
     setIsProcessingRef(true);
+    setRefUploadError(null);
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -70,7 +72,9 @@ export function DocumentFormFooter({
       updateCombinedReference(text, pastedRefText);
     } catch (error) {
       console.error("Reference upload error:", error);
-      alert("Failed to process reference template");
+      setRefUploadError(
+        "Failed to process reference template. Please try a different file.",
+      );
     } finally {
       setIsProcessingRef(false);
     }
@@ -142,6 +146,13 @@ export function DocumentFormFooter({
                 {isProcessingRef ? "Processing..." : "Choose Reference File"}
               </Button>
             </div>
+          )}
+
+          {/* Reference upload error */}
+          {refUploadError && (
+            <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-2 rounded-md">
+              {refUploadError}
+            </p>
           )}
 
           {/* Plain Text Reference Textarea */}

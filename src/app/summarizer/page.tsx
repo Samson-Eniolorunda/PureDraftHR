@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DualInput } from "@/components/dual-input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
 import { DocumentFormFooter } from "@/components/document-form-footer";
@@ -23,7 +25,7 @@ import { Modal } from "@/components/ui/modal";
 import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
 import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
 import { useDocumentStyling } from "@/hooks/useDocumentStyling";
-import { Loader2, Wand2 } from "lucide-react";
+import { Loader2, Wand2, StopCircle } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /*  /summarizer — AI-powered HR document summarizer                    */
@@ -51,21 +53,29 @@ export default function SummarizerPage() {
     resetToDefaults,
   } = useDocumentStyling();
   const [showStylingModal, setShowStylingModal] = useState(false);
+  const [refineText, setRefineText] = useState("");
+  const [streamError, setStreamError] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
-  const { messages, isLoading, append, setMessages } = useChat({
+  const { messages, isLoading, append, setMessages, stop } = useChat({
     api: "/api/chat",
     body: {
       tool: "summarizer",
       referenceText: referenceText || undefined,
       language: language !== "English" ? language : undefined,
     },
+    onError(err) {
+      console.error("[Summarizer] Stream error:", err);
+      setStreamError(
+        err.message || "An error occurred. The document may be too large.",
+      );
+    },
   });
 
   // Extract the latest assistant message (the streamed summary)
   const assistantMessage = messages.filter((m) => m.role === "assistant").pop();
   const resultContent = assistantMessage?.content ?? "";
-  const displayLoading = isLoading || showSkeletonPreview;
+  const displayLoading = (isLoading || showSkeletonPreview) && !resultContent;
 
   /** Open the styling modal before generating */
   const handleSummarizeClick = useCallback(() => {
@@ -89,6 +99,19 @@ export default function SummarizerPage() {
       resultRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 300);
   }, [inputText, append, setMessages]);
+
+  /** Send a refinement follow-up */
+  const handleRefine = useCallback(() => {
+    if (!refineText.trim() || isLoading) return;
+    append({
+      role: "user",
+      content: refineText.trim(),
+    });
+    setRefineText("");
+    setTimeout(() => {
+      resultRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 300);
+  }, [refineText, isLoading, append]);
 
   return (
     <div className="space-y-6">
@@ -141,6 +164,20 @@ export default function SummarizerPage() {
 
         {/* ── Result Section ── */}
         <div ref={resultRef}>
+          {/* Error banner */}
+          {streamError && (
+            <div className="mb-4 flex items-center justify-between rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3">
+              <p className="text-sm text-red-700 dark:text-red-400">
+                {streamError}
+              </p>
+              <button
+                onClick={() => setStreamError(null)}
+                className="text-red-500 hover:text-red-700 dark:hover:text-red-300 ml-2"
+              >
+                &times;
+              </button>
+            </div>
+          )}
           {(resultContent || isLoading) && (
             <Card>
               <CardHeader>
@@ -161,11 +198,53 @@ export default function SummarizerPage() {
                       content={resultContent}
                       styling={styling}
                     />
+                    {isLoading && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="mt-3 gap-2"
+                        onClick={() => stop()}
+                      >
+                        <StopCircle className="h-4 w-4" />
+                        Stop Generating
+                      </Button>
+                    )}
                     <ExportButtons
                       content={resultContent}
                       filename="hr-summary"
                       styling={styling}
                     />
+
+                    {/* Refine Summary */}
+                    {!isLoading && resultContent && (
+                      <div className="mt-6 space-y-2 border-t pt-4">
+                        <Label className="text-sm font-medium">
+                          Refine Summary
+                        </Label>
+                        <Textarea
+                          rows={2}
+                          value={refineText}
+                          onChange={(e) => setRefineText(e.target.value)}
+                          placeholder='e.g. "Focus more on the action items" or "Add key metrics"…'
+                          className="resize-y min-h-[60px]"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              handleRefine();
+                            }
+                          }}
+                        />
+                        <Button
+                          size="sm"
+                          onClick={handleRefine}
+                          disabled={!refineText.trim()}
+                          className="gap-2"
+                        >
+                          <Wand2 className="h-4 w-4" />
+                          Refine
+                        </Button>
+                      </div>
+                    )}
                   </>
                 )}
               </CardContent>

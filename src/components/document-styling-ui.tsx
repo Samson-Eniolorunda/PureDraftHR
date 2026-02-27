@@ -104,7 +104,7 @@ export function DocumentStylingUI({
 
       {/* Font Sizes — Dropdowns */}
       <div className="space-y-3">
-        <Label className="text-sm font-medium">Font Sizes (pt)</Label>
+        <span className="text-sm font-medium">Font Sizes (pt)</span>
 
         {/* Heading 1 */}
         <div className="space-y-1.5">

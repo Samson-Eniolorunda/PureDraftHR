@@ -36,6 +36,8 @@ import {
   CheckCircle,
   X,
   FileText,
+  StopCircle,
+  SlidersHorizontal,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -61,18 +63,26 @@ export default function AssistantPage() {
   const [userPrompt, setUserPrompt] = useState("");
   const [language, setLanguage] = useState<LanguageValue>("English");
   const [showStylingModal, setShowStylingModal] = useState(false);
+  const [refineText, setRefineText] = useState("");
+  const [streamError, setStreamError] = useState<string | null>(null);
   const [referenceText, setReferenceText] = useState("");
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const { messages, isLoading, append, setMessages } = useChat({
+  const { messages, isLoading, append, setMessages, stop } = useChat({
     api: "/api/chat",
     body: {
       tool: "assistant",
       referenceText: referenceText || undefined,
       language: language !== "English" ? language : undefined,
+    },
+    onError(err) {
+      console.error("[Assistant] Stream error:", err);
+      setStreamError(
+        err.message || "An error occurred. The document may be too large.",
+      );
     },
   });
 
@@ -109,7 +119,9 @@ export default function AssistantPage() {
         setReferenceText(text);
       } catch (error) {
         console.error("Document upload error:", error);
-        alert("Failed to process document");
+        setStreamError(
+          "Failed to process document. Please try a different file.",
+        );
       } finally {
         setIsProcessingFile(false);
       }
@@ -173,6 +185,19 @@ export default function AssistantPage() {
     [handleQuickSend],
   );
 
+  /** Send a refinement follow-up */
+  const handleRefine = useCallback(() => {
+    if (!refineText.trim() || isLoading) return;
+    append({
+      role: "user",
+      content: refineText.trim(),
+    });
+    setRefineText("");
+    setTimeout(() => {
+      resultRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 300);
+  }, [refineText, isLoading, append]);
+
   return (
     <div className="space-y-6">
       {/* ── Page Header ── */}
@@ -195,8 +220,8 @@ export default function AssistantPage() {
           <CardHeader>
             <CardTitle className="text-lg">How can I help you?</CardTitle>
             <CardDescription>
-              Ask a question or request a draft. Press Enter to send, or use the
-              styling button for formatted output.
+              Ask a question or request a draft. Press Enter to send, or use
+              Format Document for styled output.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -290,8 +315,8 @@ export default function AssistantPage() {
                 }
               />
               <p className="text-xs text-muted-foreground">
-                Press Enter to send quickly, or use the styled button below for
-                formatted output.
+                Press Enter to send quickly, or use the Format Document button
+                below for styled output.
               </p>
             </div>
 
@@ -312,8 +337,8 @@ export default function AssistantPage() {
                 className="gap-2"
                 title="Apply document styling before generating"
               >
-                <Wand2 className="h-4 w-4" />
-                Styled
+                <SlidersHorizontal className="h-4 w-4" />
+                Format Document
               </Button>
             </div>
 
@@ -329,6 +354,20 @@ export default function AssistantPage() {
 
         {/* ── Response Section ── */}
         <div ref={resultRef}>
+          {/* Error banner */}
+          {streamError && (
+            <div className="mb-4 flex items-center justify-between rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3">
+              <p className="text-sm text-red-700 dark:text-red-400">
+                {streamError}
+              </p>
+              <button
+                onClick={() => setStreamError(null)}
+                className="text-red-500 hover:text-red-700 dark:hover:text-red-300 ml-2"
+              >
+                &times;
+              </button>
+            </div>
+          )}
           {(latestResponse || isLoading) && (
             <Card>
               <CardHeader>
@@ -367,12 +406,54 @@ export default function AssistantPage() {
                       content={latestResponse}
                       styling={styling}
                     />
+                    {isLoading && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="mt-3 gap-2"
+                        onClick={() => stop()}
+                      >
+                        <StopCircle className="h-4 w-4" />
+                        Stop Generating
+                      </Button>
+                    )}
                     <ExportButtons
                       content={latestResponse}
                       filename="hr-assistant"
                       styling={styling}
                     />
                   </>
+                )}
+
+                {/* Refine Response */}
+                {!isLoading && latestResponse && (
+                  <div className="mt-4 space-y-2 border-t pt-4">
+                    <Label className="text-sm font-medium">
+                      Refine Response
+                    </Label>
+                    <Textarea
+                      rows={2}
+                      value={refineText}
+                      onChange={(e) => setRefineText(e.target.value)}
+                      placeholder='e.g. "Make it shorter" or "Add more detail about the policy"…'
+                      className="resize-y min-h-[60px]"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleRefine();
+                        }
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={handleRefine}
+                      disabled={!refineText.trim()}
+                      className="gap-2"
+                    >
+                      <Wand2 className="h-4 w-4" />
+                      Refine
+                    </Button>
+                  </div>
                 )}
               </CardContent>
             </Card>

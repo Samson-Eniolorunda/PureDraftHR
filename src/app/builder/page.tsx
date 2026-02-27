@@ -26,7 +26,13 @@ import { Modal } from "@/components/ui/modal";
 import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
 import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
 import { useDocumentStyling } from "@/hooks/useDocumentStyling";
-import { Loader2, Wand2, Upload, FileSpreadsheet } from "lucide-react";
+import {
+  Loader2,
+  Wand2,
+  Upload,
+  FileSpreadsheet,
+  StopCircle,
+} from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /*  Configuration options for the Builder wizard                       */
@@ -193,10 +199,16 @@ export default function BuilderPage() {
   const [step, setStep] = useState(1); // Wizard step 1-3
   const [minSkeletonDuration, setMinSkeletonDuration] = useState(false);
   const [showStylingModal, setShowStylingModal] = useState(false);
+  const [refineText, setRefineText] = useState("");
+  const [streamError, setStreamError] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
+  const bulkAbortRef = useRef<AbortController | null>(null);
 
   // Bulk CSV state
   const [bulkMode, setBulkMode] = useState(false);
+  const [bulkToggleFeedback, setBulkToggleFeedback] = useState<
+    "enabled" | "disabled" | null
+  >(null);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [csvData, setCsvData] = useState<{
     headers: string[];
@@ -216,19 +228,20 @@ export default function BuilderPage() {
         ? "Custom HR Document"
         : docType;
 
-  const { messages, isLoading, append, setMessages } = useChat({
+  const { messages, isLoading, append, setMessages, stop } = useChat({
     api: "/api/chat",
     body: {
       tool: "builder",
       referenceText: referenceText || undefined,
       language: language !== "English" ? language : undefined,
     },
+    onError(err) {
+      console.error("[Builder] Stream error:", err);
+      setStreamError(
+        err.message || "An error occurred. The document may be too large.",
+      );
+    },
   });
-
-  // Debug logs for messages & loading
-  useEffect(() => {
-    console.log("Builder useChat state:", { messages, isLoading });
-  }, [messages, isLoading]);
 
   // Manage skeleton minimum display duration (1.5 seconds)
   useEffect(() => {
@@ -242,7 +255,7 @@ export default function BuilderPage() {
   const assistantMessage = messages.filter((m) => m.role === "assistant").pop();
   const resultContent = assistantMessage?.content ?? "";
   const displayLoading =
-    (isLoading || showSkeletonPreview) && minSkeletonDuration;
+    (isLoading || showSkeletonPreview) && minSkeletonDuration && !resultContent;
 
   /** Open styling modal instead of generating directly */
   const handleGenerateClick = useCallback(() => {
@@ -253,13 +266,6 @@ export default function BuilderPage() {
   /** Confirm styling and trigger the AI stream */
   const handleConfirmGenerate = useCallback(() => {
     setShowStylingModal(false);
-
-    console.log("Builder.handleConfirmGenerate", {
-      docType: resolvedDocType,
-      tone,
-      keyDetailsLength: keyDetails.length,
-      language,
-    });
 
     setMessages([]);
     append({
@@ -275,6 +281,19 @@ Key Details: ${keyDetails}`,
       resultRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 300);
   }, [keyDetails, append, setMessages, resolvedDocType, tone, language]);
+
+  /** Send a refinement follow-up */
+  const handleRefine = useCallback(() => {
+    if (!refineText.trim() || isLoading) return;
+    append({
+      role: "user",
+      content: refineText.trim(),
+    });
+    setRefineText("");
+    setTimeout(() => {
+      resultRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 300);
+  }, [refineText, isLoading, append]);
 
   /** Handle CSV file upload */
   const handleCsvUpload = useCallback(
@@ -296,9 +315,12 @@ Key Details: ${keyDetails}`,
     setBulkResults([]);
     setBulkProgress({ current: 0, total: csvData.rows.length });
 
+    const controller = new AbortController();
+    bulkAbortRef.current = controller;
     const results: string[] = [];
 
     for (let i = 0; i < csvData.rows.length; i++) {
+      if (controller.signal.aborted) break;
       setBulkProgress({ current: i + 1, total: csvData.rows.length });
       const row = csvData.rows[i];
       const rowDetails = Object.entries(row)
@@ -324,7 +346,15 @@ Key Details: ${keyDetails}`,
             referenceText: referenceText || undefined,
             language: language !== "English" ? language : undefined,
           }),
+          signal: controller.signal,
         });
+
+        if (!res.ok) {
+          results.push(
+            `[Error generating document for row ${i + 1}: HTTP ${res.status}]`,
+          );
+          continue;
+        }
 
         // Read the streaming response fully
         const reader = res.body?.getReader();
@@ -353,7 +383,11 @@ Key Details: ${keyDetails}`,
         results.push(
           fullText || `[Error generating document for row ${i + 1}]`,
         );
-      } catch (err) {
+      } catch (err: unknown) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+          results.push(`[Cancelled at row ${i + 1}]`);
+          break;
+        }
         console.error(`Bulk generation error for row ${i + 1}:`, err);
         results.push(`[Error generating document for row ${i + 1}]`);
       }
@@ -361,11 +395,17 @@ Key Details: ${keyDetails}`,
 
     setBulkResults(results);
     setBulkProgress(null);
+    bulkAbortRef.current = null;
 
     setTimeout(() => {
       resultRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 300);
   }, [csvData, keyDetails, resolvedDocType, tone, referenceText, language]);
+
+  /** Cancel ongoing bulk generation */
+  const handleCancelBulk = useCallback(() => {
+    bulkAbortRef.current?.abort();
+  }, []);
 
   /** Can the user proceed to the next step? */
   const canProceed =
@@ -475,18 +515,44 @@ Key Details: ${keyDetails}`,
                     </div>
                     <Button
                       type="button"
-                      variant={bulkMode ? "default" : "outline"}
+                      variant={
+                        bulkToggleFeedback === "enabled"
+                          ? "default"
+                          : bulkToggleFeedback === "disabled"
+                            ? "outline"
+                            : bulkMode
+                              ? "default"
+                              : "outline"
+                      }
                       size="sm"
+                      className={
+                        bulkToggleFeedback === "enabled"
+                          ? "bg-green-600 hover:bg-green-700 text-white"
+                          : bulkToggleFeedback === "disabled"
+                            ? "border-red-400 text-red-600 dark:text-red-400"
+                            : bulkMode
+                              ? "bg-primary text-primary-foreground"
+                              : ""
+                      }
                       onClick={() => {
-                        setBulkMode(!bulkMode);
-                        if (bulkMode) {
+                        const newMode = !bulkMode;
+                        setBulkMode(newMode);
+                        setBulkToggleFeedback(newMode ? "enabled" : "disabled");
+                        if (!newMode) {
                           setCsvFile(null);
                           setCsvData(null);
                           setBulkResults([]);
                         }
+                        setTimeout(() => setBulkToggleFeedback(null), 2000);
                       }}
                     >
-                      {bulkMode ? "Enabled" : "Enable"}
+                      {bulkToggleFeedback === "enabled"
+                        ? "✅ Enabled!"
+                        : bulkToggleFeedback === "disabled"
+                          ? "❌ Disabled!"
+                          : bulkMode
+                            ? "Disable Bulk Generation"
+                            : "Enable Bulk Generation"}
                     </Button>
                   </div>
 
@@ -645,6 +711,20 @@ Key Details: ${keyDetails}`,
 
         {/* ── Result Section ── */}
         <div ref={resultRef}>
+          {/* Error banner */}
+          {streamError && (
+            <div className="mb-4 flex items-center justify-between rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3">
+              <p className="text-sm text-red-700 dark:text-red-400">
+                {streamError}
+              </p>
+              <button
+                onClick={() => setStreamError(null)}
+                className="text-red-500 hover:text-red-700 dark:hover:text-red-300 ml-2"
+              >
+                &times;
+              </button>
+            </div>
+          )}
           {/* Bulk progress indicator */}
           {bulkProgress && (
             <Card>
@@ -665,6 +745,15 @@ Key Details: ${keyDetails}`,
                       />
                     </div>
                   </div>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="ml-auto gap-2 shrink-0"
+                    onClick={handleCancelBulk}
+                  >
+                    <StopCircle className="h-4 w-4" />
+                    Cancel
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -729,11 +818,53 @@ Key Details: ${keyDetails}`,
                       content={resultContent}
                       styling={styling}
                     />
+                    {isLoading && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="mt-3 gap-2"
+                        onClick={() => stop()}
+                      >
+                        <StopCircle className="h-4 w-4" />
+                        Stop Generating
+                      </Button>
+                    )}
                     <ExportButtons
                       content={resultContent}
                       filename={`hr-${resolvedDocType.toLowerCase().replace(/\s+/g, "-")}`}
                       styling={styling}
                     />
+
+                    {/* Refine Document */}
+                    {!isLoading && resultContent && (
+                      <div className="mt-6 space-y-2 border-t pt-4">
+                        <Label className="text-sm font-medium">
+                          Refine Document
+                        </Label>
+                        <Textarea
+                          rows={2}
+                          value={refineText}
+                          onChange={(e) => setRefineText(e.target.value)}
+                          placeholder='e.g. "Make the tone friendlier" or "Add a remote work section"…'
+                          className="resize-y min-h-[60px]"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              handleRefine();
+                            }
+                          }}
+                        />
+                        <Button
+                          size="sm"
+                          onClick={handleRefine}
+                          disabled={!refineText.trim()}
+                          className="gap-2"
+                        >
+                          <Wand2 className="h-4 w-4" />
+                          Refine
+                        </Button>
+                      </div>
+                    )}
                   </>
                 )}
               </CardContent>
