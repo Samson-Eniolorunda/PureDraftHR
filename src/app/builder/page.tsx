@@ -237,9 +237,12 @@ export default function BuilderPage() {
     },
     onError(err) {
       console.error("[Builder] Stream error:", err);
-      setStreamError(
-        err.message || "An error occurred. The document may be too large.",
-      );
+      const msg = err.message || "";
+      if (msg.includes("429") || msg.includes("rate") || msg.includes("slow down")) {
+        setStreamError("Our AI is currently processing a high volume of documents. Please wait just a few seconds and try again! \u23f3");
+      } else {
+        setStreamError(msg || "An error occurred. The document may be too large.");
+      }
     },
   });
 
@@ -383,6 +386,11 @@ Key Details: ${keyDetails}`,
         results.push(
           fullText || `[Error generating document for row ${i + 1}]`,
         );
+
+        // Throttle: wait between rows to respect Gemini RPM limits
+        if (i < csvData.rows.length - 1 && !controller.signal.aborted) {
+          await new Promise((r) => setTimeout(r, 1500));
+        }
       } catch (err: unknown) {
         if (err instanceof DOMException && err.name === "AbortError") {
           results.push(`[Cancelled at row ${i + 1}]`);
@@ -735,6 +743,9 @@ Key Details: ${keyDetails}`,
                     <p className="font-medium">
                       Generating document {bulkProgress.current} of{" "}
                       {bulkProgress.total}...
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Please don&apos;t close this page ⏳
                     </p>
                     <div className="mt-2 h-2 w-full rounded-full bg-muted overflow-hidden">
                       <div

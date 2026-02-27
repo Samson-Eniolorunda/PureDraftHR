@@ -7,6 +7,90 @@ export const maxDuration = 60;
 const MAX_REFERENCE_CHARS = 30_000; // ~7,500 tokens
 const MAX_MESSAGE_CHARS = 40_000;
 
+/* ── In-memory IP rate limiter (5 req/min per IP) ── */
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX_REQUESTS = 5;
+const ipHits = new Map<string, number[]>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const hits = ipHits.get(ip) ?? [];
+  // Prune old entries
+  const recent = hits.filter((t) => now - t < RATE_WINDOW_MS);
+  if (recent.length >= RATE_MAX_REQUESTS) {
+    ipHits.set(ip, recent);
+    return true;
+  }
+  recent.push(now);
+  ipHits.set(ip, recent);
+  return false;
+}
+
+// Periodically clean stale IPs to prevent memory leaks (every 5 min)
+if (typeof globalThis !== "undefined") {
+  const key = "__pureDraftHR_rateLimitCleanup__";
+  if (!(globalThis as Record<string, unknown>)[key]) {
+    (globalThis as Record<string, unknown>)[key] = true;
+    setInterval(() => {
+      const cutoff = Date.now() - RATE_WINDOW_MS;
+      for (const [ip, hits] of ipHits.entries()) {
+        const fresh = hits.filter((t) => t > cutoff);
+        if (fresh.length === 0) ipHits.delete(ip);
+        else ipHits.set(ip, fresh);
+      }
+    }, 300_000);
+  }
+}
+
+/* ── Exponential backoff helper for Gemini 429s ── */
+const MAX_RETRIES = 3;
+const INITIAL_DELAY_MS = 2_000;
+
+async function streamWithRetry(
+  systemPrompt: string,
+  safeMessages: CoreMessage[],
+) {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const result = streamText({
+        model: google("gemini-2.5-flash"),
+        system: systemPrompt,
+        messages: safeMessages,
+        onError: ({ error }) => {
+          console.error("[API/chat] Stream error:", error);
+          if (error instanceof Error) {
+            console.error("[API/chat] Stream stack:", error.stack);
+          }
+        },
+      });
+
+      // Probe the stream: if the model setup itself throws (e.g. 429),
+      // the error surfaces here on the first await.
+      return result;
+    } catch (err) {
+      lastError = err;
+      const msg = err instanceof Error ? err.message : String(err);
+      const isRetryable =
+        msg.includes("429") ||
+        msg.includes("RESOURCE_EXHAUSTED") ||
+        msg.includes("quota") ||
+        msg.includes("RATE");
+
+      if (!isRetryable || attempt === MAX_RETRIES) throw err;
+
+      const delay = INITIAL_DELAY_MS * Math.pow(2, attempt);
+      console.warn(
+        `[API/chat] Rate-limited (attempt ${attempt + 1}/${MAX_RETRIES}), retrying in ${delay}ms...`,
+      );
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+
+  throw lastError;
+}
+
 function safeTruncate(text: string, max: number): string {
   if (!text || text.length <= max) return text;
   return (
@@ -206,6 +290,20 @@ Output in markdown. No meta-commentary or preamble unless needed for clarificati
 
 export async function POST(req: Request) {
   try {
+    /* ── IP rate limiting ── */
+    const forwarded = req.headers.get("x-forwarded-for");
+    const ip = forwarded?.split(",")[0]?.trim() || "unknown";
+    if (isRateLimited(ip)) {
+      console.warn("[API/chat] Rate-limited IP:", ip);
+      return new Response(
+        JSON.stringify({
+          error:
+            "Please slow down — you've reached the limit of 5 requests per minute. Wait a moment and try again.",
+        }),
+        { status: 429, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
     let body: Record<string, unknown>;
     try {
       body = await req.json();
@@ -300,20 +398,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const result = streamText({
-      model: google("gemini-2.5-flash"),
-      system: systemPrompt,
-      messages: safeMessages,
-      onError: ({ error }) => {
-        // This fires for errors that occur DURING streaming (after
-        // the response headers are already sent), which the outer
-        // try/catch cannot intercept.
-        console.error("[API/chat] Stream error:", error);
-        if (error instanceof Error) {
-          console.error("[API/chat] Stream stack:", error.stack);
-        }
-      },
-    });
+    const result = await streamWithRetry(systemPrompt, safeMessages);
 
     console.log("[API/chat] Stream initialized successfully");
 
@@ -348,9 +433,12 @@ export async function POST(req: Request) {
     const userMessage =
       message.includes("too large") || message.includes("payload")
         ? "Document too large. Please shorten the text and try again."
-        : message.includes("quota") || message.includes("429")
-          ? "API rate limit reached. Please wait a moment and try again."
-          : message.includes("timeout")
+        : message.includes("quota") ||
+            message.includes("429") ||
+            message.includes("RATE") ||
+            message.includes("RESOURCE_EXHAUSTED")
+          ? "Our AI is currently processing a high volume of documents. Please wait just a few seconds and try again! \u23F3"
+          : message.includes("timeout") || message.includes("DEADLINE")
             ? "The request timed out. Please try again."
             : `API Error: ${message.slice(0, 200)}`;
 

@@ -66,9 +66,12 @@ export default function SummarizerPage() {
     },
     onError(err) {
       console.error("[Summarizer] Stream error:", err);
-      setStreamError(
-        err.message || "An error occurred. The document may be too large.",
-      );
+      const msg = err.message || "";
+      if (msg.includes("429") || msg.includes("rate") || msg.includes("slow down")) {
+        setStreamError("Our AI is currently processing a high volume of documents. Please wait just a few seconds and try again! \u23f3");
+      } else {
+        setStreamError(msg || "An error occurred. The document may be too large.");
+      }
     },
   });
 

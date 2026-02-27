@@ -1,12 +1,13 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
 /*  Select — accessible custom dropdown (maps <option> children)      */
 /*  - Supports <option> and <optgroup> children                       */
-/*  - initial arrow faces up (closed)                                  */
+/*  - Renders dropdown via Portal to avoid overflow clipping           */
 /*  - click/tap toggles open/close                                     */
 /*  - click outside or Escape closes                                   */
 /*  - keyboard navigation: ArrowUp/ArrowDown/Enter/Escape              */
@@ -70,21 +71,41 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
     const [isOpen, setIsOpen] = React.useState(false);
     const containerRef = React.useRef<HTMLDivElement | null>(null);
     const optionsRef = React.useRef<Array<HTMLDivElement | null>>([]);
+    const dropdownRef = React.useRef<HTMLDivElement | null>(null);
+    const [dropdownStyle, setDropdownStyle] = React.useState<React.CSSProperties>({});
 
     // Sync controlled value
     React.useEffect(() => {
       if (isControlled) setSelected(value as string);
     }, [value, isControlled]);
 
-    // Close on outside click
+    // Close on outside click (check both trigger and portal dropdown)
     React.useEffect(() => {
       const onDoc = (e: MouseEvent) => {
-        if (!containerRef.current) return;
-        if (!containerRef.current.contains(e.target as Node)) setIsOpen(false);
+        const target = e.target as Node;
+        if (
+          containerRef.current?.contains(target) ||
+          dropdownRef.current?.contains(target)
+        )
+          return;
+        setIsOpen(false);
       };
       document.addEventListener("mousedown", onDoc);
       return () => document.removeEventListener("mousedown", onDoc);
     }, []);
+
+    // Position the portal dropdown relative to the trigger button
+    React.useEffect(() => {
+      if (!isOpen || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      setDropdownStyle({
+        position: "fixed",
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+        zIndex: 9999,
+      });
+    }, [isOpen]);
 
     // Keyboard handling on trigger
     const handleTriggerKey = (e: React.KeyboardEvent) => {
@@ -173,15 +194,18 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
           </svg>
         </button>
 
-        {/* Options panel */}
-        {isOpen && (
-          <div
-            role="listbox"
-            tabIndex={-1}
-            title="Select an option"
-            className="absolute left-0 right-0 mt-2 z-40 max-h-60 overflow-auto rounded-lg border border-input bg-card shadow-lg p-1"
-            aria-activedescendant={selected}
-          >
+        {/* Options panel — rendered via Portal to escape overflow clipping */}
+        {isOpen &&
+          createPortal(
+            <div
+              ref={dropdownRef}
+              role="listbox"
+              tabIndex={-1}
+              title="Select an option"
+              className="overflow-auto rounded-lg border border-input bg-card shadow-lg p-1"
+              style={{ ...dropdownStyle, maxHeight: 240 }}
+              aria-activedescendant={selected}
+            >
             {(() => {
               let lastGroup: string | undefined;
               let flatIdx = 0;
@@ -249,7 +273,8 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
                 );
               });
             })()}
-          </div>
+          </div>,
+          document.body,
         )}
       </div>
     );

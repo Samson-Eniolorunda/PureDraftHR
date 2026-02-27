@@ -62,7 +62,7 @@ export function DocumentStylingUI({
   onResetDefaults,
 }: DocumentStylingUIProps) {
   return (
-    <div className="space-y-5 pb-20">
+    <div className="space-y-5">
       {/* Header with reset */}
       <div className="flex items-center justify-between">
         <h3 className="text-base font-semibold">Document Styling</h3>
