@@ -3,6 +3,7 @@
 import React, { useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import type { DocumentStyling } from "@/hooks/useDocumentStyling";
 import { getDocumentStylesCSS } from "@/lib/document-styling";
 
@@ -49,6 +50,7 @@ export const MarkdownRenderer = React.memo(function MarkdownRenderer({
     <div className="document-preview prose prose-sm dark:prose-invert max-w-none rounded-lg border bg-card p-4 sm:p-6 prose-table:border-collapse prose-th:border prose-th:border-border prose-th:p-2 prose-th:bg-muted prose-th:text-left prose-td:border prose-td:border-border prose-td:p-2">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw]}
         components={{
           table: ({ children, ...props }) => (
             <table
