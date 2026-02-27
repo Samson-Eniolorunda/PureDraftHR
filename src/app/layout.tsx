@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import { AppNav } from "@/components/app-nav";
 import { MobileHeader } from "@/components/mobile-header";
@@ -12,21 +13,38 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 // Cache bust version - increment this when favicon changes
 const FAVICON_VERSION = "v2";
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://puredrafthr.com";
+
 /* ------------------------------------------------------------------ */
-/*  Metadata — includes PWA meta tags for iOS & Android                */
+/*  Metadata — SEO + PWA meta tags for iOS & Android                   */
 /* ------------------------------------------------------------------ */
 export const metadata: Metadata = {
-  title: "PureDraft HR - AI-Powered HR Document Processing",
+  title: {
+    default: "PureDraft HR — AI-Powered HR Document Generator",
+    template: "%s | PureDraft HR",
+  },
   description:
-    "Enterprise-grade HR document processing with AI-powered formatting, summarization, and creation for HR professionals. Built with Google Gemini.",
+    "Generate, format, and summarize professional HR documents in seconds with AI. Offer letters, policies, performance reviews, bulk CSV generation, and more — powered by Google Gemini.",
   keywords: [
-    "HR documents",
-    "AI formatting",
-    "document summarization",
-    "HR tools",
-    "recruitment",
+    "HR software",
+    "AI document generator",
+    "HR document formatting",
+    "AI offer letters",
+    "bulk CSV document generation",
+    "human resources tools",
+    "policy generator",
+    "performance review template",
+    "HR assistant",
+    "document summarizer",
+    "onboarding documents",
+    "termination letter generator",
+    "PureDraft HR",
+    "Google Gemini HR",
   ],
   manifest: "/manifest.json",
+  metadataBase: new URL(SITE_URL),
+  alternates: { canonical: "/" },
   icons: {
     icon: `/favicon.svg?v=${FAVICON_VERSION}`,
     shortcut: `/favicon.svg?v=${FAVICON_VERSION}`,
@@ -34,17 +52,22 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://puredrafthr.com",
-    title: "PureDraft HR - AI-Powered HR Document Processing",
+    url: SITE_URL,
+    title: "PureDraft HR — AI-Powered HR Document Generator",
     description:
-      "Enterprise-grade HR document processing with AI-powered formatting, summarization, and creation for HR professionals.",
+      "Generate, format, and summarize professional HR documents in seconds with AI. Offer letters, policies, bulk CSV generation, and more.",
     siteName: "PureDraft HR",
   },
   twitter: {
     card: "summary_large_image",
-    title: "PureDraft HR - AI-Powered HR Document Processing",
+    title: "PureDraft HR — AI-Powered HR Document Generator",
     description:
-      "Enterprise-grade HR document processing with AI-powered formatting, summarization, and creation for HR professionals.",
+      "Generate, format, and summarize professional HR documents in seconds with AI. Powered by Google Gemini.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
   },
   appleWebApp: {
     capable: true,
@@ -96,7 +119,7 @@ export default function RootLayout({
               url: "https://puredrafthr.com",
               logo: "https://puredrafthr.com/favicon.svg",
               description:
-                "Enterprise-grade HR document processing with AI-powered formatting, summarization, and creation for HR professionals.",
+                "Generate, format, and summarize professional HR documents in seconds with AI. Offer letters, policies, bulk CSV generation, and more — powered by Google Gemini.",
               sameAs: ["https://github.com/Samson-Eniolorunda"],
               contactPoint: {
                 "@type": "ContactPoint",
@@ -135,6 +158,11 @@ export default function RootLayout({
             `,
           }}
         />
+        {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
+          <GoogleAnalytics
+            gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}
+          />
+        )}
       </body>
     </html>
   );
