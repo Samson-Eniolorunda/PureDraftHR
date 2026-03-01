@@ -13,8 +13,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 // Cache bust version - increment this when favicon changes
 const FAVICON_VERSION = "v2";
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://puredrafthr.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://puredrafthr.com";
 
 /* ------------------------------------------------------------------ */
 /*  Metadata — SEO + PWA meta tags for iOS & Android                   */
@@ -26,6 +25,9 @@ export const metadata: Metadata = {
   },
   description:
     "Generate, format, and summarize professional HR documents in seconds with AI. Offer letters, policies, performance reviews, bulk CSV generation, and more — powered by Google Gemini.",
+  verification: {
+    google: "5i2fsgC8Wd-MSLzIQm51TyjpIfbYegL6_95yvPN_LwU",
+  },
   keywords: [
     "HR software",
     "AI document generator",
@@ -159,9 +161,7 @@ export default function RootLayout({
           }}
         />
         {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
-          <GoogleAnalytics
-            gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}
-          />
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
         )}
       </body>
     </html>
