@@ -463,7 +463,7 @@ export default function AssistantPage() {
                 )}
               </CardContent>
             </Card>
-          )
+          )}
         </div>
       </div>
   );
