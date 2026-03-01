@@ -93,6 +93,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Google Site Verification */}
+        <meta
+          name="google-site-verification"
+          content="5i2fsgC8Wd-MSLzIQm51TyjpIfbYegL6_95yvPN_LwU"
+        />
         {/* Favicon cache buster for all browsers */}
         <link
           rel="icon"
