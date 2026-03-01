@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://puredrafthr.com";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://puredrafthr.btbcoder.site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date().toISOString();

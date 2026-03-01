@@ -134,8 +134,10 @@ You must strictly adhere to the following layout and typography rules:
 2. HUMAN RHYTHM: Write with a natural, human rhythm. Vary your sentence lengths. Use clear, direct, and professional business English without sounding overly academic or robotic.
 3. BE DIRECT: Get straight to the point. Do not write generic introductory or concluding paragraphs unless specifically requested.
 
-**D. DYNAMIC CLONE DIRECTIVE:**
-You must act as a perfect structural cloner. Do not force data into a generic table if the reference document does not use one. You must analyze the EXACT layout of the uploaded reference document.
+**D. DYNAMIC CLONE DIRECTIVE (THE ESCAPE HATCH & HARD OVERRIDE):**
+You must dynamically analyze the uploaded reference document before formatting.
+- **HARD OVERRIDE FOR REPORTS:** If the document is identified as a "Daily Report", "Weekly Report", or "Staff Report", you are STRICTLY FORBIDDEN from formatting it as standard text or bulleted lists. You MUST ALWAYS treat it as a tabular document and generate a Markdown table.
+- **For all other documents:** Do not force a Markdown table if the reference does not use one (e.g., standard text, letters). Use standard Markdown headings, bold text, and bullet points to clone the original hierarchy.
 - If the reference uses specific sections (e.g., 'TASKS COMPLETED', 'PENDING / ONGOING TASKS', 'NOTES'), you MUST replicate those exact headers and sections.
 - If the reference uses a specific table with custom columns, you MUST replicate those exact columns.
 - Match the uppercase/lowercase formatting of the original headers exactly. Do not invent your own document titles or structures.
@@ -169,10 +171,12 @@ CRITICAL TYPOGRAPHY RULES:
 3. BULLET LISTS: Use dashes (-) for standard lists. Leave blank lines before and after lists.
 4. BOLD KEY TERMS: Bold important takeaways and metrics (e.g., **5% increase**).
 
-DYNAMIC CLONE DIRECTIVE:
-You must act as a perfect structural cloner. Do not force data into a generic table if the reference document does not use one. Analyze the EXACT layout of the uploaded reference document.
-- If the reference uses specific sections (e.g., 'TASKS COMPLETED', 'PENDING / ONGOING TASKS', 'NOTES'), replicate those exact headers and sections.
-- If the reference uses a specific table with custom columns, replicate those exact columns.
+DYNAMIC CLONE DIRECTIVE (THE ESCAPE HATCH & HARD OVERRIDE):
+You must dynamically analyze the uploaded reference document before formatting.
+- **HARD OVERRIDE FOR REPORTS:** If the document is identified as a "Daily Report", "Weekly Report", or "Staff Report", you are STRICTLY FORBIDDEN from formatting it as standard text or bulleted lists. You MUST ALWAYS treat it as a tabular document and generate a Markdown table.
+- **For all other documents:** Do not force a Markdown table if the reference does not use one (e.g., standard text, letters). Use standard Markdown headings, bold text, and bullet points to clone the original hierarchy.
+- If the reference uses specific sections (e.g., 'TASKS COMPLETED', 'PENDING / ONGOING TASKS', 'NOTES'), you MUST replicate those exact headers and sections.
+- If the reference uses a specific table with custom columns, you MUST replicate those exact columns.
 - Match the uppercase/lowercase formatting of the original headers exactly. Do not invent your own structures.
 - If the input text was extracted from a PDF/DOCX, tables may appear as messy comma-separated strings. Reconstruct them into Markdown Tables matching the original column structure.
 - Do not output raw comma-separated text. If data belongs in a grid, reconstruct it as a table.
@@ -218,10 +222,12 @@ You must strictly enforce proper document structure and white-space:
 6. BOLDING: Bold key terms and labels making the document scannable (e.g., **Start Date:**, **Salary:**).
 7. IF DATA LOOKS TABULAR: Use Markdown Tables with | and - to structure salary breakdowns, paired values, grids, and data lists.
 
-**B. DYNAMIC CLONE DIRECTIVE:**
-You must act as a perfect structural cloner. Do not force data into a generic table if the reference document does not use one. Analyze the EXACT layout of any uploaded reference.
-- If the reference uses specific sections (e.g., 'TASKS COMPLETED', 'PENDING / ONGOING TASKS', 'NOTES'), replicate those exact headers and sections.
-- If the reference uses a specific table with custom columns, replicate those exact columns.
+**B. DYNAMIC CLONE DIRECTIVE (THE ESCAPE HATCH & HARD OVERRIDE):**
+You must dynamically analyze the uploaded reference document before formatting.
+- **HARD OVERRIDE FOR REPORTS:** If the document is identified as a "Daily Report", "Weekly Report", or "Staff Report", you are STRICTLY FORBIDDEN from formatting it as standard text or bulleted lists. You MUST ALWAYS treat it as a tabular document and generate a Markdown table.
+- **For all other documents:** Do not force a Markdown table if the reference does not use one (e.g., standard text, letters). Use standard Markdown headings, bold text, and bullet points to clone the original hierarchy.
+- If the reference uses specific sections (e.g., 'TASKS COMPLETED', 'PENDING / ONGOING TASKS', 'NOTES'), you MUST replicate those exact headers and sections.
+- If the reference uses a specific table with custom columns, you MUST replicate those exact columns.
 - Match the uppercase/lowercase formatting of the original headers exactly. Do not invent your own structures.
 - If data was extracted from a PDF/DOCX, tables may appear as messy comma-separated strings. Reconstruct them into Markdown Tables matching the original column structure.
 - Do not output raw comma-separated text. If data belongs in a grid, reconstruct it as a table.
@@ -269,7 +275,7 @@ IF A REFERENCE DOCUMENT IS PROVIDED:
 - Use it as context to answer questions about its content.
 - If the user asks about a specific policy, procedure, or section, search the reference text and provide a clear, direct answer.
 - Always cite or reference the relevant section when answering.
-- DYNAMIC CLONE DIRECTIVE: You must act as a perfect structural cloner. Do not force data into a generic table if the reference document does not use one. Analyze the EXACT layout of the reference and replicate its exact headers, sections, and column structure. Match uppercase/lowercase formatting exactly. If data was extracted from a PDF/DOCX and appears as messy comma-separated strings, reconstruct it into a Markdown Table matching the original columns. Do not output raw comma-separated text.
+- DYNAMIC CLONE DIRECTIVE (HARD OVERRIDE): You must dynamically analyze the uploaded reference document. If the document is identified as a "Daily Report", "Weekly Report", or "Staff Report", you are STRICTLY FORBIDDEN from formatting it as standard text or bulleted lists. You MUST ALWAYS treat it as a tabular document and generate a Markdown table. For all other documents, do not force a table if the reference doesn't use one. Replicate exact headers, sections, and column structure. If data was extracted from a PDF/DOCX and appears as messy comma-separated strings, reconstruct it into a Markdown Table matching the original columns. Do not output raw comma-separated text.
 - CRITICAL TABLE SYNTAX RULE: If you build a Markdown table, you are strictly forbidden from using newlines inside a table cell. Use the HTML \`<br>\` tag for visual line breaks within cells. CORRECT: \`| Monday | Rebecca | ❖ Task 1 <br> ❖ Task 2 |\` — INCORRECT: Do not use \\n between items inside a cell.
 
 SMART MEETING SCHEDULER:
@@ -382,10 +388,16 @@ export async function POST(req: Request) {
     const totalChars =
       systemPrompt.length +
       safeMessages.reduce(
-        (sum, m) => sum + (typeof m.content === "string" ? m.content.length : 0),
+        (sum, m) =>
+          sum + (typeof m.content === "string" ? m.content.length : 0),
         0,
       );
-    console.log("[API/chat] Starting stream for tool:", tool, "| total chars:", totalChars);
+    console.log(
+      "[API/chat] Starting stream for tool:",
+      tool,
+      "| total chars:",
+      totalChars,
+    );
 
     if (totalChars > 120_000) {
       console.error("[API/chat] Payload too large:", totalChars, "chars");
@@ -406,13 +418,20 @@ export async function POST(req: Request) {
       getErrorMessage: (error: unknown) => {
         // This controls the error string sent to the client inside
         // the SSE stream instead of the default "An error occurred".
-        const msg =
-          error instanceof Error ? error.message : String(error);
+        const msg = error instanceof Error ? error.message : String(error);
         console.error("[API/chat] Client-facing stream error:", msg);
 
-        if (msg.includes("too large") || msg.includes("payload") || msg.includes("Token"))
+        if (
+          msg.includes("too large") ||
+          msg.includes("payload") ||
+          msg.includes("Token")
+        )
           return "The document is too large for the AI to process. Please shorten it and try again.";
-        if (msg.includes("quota") || msg.includes("429") || msg.includes("RATE"))
+        if (
+          msg.includes("quota") ||
+          msg.includes("429") ||
+          msg.includes("RATE")
+        )
           return "API rate limit reached. Please wait a moment and try again.";
         if (msg.includes("timeout") || msg.includes("DEADLINE"))
           return "The request timed out. Please try again with shorter content.";
