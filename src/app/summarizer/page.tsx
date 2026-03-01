@@ -265,3 +265,4 @@ export default function SummarizerPage() {
       </div>
     </div>
   );
+}
