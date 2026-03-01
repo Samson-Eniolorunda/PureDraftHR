@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 /** Escape HTML special chars to prevent XSS in email templates */
 function escapeHtml(str: string): string {
   return str
@@ -64,12 +62,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Instantiate Resend lazily so the build doesn't fail when the key is absent
+    const resend = new Resend(process.env.RESEND_API_KEY);
+
     // Guard against missing env var
     const contactEmail = process.env.CONTACT_EMAIL;
     if (!contactEmail) {
       console.error("❌ CONTACT_EMAIL env var is not set");
       return NextResponse.json(
-        { success: false, error: "Server misconfigured. Please try again later." },
+        {
+          success: false,
+          error: "Server misconfigured. Please try again later.",
+        },
         { status: 500 },
       );
     }
@@ -109,7 +113,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("📧 Contact form email sent successfully to", process.env.CONTACT_EMAIL);
+    console.log(
+      "📧 Contact form email sent successfully to",
+      process.env.CONTACT_EMAIL,
+    );
 
     return NextResponse.json(
       {
