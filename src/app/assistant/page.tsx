@@ -466,6 +466,5 @@ export default function AssistantPage() {
           )}
         </div>
       </div>
-  )}
   );
 }
