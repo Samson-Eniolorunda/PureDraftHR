@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useChat } from "ai/react";
 import {
   Card,
@@ -27,6 +27,7 @@ import { Modal } from "@/components/ui/modal";
 import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
 import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
 import { useDocumentStyling } from "@/hooks/useDocumentStyling";
+import { getFormatterInput } from "@/lib/formatter-transfer";
 import { Loader2, Wand2, StopCircle } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -74,7 +75,16 @@ export default function FormatterPage() {
   const [showStylingModal, setShowStylingModal] = useState(false);
   const [refineText, setRefineText] = useState("");
   const [streamError, setStreamError] = useState<string | null>(null);
+  const [masterDocument, setMasterDocument] = useState("");
   const resultRef = useRef<HTMLDivElement>(null);
+
+  // Pre-fill input text from transfer (e.g., from Assistant/Summarizer)
+  useEffect(() => {
+    const transferredText = getFormatterInput();
+    if (transferredText) {
+      setInputText(transferredText);
+    }
+  }, []);
 
   /** Resolved template — custom string or dropdown value */
   const resolvedTemplate =
@@ -89,14 +99,23 @@ export default function FormatterPage() {
       template: resolvedTemplate,
       referenceText: referenceText || undefined,
       language: language !== "English" ? language : undefined,
+      existingDocument: masterDocument || undefined,
     },
     onError(err) {
       console.error("[Formatter] Stream error:", err);
       const msg = err.message || "";
-      if (msg.includes("429") || msg.includes("rate") || msg.includes("slow down")) {
-        setStreamError("Our AI is currently processing a high volume of documents. Please wait just a few seconds and try again! \u23f3");
+      if (
+        msg.includes("429") ||
+        msg.includes("rate") ||
+        msg.includes("slow down")
+      ) {
+        setStreamError(
+          "Our AI is currently processing a high volume of documents. Please wait just a few seconds and try again! \u23f3",
+        );
       } else {
-        setStreamError(msg || "An error occurred. The document may be too large.");
+        setStreamError(
+          msg || "An error occurred. The document may be too large.",
+        );
       }
     },
   });
@@ -115,16 +134,24 @@ export default function FormatterPage() {
   const handleConfirmGenerate = useCallback(() => {
     setShowStylingModal(false);
 
+    let userContent = `Template: ${resolvedTemplate}\n\n`;
+
+    if (masterDocument.trim()) {
+      userContent += `MASTER DOCUMENT:\n\n${masterDocument}\n\n---\n\nNEW RAW DATA TO FORMAT:\n\n${inputText}`;
+    } else {
+      userContent += `Raw text to format:\n\n${inputText}`;
+    }
+
     setMessages([]);
     append({
       role: "user",
-      content: `Template: ${resolvedTemplate}\n\nRaw text to format:\n\n${inputText}`,
+      content: userContent,
     });
 
     setTimeout(() => {
       resultRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 300);
-  }, [inputText, append, setMessages, resolvedTemplate]);
+  }, [inputText, masterDocument, append, setMessages, resolvedTemplate]);
 
   /** Send a refinement follow-up */
   const handleRefine = useCallback(() => {
@@ -205,12 +232,38 @@ export default function FormatterPage() {
               disabled={isLoading}
             />
 
+            {/* Master Document for Continuous Formatting */}
+            <div className="space-y-2">
+              <Label htmlFor="master-document" className="text-sm font-medium">
+                Current Master Document (Optional)
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Paste your previously formatted document here for incremental
+                merging. The AI will format your new data to match this
+                structure and append it in the correct location.
+              </p>
+              <Textarea
+                id="master-document"
+                rows={4}
+                value={masterDocument}
+                onChange={(e) => setMasterDocument(e.target.value)}
+                placeholder="Paste your previously formatted document here (optional)..."
+                disabled={isLoading}
+                className="resize-y min-h-[100px]"
+              />
+            </div>
+
             {/* Dual input: upload or paste */}
-            <DualInput
-              onTextReady={setInputText}
-              disabled={isLoading}
-              placeholder="Paste the messy/unstructured text you want formatted…"
-            />
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">
+                New Raw Data to Format
+              </Label>
+              <DualInput
+                onTextReady={setInputText}
+                disabled={isLoading}
+                placeholder="Paste the messy/unstructured text you want formatted…"
+              />
+            </div>
 
             {/* Consent & Reference Template Footer */}
             <DocumentFormFooter

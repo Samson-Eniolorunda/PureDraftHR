@@ -109,6 +109,14 @@ function sanitizeString(str: string): string {
 const SYSTEM_PROMPTS: Record<string, string> = {
   formatter: `You are an expert HR Document Formatter. Your job is to take messy, unstructured text and restructure it into a perfectly organized markdown document.
 
+**LAYOUT DETECTION (ESCAPE HATCH):**
+Before formatting, analyze the uploaded reference document:
+- If the document is structurally a table or grid (e.g., Staff Reports, Payroll): proceed to dynamic table generation.
+- If the document is standard text, a form, or a letter (e.g., Offer Letters, Company Policies): DO NOT force a Markdown table. Use standard Markdown headings (##), bold text, and bullet points to perfectly clone the original document's hierarchy.
+
+**CONTENT PRESERVATION DIRECTIVE:**
+You are a strict document formatter. You must NEVER add, remove, summarize, or alter the meaning of the provided text. Your ONLY job is to apply the requested visual Markdown styling to the exact content provided.
+
 CRITICAL REFERENCE CLONING & TYPOGRAPHY INSTRUCTIONS:
 You must strictly adhere to the following layout and typography rules:
 
@@ -170,9 +178,17 @@ INCORRECT: Do not press enter or use \\n between items inside a cell. This break
 9. "Training Summary": Program Name, Date, Participants, Topics Covered, Key Learnings, Follow-Up Action.
 10. "Disciplinary Notice": Employee, Offense, Policy Violated, Consequence, Appeal Process, Signature Area.
 
+**INCREMENTAL MERGE DIRECTIVE:**
+When provided with a "Current Master Document" and "New Raw Data": analyze the Master Document's structural pattern (chronological days, department groupings, etc.), format the New Raw Data to match that structure, and logically merge/append it in the correct sequential location. NEVER delete or overwrite existing data in the Master Document.
+
 Output ONLY the formatted markdown document. Do not include any preamble or explanation.`,
 
   summarizer: `You are a seasoned HR professional who writes clear, human-sounding summaries of workplace documents. Your goal is to distill lengthy HR text into concise, actionable summaries.
+
+**LAYOUT DETECTION (ESCAPE HATCH):**
+Before formatting, analyze the uploaded reference document:
+- If the document is structurally a table or grid (e.g., Staff Reports, Payroll): proceed to dynamic table generation.
+- If the document is standard text, a form, or a letter (e.g., Offer Letters, Company Policies): DO NOT force a Markdown table. Use standard Markdown headings (##), bold text, and bullet points to perfectly clone the original document's hierarchy.
 
 CRITICAL TYPOGRAPHY RULES:
 1. GENERAL SPACING: Use double line breaks (\\n\\n) between paragraphs to maintain readability.
@@ -223,6 +239,11 @@ Output format:
 Output ONLY the summary in markdown. No preamble.`,
 
   builder: `You are an expert HR document writer. You create complete, professional HR documents from scratch based on minimal input.
+
+**LAYOUT DETECTION (ESCAPE HATCH):**
+Before formatting, analyze the uploaded reference document:
+- If the document is structurally a table or grid (e.g., Staff Reports, Payroll): proceed to dynamic table generation.
+- If the document is standard text, a form, or a letter (e.g., Offer Letters, Company Policies): DO NOT force a Markdown table. Use standard Markdown headings (##), bold text, and bullet points to perfectly clone the original document's hierarchy.
 
 CRITICAL STRUCTURE & TYPOGRAPHY INSTRUCTIONS:
 You must strictly enforce proper document structure and white-space:
@@ -298,6 +319,11 @@ WRITING STYLE:
 - It's OK to use contractions (don't, isn't, we're) to sound natural.
 - Ensure you format any drafts with proper spacing so they can be easily copied and pasted.
 
+**LAYOUT DETECTION (ESCAPE HATCH):**
+Before formatting, analyze the uploaded reference document:
+- If the document is structurally a table or grid (e.g., Staff Reports, Payroll): proceed to dynamic table generation.
+- If the document is standard text, a form, or a letter (e.g., Offer Letters, Company Policies): DO NOT force a Markdown table. Use standard Markdown headings (##), bold text, and bullet points to perfectly clone the original document's hierarchy.
+
 IF A REFERENCE DOCUMENT IS PROVIDED:
 - Use it as context to answer questions about its content.
 - If the user asks about a specific policy, procedure, or section, search the reference text and provide a clear, direct answer.
@@ -351,7 +377,14 @@ export async function POST(req: Request) {
       );
     }
 
-    const { messages, tool, template, referenceText, language } = body as {
+    const {
+      messages,
+      tool,
+      template,
+      referenceText,
+      language,
+      existingDocument,
+    } = body as {
       messages: {
         role: "user" | "assistant" | "system" | "tool";
         content: string;
@@ -360,6 +393,7 @@ export async function POST(req: Request) {
       template?: string;
       referenceText?: string;
       language?: string;
+      existingDocument?: string;
     };
 
     console.log("[API/chat] POST received", {
@@ -401,6 +435,11 @@ export async function POST(req: Request) {
         MAX_REFERENCE_CHARS,
       );
       systemPrompt += `\n\n⚠️ REFERENCE TEMPLATE PROVIDED: You MUST perfectly mimic the structure, tone, layout, and formatting style of the following reference text when generating your output:\n\n---\n${safeRef}\n---\n\nAnalyze this reference carefully and apply its style principles to your output.`;
+    }
+
+    // If an existing document is provided for the formatter, activate Incremental Merge Directive
+    if (tool === "formatter" && existingDocument && existingDocument.trim()) {
+      systemPrompt += `\n\n⚠️ INCREMENTAL MERGE MODE: You have been provided with a Current Master Document and New Raw Data. Apply the INCREMENTAL MERGE DIRECTIVE to format and merge the new data into the master document without overwriting existing content.`;
     }
 
     // Multi-language support: if a non-English language is selected, append instruction

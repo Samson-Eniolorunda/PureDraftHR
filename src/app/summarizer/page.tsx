@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useChat } from "ai/react";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -16,16 +17,19 @@ import { Label } from "@/components/ui/label";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
 import { DocumentFormFooter } from "@/components/document-form-footer";
-import { DocumentStylingUI } from "@/components/document-styling-ui";
 import {
   LanguageSelector,
   type LanguageValue,
 } from "@/components/language-selector";
-import { Modal } from "@/components/ui/modal";
 import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
 import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
-import { useDocumentStyling } from "@/hooks/useDocumentStyling";
-import { Loader2, Wand2, StopCircle } from "lucide-react";
+import { setFormatterInput } from "@/lib/formatter-transfer";
+import {
+  Loader2,
+  Wand2,
+  StopCircle,
+  FileText as FileTextIcon,
+} from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /*  /summarizer — AI-powered HR document summarizer                    */
@@ -40,19 +44,7 @@ export default function SummarizerPage() {
   const [isConsented, setIsConsented] = useState(false);
   const [language, setLanguage] = useState<LanguageValue>("English");
   const showSkeletonPreview = useDevSkeletonPreview();
-  const {
-    styling,
-    googleFonts,
-    webSafeFonts,
-    updateFontFamily,
-    updateH1Size,
-    updateH2H3Size,
-    updateBodyTextSize,
-    updateLineSpacing,
-    updateBulletStyle,
-    resetToDefaults,
-  } = useDocumentStyling();
-  const [showStylingModal, setShowStylingModal] = useState(false);
+  const router = useRouter();
   const [refineText, setRefineText] = useState("");
   const [streamError, setStreamError] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
@@ -67,10 +59,18 @@ export default function SummarizerPage() {
     onError(err) {
       console.error("[Summarizer] Stream error:", err);
       const msg = err.message || "";
-      if (msg.includes("429") || msg.includes("rate") || msg.includes("slow down")) {
-        setStreamError("Our AI is currently processing a high volume of documents. Please wait just a few seconds and try again! \u23f3");
+      if (
+        msg.includes("429") ||
+        msg.includes("rate") ||
+        msg.includes("slow down")
+      ) {
+        setStreamError(
+          "Our AI is currently processing a high volume of documents. Please wait just a few seconds and try again! \u23f3",
+        );
       } else {
-        setStreamError(msg || "An error occurred. The document may be too large.");
+        setStreamError(
+          msg || "An error occurred. The document may be too large.",
+        );
       }
     },
   });
@@ -80,15 +80,9 @@ export default function SummarizerPage() {
   const resultContent = assistantMessage?.content ?? "";
   const displayLoading = (isLoading || showSkeletonPreview) && !resultContent;
 
-  /** Open the styling modal before generating */
-  const handleSummarizeClick = useCallback(() => {
+  /** Summarize the document */
+  const handleSummarize = useCallback(() => {
     if (!inputText.trim() || isLoading || !isConsented) return;
-    setShowStylingModal(true);
-  }, [inputText, isLoading, isConsented]);
-
-  /** Confirm styling and trigger the AI stream */
-  const handleConfirmGenerate = useCallback(() => {
-    setShowStylingModal(false);
 
     // Reset previous conversation and send the new text
     setMessages([]);
@@ -101,7 +95,14 @@ export default function SummarizerPage() {
     setTimeout(() => {
       resultRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 300);
-  }, [inputText, append, setMessages]);
+  }, [inputText, isLoading, isConsented, append, setMessages]);
+
+  /** Format Document - transfer to Formatter */
+  const handleFormatDocument = useCallback(() => {
+    if (!resultContent) return;
+    setFormatterInput(resultContent);
+    router.push("/formatter");
+  }, [resultContent, router]);
 
   /** Send a refinement follow-up */
   const handleRefine = useCallback(() => {
@@ -159,7 +160,7 @@ export default function SummarizerPage() {
               isConsented={isConsented}
               onConsentChange={setIsConsented}
               onReferenceTextChange={setReferenceText}
-              onSubmit={handleSummarizeClick}
+              onSubmit={handleSummarize}
               submitLabel="Summarize"
             />
           </CardContent>
@@ -197,10 +198,7 @@ export default function SummarizerPage() {
                   <ResultSkeleton />
                 ) : (
                   <>
-                    <MarkdownRenderer
-                      content={resultContent}
-                      styling={styling}
-                    />
+                    <MarkdownRenderer content={resultContent} />
                     {isLoading && (
                       <Button
                         variant="destructive"
@@ -215,8 +213,18 @@ export default function SummarizerPage() {
                     <ExportButtons
                       content={resultContent}
                       filename="hr-summary"
-                      styling={styling}
                     />
+                    {!isLoading && resultContent && (
+                      <Button
+                        onClick={handleFormatDocument}
+                        disabled={!resultContent}
+                        className="w-full gap-2 mt-3"
+                        variant="outline"
+                      >
+                        <FileTextIcon className="h-4 w-4" />
+                        Format Document
+                      </Button>
+                    )}
 
                     {/* Refine Summary */}
                     {!isLoading && resultContent && (
@@ -255,40 +263,5 @@ export default function SummarizerPage() {
           )}
         </div>
       </div>
-
-      {/* ── Document Styling Modal ── */}
-      <Modal
-        open={showStylingModal}
-        onClose={() => setShowStylingModal(false)}
-        title="Document Styling"
-        footer={
-          <>
-            <Button
-              variant="outline"
-              onClick={() => setShowStylingModal(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleConfirmGenerate}>
-              <Wand2 className="h-4 w-4 mr-2" />
-              Confirm &amp; Generate
-            </Button>
-          </>
-        }
-      >
-        <DocumentStylingUI
-          styling={styling}
-          googleFonts={googleFonts}
-          webSafeFonts={webSafeFonts}
-          onFontFamilyChange={updateFontFamily}
-          onH1SizeChange={updateH1Size}
-          onH2H3SizeChange={updateH2H3Size}
-          onBodyTextSizeChange={updateBodyTextSize}
-          onLineSpacingChange={updateLineSpacing}
-          onBulletStyleChange={updateBulletStyle}
-          onResetDefaults={resetToDefaults}
-        />
-      </Modal>
     </div>
   );
-}
