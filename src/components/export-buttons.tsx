@@ -187,12 +187,13 @@ export function ExportButtons({
       const rawDocx = await import("docx");
       const rawFileSaver = await import("file-saver");
 
-      // 2. Safely unwrap them (handles Next.js production build quirks)
-      const docx = rawDocx.default || rawDocx;
+      // 2. Safely unwrap them (bypass TS strict mode to handle Webpack quirks)
+      const docx: typeof import("docx") = (rawDocx as any).default || rawDocx;
       const saveAs =
-        rawFileSaver.saveAs ||
-        (rawFileSaver.default && rawFileSaver.default.saveAs) ||
-        rawFileSaver.default;
+        (rawFileSaver as any).saveAs ||
+        ((rawFileSaver as any).default &&
+          (rawFileSaver as any).default.saveAs) ||
+        (rawFileSaver as any).default;
 
       if (!saveAs) {
         throw new Error("Could not load file-saver properly");
