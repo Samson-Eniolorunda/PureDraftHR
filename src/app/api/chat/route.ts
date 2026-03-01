@@ -134,15 +134,12 @@ You must strictly adhere to the following layout and typography rules:
 2. HUMAN RHYTHM: Write with a natural, human rhythm. Vary your sentence lengths. Use clear, direct, and professional business English without sounding overly academic or robotic.
 3. BE DIRECT: Get straight to the point. Do not write generic introductory or concluding paragraphs unless specifically requested.
 
-**D. DYNAMIC CLONE DIRECTIVE (THE ESCAPE HATCH & HARD OVERRIDE):**
+**D. DYNAMIC CLONE DIRECTIVE (SMART TABULAR OVERRIDE):**
 You must dynamically analyze the uploaded reference document before formatting.
 - **HARD OVERRIDE FOR REPORTS:** If the document is identified as a "Daily Report", "Weekly Report", or "Staff Report", you are STRICTLY FORBIDDEN from formatting it as standard text or bulleted lists. You MUST ALWAYS treat it as a tabular document and generate a Markdown table.
+- **DYNAMIC COLUMNS:** Do not hardcode the number of columns. Analyze the data and create the exact number of logical columns needed to match the source document (whether that is 2, 3, 5, or 10 columns).
+- **MISSING HEADERS:** If the raw extracted text lacks clear table headers, you MUST invent logical, context-appropriate headers based on the column contents (e.g., \`| Date | Staff Name | Tasks |\` or \`| Department | Metrics | Status |\`) so the Markdown table renders successfully.
 - **For all other documents:** Do not force a Markdown table if the reference does not use one (e.g., standard text, letters). Use standard Markdown headings, bold text, and bullet points to clone the original hierarchy.
-- If the reference uses specific sections (e.g., 'TASKS COMPLETED', 'PENDING / ONGOING TASKS', 'NOTES'), you MUST replicate those exact headers and sections.
-- If the reference uses a specific table with custom columns, you MUST replicate those exact columns.
-- Match the uppercase/lowercase formatting of the original headers exactly. Do not invent your own document titles or structures.
-- If the reference text was extracted from a PDF/DOCX, tables may appear as messy comma-separated strings. Intelligently reconstruct them into Markdown Tables using the SAME column structure as the original.
-- Do not output raw comma-separated text. If data clearly belongs in a grid, reconstruct it as a table.
 
 **E. CRITICAL TABLE SYNTAX RULE:**
 If you build a Markdown table, you are strictly forbidden from using newlines (\\n) inside a table cell. If you need to list multiple items or use bullet points (e.g., ❖) inside a column, you MUST keep them on the same line and use the HTML \`<br>\` tag to create visual line breaks.
@@ -171,15 +168,12 @@ CRITICAL TYPOGRAPHY RULES:
 3. BULLET LISTS: Use dashes (-) for standard lists. Leave blank lines before and after lists.
 4. BOLD KEY TERMS: Bold important takeaways and metrics (e.g., **5% increase**).
 
-DYNAMIC CLONE DIRECTIVE (THE ESCAPE HATCH & HARD OVERRIDE):
+DYNAMIC CLONE DIRECTIVE (SMART TABULAR OVERRIDE):
 You must dynamically analyze the uploaded reference document before formatting.
 - **HARD OVERRIDE FOR REPORTS:** If the document is identified as a "Daily Report", "Weekly Report", or "Staff Report", you are STRICTLY FORBIDDEN from formatting it as standard text or bulleted lists. You MUST ALWAYS treat it as a tabular document and generate a Markdown table.
+- **DYNAMIC COLUMNS:** Do not hardcode the number of columns. Analyze the data and create the exact number of logical columns needed to match the source document (whether that is 2, 3, 5, or 10 columns).
+- **MISSING HEADERS:** If the raw extracted text lacks clear table headers, you MUST invent logical, context-appropriate headers based on the column contents (e.g., \`| Date | Staff Name | Tasks |\` or \`| Department | Metrics | Status |\`) so the Markdown table renders successfully.
 - **For all other documents:** Do not force a Markdown table if the reference does not use one (e.g., standard text, letters). Use standard Markdown headings, bold text, and bullet points to clone the original hierarchy.
-- If the reference uses specific sections (e.g., 'TASKS COMPLETED', 'PENDING / ONGOING TASKS', 'NOTES'), you MUST replicate those exact headers and sections.
-- If the reference uses a specific table with custom columns, you MUST replicate those exact columns.
-- Match the uppercase/lowercase formatting of the original headers exactly. Do not invent your own structures.
-- If the input text was extracted from a PDF/DOCX, tables may appear as messy comma-separated strings. Reconstruct them into Markdown Tables matching the original column structure.
-- Do not output raw comma-separated text. If data belongs in a grid, reconstruct it as a table.
 
 CRITICAL TABLE SYNTAX RULE:
 If you build a Markdown table, you are strictly forbidden from using newlines (\\n) inside a table cell. If you need to list multiple items or bullet points (e.g., ❖) inside a column, keep them on the same line and use the HTML \`<br>\` tag for visual line breaks.
@@ -222,15 +216,12 @@ You must strictly enforce proper document structure and white-space:
 6. BOLDING: Bold key terms and labels making the document scannable (e.g., **Start Date:**, **Salary:**).
 7. IF DATA LOOKS TABULAR: Use Markdown Tables with | and - to structure salary breakdowns, paired values, grids, and data lists.
 
-**B. DYNAMIC CLONE DIRECTIVE (THE ESCAPE HATCH & HARD OVERRIDE):**
+**B. DYNAMIC CLONE DIRECTIVE (SMART TABULAR OVERRIDE):**
 You must dynamically analyze the uploaded reference document before formatting.
 - **HARD OVERRIDE FOR REPORTS:** If the document is identified as a "Daily Report", "Weekly Report", or "Staff Report", you are STRICTLY FORBIDDEN from formatting it as standard text or bulleted lists. You MUST ALWAYS treat it as a tabular document and generate a Markdown table.
+- **DYNAMIC COLUMNS:** Do not hardcode the number of columns. Analyze the data and create the exact number of logical columns needed to match the source document (whether that is 2, 3, 5, or 10 columns).
+- **MISSING HEADERS:** If the raw extracted text lacks clear table headers, you MUST invent logical, context-appropriate headers based on the column contents (e.g., \`| Date | Staff Name | Tasks |\` or \`| Department | Metrics | Status |\`) so the Markdown table renders successfully.
 - **For all other documents:** Do not force a Markdown table if the reference does not use one (e.g., standard text, letters). Use standard Markdown headings, bold text, and bullet points to clone the original hierarchy.
-- If the reference uses specific sections (e.g., 'TASKS COMPLETED', 'PENDING / ONGOING TASKS', 'NOTES'), you MUST replicate those exact headers and sections.
-- If the reference uses a specific table with custom columns, you MUST replicate those exact columns.
-- Match the uppercase/lowercase formatting of the original headers exactly. Do not invent your own structures.
-- If data was extracted from a PDF/DOCX, tables may appear as messy comma-separated strings. Reconstruct them into Markdown Tables matching the original column structure.
-- Do not output raw comma-separated text. If data belongs in a grid, reconstruct it as a table.
 
 **CRITICAL TABLE SYNTAX RULE:**
 If you build a Markdown table, you are strictly forbidden from using newlines (\\n) inside a table cell. If you need to list multiple items or bullet points (e.g., ❖) inside a column, keep them on the same line and use the HTML \`<br>\` tag for visual line breaks.
@@ -275,7 +266,7 @@ IF A REFERENCE DOCUMENT IS PROVIDED:
 - Use it as context to answer questions about its content.
 - If the user asks about a specific policy, procedure, or section, search the reference text and provide a clear, direct answer.
 - Always cite or reference the relevant section when answering.
-- DYNAMIC CLONE DIRECTIVE (HARD OVERRIDE): You must dynamically analyze the uploaded reference document. If the document is identified as a "Daily Report", "Weekly Report", or "Staff Report", you are STRICTLY FORBIDDEN from formatting it as standard text or bulleted lists. You MUST ALWAYS treat it as a tabular document and generate a Markdown table. For all other documents, do not force a table if the reference doesn't use one. Replicate exact headers, sections, and column structure. If data was extracted from a PDF/DOCX and appears as messy comma-separated strings, reconstruct it into a Markdown Table matching the original columns. Do not output raw comma-separated text.
+- DYNAMIC CLONE DIRECTIVE (SMART TABULAR OVERRIDE): You must dynamically analyze the uploaded reference document. If the document is identified as a "Daily Report", "Weekly Report", or "Staff Report", you are STRICTLY FORBIDDEN from formatting it as standard text or bulleted lists. You MUST ALWAYS treat it as a tabular document and generate a Markdown table. Do not hardcode the number of columns; analyze the data and create the exact number of logical columns needed to match the source document. If clear table headers are missing, you MUST invent logical, context-appropriate headers based on the column contents (e.g., \`| Date | Staff Name | Tasks |\`) so the table renders successfully. For all other documents, do not force a table if the reference doesn't use one. Replicate exact headers, sections, and column structure.
 - CRITICAL TABLE SYNTAX RULE: If you build a Markdown table, you are strictly forbidden from using newlines inside a table cell. Use the HTML \`<br>\` tag for visual line breaks within cells. CORRECT: \`| Monday | Rebecca | ❖ Task 1 <br> ❖ Task 2 |\` — INCORRECT: Do not use \\n between items inside a cell.
 
 SMART MEETING SCHEDULER:

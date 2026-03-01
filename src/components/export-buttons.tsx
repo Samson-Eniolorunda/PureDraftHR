@@ -182,24 +182,41 @@ export function ExportButtons({
 
   /* ── DOCX Export via the docx library (lazy-loaded) ── */
   const handleDocxExport = useCallback(async () => {
-    const [docx, { saveAs }] = await Promise.all([
-      import("docx"),
-      import("file-saver"),
-    ]);
+    try {
+      // 1. Await the raw modules without destructuring
+      const rawDocx = await import("docx");
+      const rawFileSaver = await import("file-saver");
 
-    const paragraphs = markdownToDocxParagraphs(docx, content, styling);
+      // 2. Safely unwrap them (handles Next.js production build quirks)
+      const docx = rawDocx.default || rawDocx;
+      const saveAs =
+        rawFileSaver.saveAs ||
+        (rawFileSaver.default && rawFileSaver.default.saveAs) ||
+        rawFileSaver.default;
 
-    const doc = new docx.Document({
-      sections: [
-        {
-          properties: {},
-          children: paragraphs,
-        },
-      ],
-    });
+      if (!saveAs) {
+        throw new Error("Could not load file-saver properly");
+      }
 
-    const blob = await docx.Packer.toBlob(doc);
-    saveAs(blob, `${resolvedFilename}.docx`);
+      // 3. Generate the document
+      const paragraphs = markdownToDocxParagraphs(docx, content, styling);
+
+      const doc = new docx.Document({
+        sections: [
+          {
+            properties: {},
+            children: paragraphs,
+          },
+        ],
+      });
+
+      // 4. Pack and save
+      const blob = await docx.Packer.toBlob(doc);
+      saveAs(blob, `${resolvedFilename}.docx`);
+    } catch (error) {
+      console.error("Failed to generate DOCX:", error);
+      alert("Failed to download Word document. Please try again.");
+    }
   }, [content, resolvedFilename, styling]);
 
   if (!content) return null;
@@ -208,7 +225,10 @@ export function ExportButtons({
     <div className="space-y-3 mt-4">
       {/* Editable filename input */}
       <div className="flex items-center gap-2">
-        <Label htmlFor="export-filename" className="text-xs text-muted-foreground whitespace-nowrap flex items-center gap-1">
+        <Label
+          htmlFor="export-filename"
+          className="text-xs text-muted-foreground whitespace-nowrap flex items-center gap-1"
+        >
           <Pencil className="h-3 w-3" />
           File Name
         </Label>
@@ -224,52 +244,54 @@ export function ExportButtons({
 
       {/* Export buttons */}
       <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handlePdfExport}
-        className="gap-2"
-      >
-        <Download className="h-4 w-4" />
-        PDF
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleDocxExport}
-        className="gap-2"
-      >
-        <Download className="h-4 w-4" />
-        Word
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleExcelExport}
-        className="gap-2"
-        title={hasTable ? "Export table data to Excel" : "Export text to Excel"}
-      >
-        <FileSpreadsheet className="h-4 w-4" />
-        Excel
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleCopy}
-        className="gap-2"
-      >
-        {copied ? (
-          <>
-            <Check className="h-4 w-4 text-green-600" />
-            Copied!
-          </>
-        ) : (
-          <>
-            <Copy className="h-4 w-4" />
-            Copy
-          </>
-        )}
-      </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handlePdfExport}
+          className="gap-2"
+        >
+          <Download className="h-4 w-4" />
+          PDF
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleDocxExport}
+          className="gap-2"
+        >
+          <Download className="h-4 w-4" />
+          Word
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleExcelExport}
+          className="gap-2"
+          title={
+            hasTable ? "Export table data to Excel" : "Export text to Excel"
+          }
+        >
+          <FileSpreadsheet className="h-4 w-4" />
+          Excel
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleCopy}
+          className="gap-2"
+        >
+          {copied ? (
+            <>
+              <Check className="h-4 w-4 text-green-600" />
+              Copied!
+            </>
+          ) : (
+            <>
+              <Copy className="h-4 w-4" />
+              Copy
+            </>
+          )}
+        </Button>
       </div>
     </div>
   );
@@ -383,10 +405,26 @@ function markdownToDocxParagraphs(
   docx: DocxModule,
   md: string,
   styling?: DocumentStyling,
-): (InstanceType<DocxModule["Paragraph"]> | InstanceType<DocxModule["Table"]>)[] {
-  const { Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } = docx;
+): (
+  | InstanceType<DocxModule["Paragraph"]>
+  | InstanceType<DocxModule["Table"]>
+)[] {
+  const {
+    Paragraph,
+    TextRun,
+    HeadingLevel,
+    AlignmentType,
+    Table,
+    TableRow,
+    TableCell,
+    WidthType,
+    BorderStyle,
+  } = docx;
   const lines = md.split("\n");
-  const paragraphs: (InstanceType<typeof Paragraph> | InstanceType<typeof Table>)[] = [];
+  const paragraphs: (
+    | InstanceType<typeof Paragraph>
+    | InstanceType<typeof Table>
+  )[] = [];
 
   // Convert pt to half-points (docx uses half-points for font size)
   const h1Size = (styling?.h1SizePt || 24) * 2;
@@ -573,7 +611,12 @@ function markdownToDocxParagraphs(
       const bulletText = bulletChar ? `${bulletChar} ${bullet[1]}` : bullet[1];
       paragraphs.push(
         new Paragraph({
-          children: parseInlineFormatting(TextRun, bulletText, fontFamily, bodySize),
+          children: parseInlineFormatting(
+            TextRun,
+            bulletText,
+            fontFamily,
+            bodySize,
+          ),
           indent: { left: 360 },
           spacing: lineSpacing,
         }),
@@ -587,7 +630,12 @@ function markdownToDocxParagraphs(
       const numText = `${numbered[1]}. ${numbered[2]}`;
       paragraphs.push(
         new Paragraph({
-          children: parseInlineFormatting(TextRun, numText, fontFamily, bodySize),
+          children: parseInlineFormatting(
+            TextRun,
+            numText,
+            fontFamily,
+            bodySize,
+          ),
           indent: { left: 360 },
           spacing: lineSpacing,
         }),
