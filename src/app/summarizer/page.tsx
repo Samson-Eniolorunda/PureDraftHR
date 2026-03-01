@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useChat } from "ai/react";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -16,43 +17,25 @@ import { Label } from "@/components/ui/label";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
 import { DocumentFormFooter } from "@/components/document-form-footer";
-import { DocumentStylingUI } from "@/components/document-styling-ui";
 import {
   LanguageSelector,
   type LanguageValue,
 } from "@/components/language-selector";
-import { Modal } from "@/components/ui/modal";
 import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
 import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
-import { useDocumentStyling } from "@/hooks/useDocumentStyling";
-import { Loader2, Wand2, StopCircle } from "lucide-react";
+import { Loader2, Wand2, StopCircle, Paintbrush } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
-/*  /summarizer — AI-powered HR document summarizer                    */
-/*                                                                     */
-/*  UI: Dual-input (upload or paste) → Submit → Styling Modal →        */
-/*      Confirm & Generate → Streaming markdown                        */
-/*  Export: PDF + DOCX download + Copy to clipboard                    */
+/* /summarizer — AI-powered HR document summarizer                    */
 /* ------------------------------------------------------------------ */
 export default function SummarizerPage() {
+  const router = useRouter();
+  const showSkeletonPreview = useDevSkeletonPreview();
+
   const [inputText, setInputText] = useState("");
   const [referenceText, setReferenceText] = useState("");
   const [isConsented, setIsConsented] = useState(false);
   const [language, setLanguage] = useState<LanguageValue>("English");
-  const showSkeletonPreview = useDevSkeletonPreview();
-  const {
-    styling,
-    googleFonts,
-    webSafeFonts,
-    updateFontFamily,
-    updateH1Size,
-    updateH2H3Size,
-    updateBodyTextSize,
-    updateLineSpacing,
-    updateBulletStyle,
-    resetToDefaults,
-  } = useDocumentStyling();
-  const [showStylingModal, setShowStylingModal] = useState(false);
   const [refineText, setRefineText] = useState("");
   const [streamError, setStreamError] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
@@ -67,10 +50,18 @@ export default function SummarizerPage() {
     onError(err) {
       console.error("[Summarizer] Stream error:", err);
       const msg = err.message || "";
-      if (msg.includes("429") || msg.includes("rate") || msg.includes("slow down")) {
-        setStreamError("Our AI is currently processing a high volume of documents. Please wait just a few seconds and try again! \u23f3");
+      if (
+        msg.includes("429") ||
+        msg.includes("rate") ||
+        msg.includes("slow down")
+      ) {
+        setStreamError(
+          "Our AI is currently processing a high volume of documents. Please wait just a few seconds and try again! ⏳",
+        );
       } else {
-        setStreamError(msg || "An error occurred. The document may be too large.");
+        setStreamError(
+          msg || "An error occurred. The document may be too large.",
+        );
       }
     },
   });
@@ -80,15 +71,9 @@ export default function SummarizerPage() {
   const resultContent = assistantMessage?.content ?? "";
   const displayLoading = (isLoading || showSkeletonPreview) && !resultContent;
 
-  /** Open the styling modal before generating */
+  /** Trigger the AI stream directly */
   const handleSummarizeClick = useCallback(() => {
     if (!inputText.trim() || isLoading || !isConsented) return;
-    setShowStylingModal(true);
-  }, [inputText, isLoading, isConsented]);
-
-  /** Confirm styling and trigger the AI stream */
-  const handleConfirmGenerate = useCallback(() => {
-    setShowStylingModal(false);
 
     // Reset previous conversation and send the new text
     setMessages([]);
@@ -101,7 +86,7 @@ export default function SummarizerPage() {
     setTimeout(() => {
       resultRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 300);
-  }, [inputText, append, setMessages]);
+  }, [inputText, isLoading, isConsented, append, setMessages]);
 
   /** Send a refinement follow-up */
   const handleRefine = useCallback(() => {
@@ -115,6 +100,12 @@ export default function SummarizerPage() {
       resultRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 300);
   }, [refineText, isLoading, append]);
+
+  // Push to Formatter Action
+  const handleRouteToFormatter = (text: string) => {
+    localStorage.setItem("puredraft_formatter_payload", text);
+    router.push("/formatter"); // Navigates to your formatter page
+  };
 
   return (
     <div className="space-y-6">
@@ -169,18 +160,17 @@ export default function SummarizerPage() {
         <div ref={resultRef}>
           {/* Error banner */}
           {streamError && (
-            <div className="mb-4 flex items-center justify-between rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3">
-              <p className="text-sm text-red-700 dark:text-red-400">
-                {streamError}
-              </p>
+            <div className="mb-4 flex items-center justify-between rounded-lg border border-red-300 bg-red-50 p-3">
+              <p className="text-sm text-red-700">{streamError}</p>
               <button
                 onClick={() => setStreamError(null)}
-                className="text-red-500 hover:text-red-700 dark:hover:text-red-300 ml-2"
+                className="text-red-500 hover:text-red-700 ml-2"
               >
                 &times;
               </button>
             </div>
           )}
+
           {(resultContent || isLoading) && (
             <Card>
               <CardHeader>
@@ -197,10 +187,7 @@ export default function SummarizerPage() {
                   <ResultSkeleton />
                 ) : (
                   <>
-                    <MarkdownRenderer
-                      content={resultContent}
-                      styling={styling}
-                    />
+                    <MarkdownRenderer content={resultContent} />
                     {isLoading && (
                       <Button
                         variant="destructive"
@@ -212,11 +199,23 @@ export default function SummarizerPage() {
                         Stop Generating
                       </Button>
                     )}
-                    <ExportButtons
-                      content={resultContent}
-                      filename="hr-summary"
-                      styling={styling}
-                    />
+
+                    {!isLoading && resultContent && (
+                      <div className="mt-4 flex flex-wrap items-center gap-2 pt-2">
+                        <ExportButtons
+                          content={resultContent}
+                          filename="hr-summary"
+                        />
+                        <Button
+                          variant="secondary"
+                          onClick={() => handleRouteToFormatter(resultContent)}
+                          className="gap-2"
+                        >
+                          <Paintbrush className="h-4 w-4" />
+                          Format Document
+                        </Button>
+                      </div>
+                    )}
 
                     {/* Refine Summary */}
                     {!isLoading && resultContent && (
@@ -255,40 +254,6 @@ export default function SummarizerPage() {
           )}
         </div>
       </div>
-
-      {/* ── Document Styling Modal ── */}
-      <Modal
-        open={showStylingModal}
-        onClose={() => setShowStylingModal(false)}
-        title="Document Styling"
-        footer={
-          <>
-            <Button
-              variant="outline"
-              onClick={() => setShowStylingModal(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleConfirmGenerate}>
-              <Wand2 className="h-4 w-4 mr-2" />
-              Confirm &amp; Generate
-            </Button>
-          </>
-        }
-      >
-        <DocumentStylingUI
-          styling={styling}
-          googleFonts={googleFonts}
-          webSafeFonts={webSafeFonts}
-          onFontFamilyChange={updateFontFamily}
-          onH1SizeChange={updateH1Size}
-          onH2H3SizeChange={updateH2H3Size}
-          onBodyTextSizeChange={updateBodyTextSize}
-          onLineSpacingChange={updateLineSpacing}
-          onBulletStyleChange={updateBulletStyle}
-          onResetDefaults={resetToDefaults}
-        />
-      </Modal>
     </div>
   );
 }

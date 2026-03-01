@@ -13,11 +13,12 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 // Cache bust version - increment this when favicon changes
 const FAVICON_VERSION = "v2";
 
+// FIXED: Now defaults to your actual staging domain
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://puredrafthr.com";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://puredrafthr.btbcoder.site";
 
 /* ------------------------------------------------------------------ */
-/*  Metadata — SEO + PWA meta tags for iOS & Android                   */
+/* Metadata — SEO + PWA meta tags for iOS & Android                  */
 /* ------------------------------------------------------------------ */
 export const metadata: Metadata = {
   title: {
@@ -26,6 +27,7 @@ export const metadata: Metadata = {
   },
   description:
     "Generate, format, and summarize professional HR documents in seconds with AI. Offer letters, policies, performance reviews, bulk CSV generation, and more — powered by Google Gemini.",
+  // Removed the old google meta verification tag here since you used the HTML file
   keywords: [
     "HR software",
     "AI document generator",
@@ -116,8 +118,8 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "Organization",
               name: "PureDraft HR",
-              url: "https://puredrafthr.com",
-              logo: "https://puredrafthr.com/favicon.svg",
+              url: SITE_URL, // FIXED: Now uses the dynamic SITE_URL
+              logo: `${SITE_URL}/favicon.svg`, // FIXED: Now uses the dynamic SITE_URL
               description:
                 "Generate, format, and summarize professional HR documents in seconds with AI. Offer letters, policies, bulk CSV generation, and more — powered by Google Gemini.",
               sameAs: ["https://github.com/Samson-Eniolorunda"],
@@ -159,9 +161,7 @@ export default function RootLayout({
           }}
         />
         {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
-          <GoogleAnalytics
-            gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}
-          />
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
         )}
       </body>
     </html>

@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useChat } from "ai/react";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -14,15 +15,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
-import { DocumentStylingUI } from "@/components/document-styling-ui";
 import {
   LanguageSelector,
   type LanguageValue,
 } from "@/components/language-selector";
-import { Modal } from "@/components/ui/modal";
 import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
 import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
-import { useDocumentStyling } from "@/hooks/useDocumentStyling";
 import {
   MeetingCard,
   parseMeetingFromResponse,
@@ -37,32 +35,18 @@ import {
   X,
   FileText,
   StopCircle,
-  SlidersHorizontal,
+  Paintbrush,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
-/*  /assistant — Freeform HR Copilot                                   */
-/*                                                                     */
-/*  Ask HR questions, draft emails, or chat with uploaded documents     */
+/* /assistant — Freeform HR Copilot                                  */
 /* ------------------------------------------------------------------ */
 export default function AssistantPage() {
+  const router = useRouter();
   const showSkeletonPreview = useDevSkeletonPreview();
-  const {
-    styling,
-    googleFonts,
-    webSafeFonts,
-    updateFontFamily,
-    updateH1Size,
-    updateH2H3Size,
-    updateBodyTextSize,
-    updateLineSpacing,
-    updateBulletStyle,
-    resetToDefaults,
-  } = useDocumentStyling();
 
   const [userPrompt, setUserPrompt] = useState("");
   const [language, setLanguage] = useState<LanguageValue>("English");
-  const [showStylingModal, setShowStylingModal] = useState(false);
   const [refineText, setRefineText] = useState("");
   const [streamError, setStreamError] = useState<string | null>(null);
   const [referenceText, setReferenceText] = useState("");
@@ -82,10 +66,18 @@ export default function AssistantPage() {
     onError(err) {
       console.error("[Assistant] Stream error:", err);
       const msg = err.message || "";
-      if (msg.includes("429") || msg.includes("rate") || msg.includes("slow down")) {
-        setStreamError("Our AI is currently processing a high volume of documents. Please wait just a few seconds and try again! \u23f3");
+      if (
+        msg.includes("429") ||
+        msg.includes("rate") ||
+        msg.includes("slow down")
+      ) {
+        setStreamError(
+          "Our AI is currently processing a high volume of documents. Please wait just a few seconds and try again! ⏳",
+        );
       } else {
-        setStreamError(msg || "An error occurred. The document may be too large.");
+        setStreamError(
+          msg || "An error occurred. The document may be too large.",
+        );
       }
     },
   });
@@ -95,12 +87,10 @@ export default function AssistantPage() {
     assistantMessages[assistantMessages.length - 1]?.content ?? "";
   const displayLoading = isLoading || showSkeletonPreview;
 
-  // Detect structured meeting JSON in the response
   const meetingData = latestResponse
     ? parseMeetingFromResponse(latestResponse)
     : null;
 
-  /** Upload a document to chat with */
   const handleDocumentUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -160,14 +150,7 @@ export default function AssistantPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   }, []);
 
-  /** Open styling modal before sending */
-  const handleSendClick = useCallback(() => {
-    if (!userPrompt.trim() || isLoading) return;
-    setShowStylingModal(true);
-  }, [userPrompt, isLoading]);
-
-  /** Quick send without styling modal */
-  const handleQuickSend = useCallback(() => {
+  const handleSend = useCallback(() => {
     if (!userPrompt.trim() || isLoading) return;
 
     setMessages([]);
@@ -183,35 +166,16 @@ export default function AssistantPage() {
     }, 300);
   }, [userPrompt, isLoading, append, setMessages]);
 
-  /** Confirm styling and send */
-  const handleConfirmSend = useCallback(() => {
-    setShowStylingModal(false);
-
-    setMessages([]);
-    append({
-      role: "user",
-      content: userPrompt,
-    });
-
-    setUserPrompt("");
-
-    setTimeout(() => {
-      resultRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 300);
-  }, [userPrompt, append, setMessages]);
-
-  /** Handle Enter key (Shift+Enter for newline) */
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        handleQuickSend();
+        handleSend();
       }
     },
-    [handleQuickSend],
+    [handleSend],
   );
 
-  /** Send a refinement follow-up */
   const handleRefine = useCallback(() => {
     if (!refineText.trim() || isLoading) return;
     append({
@@ -223,6 +187,12 @@ export default function AssistantPage() {
       resultRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 300);
   }, [refineText, isLoading, append]);
+
+  // Push to Formatter Action
+  const handleRouteToFormatter = (text: string) => {
+    localStorage.setItem("puredraft_formatter_payload", text);
+    router.push("/formatter"); // Navigates to your formatter page
+  };
 
   return (
     <div className="space-y-6">
@@ -236,7 +206,7 @@ export default function AssistantPage() {
         </div>
         <p className="mt-1 text-muted-foreground">
           Ask HR questions, draft workplace emails, or chat with an uploaded
-          document. Your personal HR copilot.
+          document.
         </p>
       </div>
 
@@ -246,21 +216,16 @@ export default function AssistantPage() {
           <CardHeader>
             <CardTitle className="text-lg">How can I help you?</CardTitle>
             <CardDescription>
-              Ask a question or request a draft. Press Enter to send, or use
-              Format Document for styled output.
+              Ask a question or request a draft. Press Enter to send.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Document Upload for "Chat with Document" */}
+            {/* Document Upload */}
             <div className="space-y-2">
               <Label className="text-sm font-medium flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Chat with a Document (Optional)
               </Label>
-              <p className="text-xs text-muted-foreground">
-                Upload a PDF, DOCX, TXT, XLSX, or CSV file to ask questions
-                about its content.
-              </p>
 
               {uploadedFileName ? (
                 <div className="flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-2.5">
@@ -274,7 +239,6 @@ export default function AssistantPage() {
                     size="sm"
                     className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
                     onClick={handleRemoveDocument}
-                    title="Remove document"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -284,8 +248,7 @@ export default function AssistantPage() {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept=".pdf,.docx,.txt,.csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
-                    title="Upload a document to chat with"
+                    accept=".pdf,.docx,.txt,.csv,.xlsx,.xls"
                     onChange={handleDocumentUpload}
                     disabled={isProcessingFile || isLoading}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
@@ -306,14 +269,12 @@ export default function AssistantPage() {
               )}
             </div>
 
-            {/* Language selector */}
             <LanguageSelector
               value={language}
               onChange={setLanguage}
               disabled={isLoading}
             />
 
-            {/* Main prompt textarea */}
             <div className="space-y-2">
               <Label htmlFor="assistant-prompt">Your Message</Label>
               <Textarea
@@ -325,76 +286,40 @@ export default function AssistantPage() {
                 onKeyDown={handleKeyDown}
                 placeholder={
                   uploadedFileName
-                    ? `Ask a question about "${uploadedFileName}" (e.g., "What is the bereavement policy?")...`
-                    : 'Ask an HR question or request a draft (e.g., "Write a sick leave email to my boss for tomorrow")...'
+                    ? `Ask a question about "${uploadedFileName}"...`
+                    : "Ask an HR question or request a draft..."
                 }
                 disabled={isLoading}
                 className="resize-y min-h-[100px]"
-                onFocus={(e) =>
-                  setTimeout(
-                    () =>
-                      (e.target as HTMLElement).scrollIntoView({
-                        behavior: "smooth",
-                        block: "center",
-                      }),
-                    300,
-                  )
-                }
               />
-              <p className="text-xs text-muted-foreground">
-                Press Enter to send quickly, or use the Format Document button
-                below for styled output.
-              </p>
             </div>
 
             {/* Action buttons */}
-            <div className="flex gap-3">
-              <Button
-                onClick={handleQuickSend}
-                disabled={!userPrompt.trim() || isLoading}
-                className="flex-1 gap-2"
-              >
-                <Send className="h-4 w-4" />
-                {isLoading ? "Thinking..." : "Send"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleSendClick}
-                disabled={!userPrompt.trim() || isLoading}
-                className="gap-2"
-                title="Apply document styling before generating"
-              >
-                <SlidersHorizontal className="h-4 w-4" />
-                Format Document
-              </Button>
-            </div>
-
-            {/* AI Disclaimer */}
-            <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded border border-border/50">
-              <p>
-                Note: Gemini AI is used to generate responses. Always review the
-                output for accuracy.
-              </p>
-            </div>
+            <Button
+              onClick={handleSend}
+              disabled={!userPrompt.trim() || isLoading}
+              className="w-full gap-2"
+            >
+              <Send className="h-4 w-4" />
+              {isLoading ? "Thinking..." : "Send"}
+            </Button>
           </CardContent>
         </Card>
 
         {/* ── Response Section ── */}
         <div ref={resultRef}>
-          {/* Error banner */}
           {streamError && (
-            <div className="mb-4 flex items-center justify-between rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3">
-              <p className="text-sm text-red-700 dark:text-red-400">
-                {streamError}
-              </p>
+            <div className="mb-4 flex items-center justify-between rounded-lg border border-red-300 bg-red-50 p-3">
+              <p className="text-sm text-red-700">{streamError}</p>
               <button
                 onClick={() => setStreamError(null)}
-                className="text-red-500 hover:text-red-700 dark:hover:text-red-300 ml-2"
+                className="text-red-500 ml-2"
               >
                 &times;
               </button>
             </div>
           )}
+
           {(latestResponse || isLoading) && (
             <Card>
               <CardHeader>
@@ -411,28 +336,36 @@ export default function AssistantPage() {
                   <ResultSkeleton />
                 ) : meetingData ? (
                   <>
-                    {/* Meeting detected — render the card instead of raw JSON */}
                     <MeetingCard meeting={meetingData.meeting} />
                     {meetingData.remainingText && (
                       <>
-                        <MarkdownRenderer
-                          content={meetingData.remainingText}
-                          styling={styling}
-                        />
-                        <ExportButtons
-                          content={meetingData.remainingText}
-                          filename="hr-assistant"
-                          styling={styling}
-                        />
+                        <MarkdownRenderer content={meetingData.remainingText} />
+                        {!isLoading && (
+                          <div className="mt-4 flex flex-wrap items-center gap-2 pt-2">
+                            <ExportButtons
+                              content={meetingData.remainingText}
+                              filename="hr-assistant"
+                            />
+                            <Button
+                              variant="secondary"
+                              onClick={() =>
+                                handleRouteToFormatter(
+                                  meetingData.remainingText,
+                                )
+                              }
+                              className="gap-2"
+                            >
+                              <Paintbrush className="h-4 w-4" />
+                              Format Document
+                            </Button>
+                          </div>
+                        )}
                       </>
                     )}
                   </>
                 ) : (
                   <>
-                    <MarkdownRenderer
-                      content={latestResponse}
-                      styling={styling}
-                    />
+                    <MarkdownRenderer content={latestResponse} />
                     {isLoading && (
                       <Button
                         variant="destructive"
@@ -444,11 +377,22 @@ export default function AssistantPage() {
                         Stop Generating
                       </Button>
                     )}
-                    <ExportButtons
-                      content={latestResponse}
-                      filename="hr-assistant"
-                      styling={styling}
-                    />
+                    {!isLoading && latestResponse && (
+                      <div className="mt-4 flex flex-wrap items-center gap-2 pt-2">
+                        <ExportButtons
+                          content={latestResponse}
+                          filename="hr-assistant"
+                        />
+                        <Button
+                          variant="secondary"
+                          onClick={() => handleRouteToFormatter(latestResponse)}
+                          className="gap-2"
+                        >
+                          <Paintbrush className="h-4 w-4" />
+                          Format Document
+                        </Button>
+                      </div>
+                    )}
                   </>
                 )}
 
@@ -462,7 +406,7 @@ export default function AssistantPage() {
                       rows={2}
                       value={refineText}
                       onChange={(e) => setRefineText(e.target.value)}
-                      placeholder='e.g. "Make it shorter" or "Add more detail about the policy"…'
+                      placeholder='e.g. "Make it shorter"…'
                       className="resize-y min-h-[60px]"
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
@@ -487,40 +431,6 @@ export default function AssistantPage() {
           )}
         </div>
       </div>
-
-      {/* ── Document Styling Modal ── */}
-      <Modal
-        open={showStylingModal}
-        onClose={() => setShowStylingModal(false)}
-        title="Document Styling"
-        footer={
-          <>
-            <Button
-              variant="outline"
-              onClick={() => setShowStylingModal(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleConfirmSend}>
-              <Wand2 className="h-4 w-4 mr-2" />
-              Confirm &amp; Send
-            </Button>
-          </>
-        }
-      >
-        <DocumentStylingUI
-          styling={styling}
-          googleFonts={googleFonts}
-          webSafeFonts={webSafeFonts}
-          onFontFamilyChange={updateFontFamily}
-          onH1SizeChange={updateH1Size}
-          onH2H3SizeChange={updateH2H3Size}
-          onBodyTextSizeChange={updateBodyTextSize}
-          onLineSpacingChange={updateLineSpacing}
-          onBulletStyleChange={updateBulletStyle}
-          onResetDefaults={resetToDefaults}
-        />
-      </Modal>
     </div>
   );
 }
