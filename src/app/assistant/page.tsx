@@ -430,38 +430,38 @@ export default function AssistantPage() {
                     )}
                   </>
                 )}
-
-                {/* Refine Response */}
-                {!isLoading && latestResponse && (
-                  <div className="mt-4 space-y-2 border-t pt-4">
-                    <Label className="text-sm font-medium">
-                      Refine Response
-                    </Label>
-                    <Textarea
-                      rows={2}
-                      value={refineText}
-                      onChange={(e) => setRefineText(e.target.value)}
-                      placeholder='e.g. "Make it shorter" or "Add more detail about the policy"…'
-                      className="resize-y min-h-[60px]"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          handleRefine();
-                        }
-                      }}
-                    />
-                    <Button
-                      size="sm"
-                      onClick={handleRefine}
-                      disabled={!refineText.trim()}
-                      className="gap-2"
-                    >
-                      <Wand2 className="h-4 w-4" />
-                      Refine
-                    </Button>
-                  </div>
-                )}
               </CardContent>
+              
+              {/* Refine Response */}
+              {!isLoading && latestResponse && (
+                <div className="mt-4 space-y-2 border-t pt-4">
+                  <Label className="text-sm font-medium">
+                    Refine Response
+                  </Label>
+                  <Textarea
+                    rows={2}
+                    value={refineText}
+                    onChange={(e) => setRefineText(e.target.value)}
+                    placeholder='e.g. "Make it shorter" or "Add more detail about the policy"…'
+                    className="resize-y min-h-[60px]"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleRefine();
+                      }
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleRefine}
+                    disabled={!refineText.trim()}
+                    className="gap-2"
+                  >
+                    <Wand2 className="h-4 w-4" />
+                    Refine
+                  </Button>
+                </div>
+              )}
             </Card>
           )}
         </div>
