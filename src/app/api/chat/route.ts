@@ -142,9 +142,20 @@ You must act as a perfect structural cloner. Do not force data into a generic ta
 - If the reference text was extracted from a PDF/DOCX, tables may appear as messy comma-separated strings. Intelligently reconstruct them into Markdown Tables using the SAME column structure as the original.
 - Do not output raw comma-separated text. If data clearly belongs in a grid, reconstruct it as a table.
 
-**E. CRITICAL TABLE SYNTAX RULE:**
-If you build a Markdown table, you are strictly forbidden from using newlines (\\n) inside a table cell. If you need to list multiple items or use bullet points (e.g., ❖) inside a column, you MUST keep them on the same line and use the HTML \`<br>\` tag to create visual line breaks.
-CORRECT: \`| Monday | Rebecca | ❖ Task 1 <br> ❖ Task 2 |\`
+**E. DYNAMIC, CRASH-PROOF MARKDOWN TABLE GENERATOR:**
+
+**E1. Dynamic Column Detection:**
+You MUST dynamically analyze the uploaded reference document to determine the exact number of logical columns. Do NOT force a strict 2-column or 3-column layout if the source document differs. Replicate the exact number of columns found in the reference.
+
+**E2. Smart Table Headers (The Fallback Rule):**
+Markdown syntax strictly requires a header row to render a table.
+- IF the reference document HAS headers: Extract and use those exact headers.
+- IF the reference document LACKS headers (e.g., it just starts with raw data): You MUST automatically generate logical, context-appropriate headers based on the column count (e.g., \`| Date | Staff Details |\` for 2 columns, or \`| Date | Name | Task |\` for 3 columns) to ensure the Markdown table renders successfully.
+
+**E3. The Cell Stacking Rule (Critical Syntax):**
+You are strictly forbidden from using standard newline characters (\\n) inside table cells, as this shatters the frontend UI.
+Whenever multiple pieces of data (e.g., a Staff Name, a sub-heading like "TASKS COMPLETED", and ❖ bullet points) need to be vertically stacked inside a single table cell, you MUST use HTML \`<br>\` tags.
+CORRECT: \`| Monday | **ZIZI**<br>**TASKS COMPLETED**<br>❖ Reviewed the minutes of the meeting. |\`
 INCORRECT: Do not press enter or use \\n between items inside a cell. This breaks the table.
 
 **Available templates and their expected structures:**
@@ -177,9 +188,20 @@ You must act as a perfect structural cloner. Do not force data into a generic ta
 - If the input text was extracted from a PDF/DOCX, tables may appear as messy comma-separated strings. Reconstruct them into Markdown Tables matching the original column structure.
 - Do not output raw comma-separated text. If data belongs in a grid, reconstruct it as a table.
 
-CRITICAL TABLE SYNTAX RULE:
-If you build a Markdown table, you are strictly forbidden from using newlines (\\n) inside a table cell. If you need to list multiple items or bullet points (e.g., ❖) inside a column, keep them on the same line and use the HTML \`<br>\` tag for visual line breaks.
-CORRECT: \`| Monday | Rebecca | ❖ Task 1 <br> ❖ Task 2 |\`
+DYNAMIC, CRASH-PROOF MARKDOWN TABLE GENERATOR:
+
+1. Dynamic Column Detection:
+You MUST dynamically analyze the uploaded reference document to determine the exact number of logical columns. Do NOT force a strict 2-column or 3-column layout if the source document differs. Replicate the exact number of columns found in the reference.
+
+2. Smart Table Headers (The Fallback Rule):
+Markdown syntax strictly requires a header row to render a table.
+- IF the reference document HAS headers: Extract and use those exact headers.
+- IF the reference document LACKS headers (e.g., it just starts with raw data): You MUST automatically generate logical, context-appropriate headers based on the column count (e.g., \`| Date | Staff Details |\` for 2 columns, or \`| Date | Name | Task |\` for 3 columns) to ensure the Markdown table renders successfully.
+
+3. The Cell Stacking Rule (Critical Syntax):
+You are strictly forbidden from using standard newline characters (\\n) inside table cells, as this shatters the frontend UI.
+Whenever multiple pieces of data (e.g., a Staff Name, a sub-heading like "TASKS COMPLETED", and ❖ bullet points) need to be vertically stacked inside a single table cell, you MUST use HTML \`<br>\` tags.
+CORRECT: \`| Monday | **ZIZI**<br>**TASKS COMPLETED**<br>❖ Reviewed the minutes of the meeting. |\`
 INCORRECT: Do not use \\n between items inside a cell. This breaks the table.
 
 CRITICAL WRITING STYLE RULES - follow these exactly:
@@ -226,9 +248,20 @@ You must act as a perfect structural cloner. Do not force data into a generic ta
 - If data was extracted from a PDF/DOCX, tables may appear as messy comma-separated strings. Reconstruct them into Markdown Tables matching the original column structure.
 - Do not output raw comma-separated text. If data belongs in a grid, reconstruct it as a table.
 
-**CRITICAL TABLE SYNTAX RULE:**
-If you build a Markdown table, you are strictly forbidden from using newlines (\\n) inside a table cell. If you need to list multiple items or bullet points (e.g., ❖) inside a column, keep them on the same line and use the HTML \`<br>\` tag for visual line breaks.
-CORRECT: \`| Monday | Rebecca | ❖ Task 1 <br> ❖ Task 2 |\`
+**DYNAMIC, CRASH-PROOF MARKDOWN TABLE GENERATOR:**
+
+**1. Dynamic Column Detection:**
+You MUST dynamically analyze the uploaded reference document to determine the exact number of logical columns. Do NOT force a strict 2-column or 3-column layout if the source document differs. Replicate the exact number of columns found in the reference.
+
+**2. Smart Table Headers (The Fallback Rule):**
+Markdown syntax strictly requires a header row to render a table.
+- IF the reference document HAS headers: Extract and use those exact headers.
+- IF the reference document LACKS headers (e.g., it just starts with raw data): You MUST automatically generate logical, context-appropriate headers based on the column count (e.g., \`| Date | Staff Details |\` for 2 columns, or \`| Date | Name | Task |\` for 3 columns) to ensure the Markdown table renders successfully.
+
+**3. The Cell Stacking Rule (Critical Syntax):**
+You are strictly forbidden from using standard newline characters (\\n) inside table cells, as this shatters the frontend UI.
+Whenever multiple pieces of data (e.g., a Staff Name, a sub-heading like "TASKS COMPLETED", and ❖ bullet points) need to be vertically stacked inside a single table cell, you MUST use HTML \`<br>\` tags.
+CORRECT: \`| Monday | **ZIZI**<br>**TASKS COMPLETED**<br>❖ Reviewed the minutes of the meeting. |\`
 INCORRECT: Do not use \\n between items inside a cell. This breaks the table.
 
 **C. HUMAN TONE AND AUTHENTICITY:**
@@ -270,7 +303,10 @@ IF A REFERENCE DOCUMENT IS PROVIDED:
 - If the user asks about a specific policy, procedure, or section, search the reference text and provide a clear, direct answer.
 - Always cite or reference the relevant section when answering.
 - DYNAMIC CLONE DIRECTIVE: You must act as a perfect structural cloner. Do not force data into a generic table if the reference document does not use one. Analyze the EXACT layout of the reference and replicate its exact headers, sections, and column structure. Match uppercase/lowercase formatting exactly. If data was extracted from a PDF/DOCX and appears as messy comma-separated strings, reconstruct it into a Markdown Table matching the original columns. Do not output raw comma-separated text.
-- CRITICAL TABLE SYNTAX RULE: If you build a Markdown table, you are strictly forbidden from using newlines inside a table cell. Use the HTML \`<br>\` tag for visual line breaks within cells. CORRECT: \`| Monday | Rebecca | ❖ Task 1 <br> ❖ Task 2 |\` — INCORRECT: Do not use \\n between items inside a cell.
+- DYNAMIC, CRASH-PROOF MARKDOWN TABLE GENERATOR:
+  1. Dynamic Column Detection: You MUST dynamically analyze the uploaded reference document to determine the exact number of logical columns. Do NOT force a strict 2-column or 3-column layout if the source document differs. Replicate the exact number of columns found in the reference.
+  2. Smart Table Headers (The Fallback Rule): Markdown syntax strictly requires a header row to render a table. IF the reference document HAS headers, extract and use those exact headers. IF the reference document LACKS headers (e.g., it just starts with raw data), you MUST automatically generate logical, context-appropriate headers based on the column count (e.g., \`| Date | Staff Details |\` for 2 columns, or \`| Date | Name | Task |\` for 3 columns) to ensure the Markdown table renders successfully.
+  3. The Cell Stacking Rule (Critical Syntax): You are strictly forbidden from using standard newline characters (\\n) inside table cells, as this shatters the frontend UI. Whenever multiple pieces of data need to be vertically stacked inside a single table cell, you MUST use HTML \`<br>\` tags. CORRECT: \`| Monday | **ZIZI**<br>**TASKS COMPLETED**<br>❖ Reviewed the minutes of the meeting. |\` — INCORRECT: Do not use \\n between items inside a cell.
 
 SMART MEETING SCHEDULER:
 If the user asks you to schedule a meeting, interview, or appointment, you must extract the details and output a strictly formatted JSON code block exactly like this, ensuring dates are in ISO 8601 format:
@@ -382,10 +418,16 @@ export async function POST(req: Request) {
     const totalChars =
       systemPrompt.length +
       safeMessages.reduce(
-        (sum, m) => sum + (typeof m.content === "string" ? m.content.length : 0),
+        (sum, m) =>
+          sum + (typeof m.content === "string" ? m.content.length : 0),
         0,
       );
-    console.log("[API/chat] Starting stream for tool:", tool, "| total chars:", totalChars);
+    console.log(
+      "[API/chat] Starting stream for tool:",
+      tool,
+      "| total chars:",
+      totalChars,
+    );
 
     if (totalChars > 120_000) {
       console.error("[API/chat] Payload too large:", totalChars, "chars");
@@ -406,13 +448,20 @@ export async function POST(req: Request) {
       getErrorMessage: (error: unknown) => {
         // This controls the error string sent to the client inside
         // the SSE stream instead of the default "An error occurred".
-        const msg =
-          error instanceof Error ? error.message : String(error);
+        const msg = error instanceof Error ? error.message : String(error);
         console.error("[API/chat] Client-facing stream error:", msg);
 
-        if (msg.includes("too large") || msg.includes("payload") || msg.includes("Token"))
+        if (
+          msg.includes("too large") ||
+          msg.includes("payload") ||
+          msg.includes("Token")
+        )
           return "The document is too large for the AI to process. Please shorten it and try again.";
-        if (msg.includes("quota") || msg.includes("429") || msg.includes("RATE"))
+        if (
+          msg.includes("quota") ||
+          msg.includes("429") ||
+          msg.includes("RATE")
+        )
           return "API rate limit reached. Please wait a moment and try again.";
         if (msg.includes("timeout") || msg.includes("DEADLINE"))
           return "The request timed out. Please try again with shorter content.";
