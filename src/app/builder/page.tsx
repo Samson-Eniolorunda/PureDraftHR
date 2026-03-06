@@ -522,10 +522,10 @@ Key Details: ${keyDetails}`,
 
                 {/* Bulk mode toggle */}
                 <div className="rounded-lg border border-dashed p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <FileSpreadsheet className="h-4 w-4 text-muted-foreground" />
-                      <Label className="text-sm font-medium">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <FileSpreadsheet className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <Label className="text-sm font-medium truncate">
                         Bulk Generation (CSV)
                       </Label>
                     </div>
@@ -541,7 +541,7 @@ Key Details: ${keyDetails}`,
                               : "outline"
                       }
                       size="sm"
-                      className={
+                      className={`shrink-0 ${
                         bulkToggleFeedback === "enabled"
                           ? "bg-green-600 hover:bg-green-700 text-white"
                           : bulkToggleFeedback === "disabled"
@@ -549,7 +549,7 @@ Key Details: ${keyDetails}`,
                             : bulkMode
                               ? "bg-primary text-primary-foreground"
                               : ""
-                      }
+                      }`}
                       onClick={() => {
                         const newMode = !bulkMode;
                         setBulkMode(newMode);
@@ -563,12 +563,12 @@ Key Details: ${keyDetails}`,
                       }}
                     >
                       {bulkToggleFeedback === "enabled"
-                        ? "✅ Enabled!"
+                        ? "Enabled!"
                         : bulkToggleFeedback === "disabled"
-                          ? "❌ Disabled!"
+                          ? "Disabled!"
                           : bulkMode
-                            ? "Disable Bulk Generation"
-                            : "Enable Bulk Generation"}
+                            ? "Disable"
+                            : "Enable"}
                     </Button>
                   </div>
 

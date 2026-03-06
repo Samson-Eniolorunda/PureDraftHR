@@ -47,18 +47,20 @@ export const MarkdownRenderer = React.memo(function MarkdownRenderer({
   if (!content) return null;
 
   return (
-    <div className="document-preview prose prose-sm dark:prose-invert max-w-none rounded-lg border bg-card p-4 sm:p-6 prose-table:border-collapse prose-th:border prose-th:border-border prose-th:p-2 prose-th:bg-muted prose-th:text-left prose-td:border prose-td:border-border prose-td:p-2">
+    <div className="document-preview prose prose-sm dark:prose-invert max-w-none rounded-lg border bg-card p-3 sm:p-6 prose-table:border-collapse prose-th:border prose-th:border-border prose-th:p-2 prose-th:bg-muted prose-th:text-left prose-td:border prose-td:border-border prose-td:p-2">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw]}
         components={{
           table: ({ children, ...props }) => (
-            <table
-              className="w-full border-collapse border border-border my-4"
-              {...props}
-            >
-              {children}
-            </table>
+            <div className="overflow-x-auto -mx-1 sm:mx-0">
+              <table
+                className="w-full border-collapse border border-border my-4 min-w-[400px]"
+                {...props}
+              >
+                {children}
+              </table>
+            </div>
           ),
           thead: ({ children, ...props }) => (
             <thead className="bg-muted" {...props}>

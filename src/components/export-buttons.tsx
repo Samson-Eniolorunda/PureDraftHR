@@ -225,7 +225,7 @@ export function ExportButtons({
   return (
     <div className="space-y-3 mt-4">
       {/* Editable filename input */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2">
         <Label
           htmlFor="export-filename"
           className="text-xs text-muted-foreground whitespace-nowrap flex items-center gap-1"
@@ -239,7 +239,7 @@ export function ExportButtons({
           value={exportFileName}
           onChange={(e) => setExportFileName(e.target.value)}
           placeholder={dynamicFilename}
-          className="h-8 text-sm flex-1 max-w-xs"
+          className="h-8 text-sm flex-1 max-w-full sm:max-w-xs"
         />
       </div>
 

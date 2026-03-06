@@ -262,10 +262,11 @@ export default function AssistantPage() {
                     className="w-full gap-2"
                   >
                     <Upload className="h-4 w-4" />
-                    {isProcessingFile
-                      ? "Processing..."
-                      : "Upload Document (PDF, DOCX, TXT, XLSX, CSV)"}
+                    {isProcessingFile ? "Processing..." : "Upload Document"}
                   </Button>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    PDF, DOCX, TXT, XLSX, CSV
+                  </p>
                 </div>
               )}
             </div>

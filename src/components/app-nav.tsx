@@ -81,7 +81,7 @@ export function AppNav() {
         aria-label="Main navigation"
         className="md:hidden fixed bottom-0 left-0 right-0 z-30 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 safe-bottom"
       >
-        <div className="flex items-center justify-around h-16">
+        <div className="flex items-center justify-around h-16 px-1">
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
             const active = pathname === href;
             return (
@@ -89,7 +89,7 @@ export function AppNav() {
                 key={href}
                 href={href}
                 className={cn(
-                  "flex flex-col items-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors",
+                  "flex flex-col items-center justify-center gap-0.5 min-w-[3rem] min-h-[2.75rem] px-2 py-1 text-xs font-medium transition-colors rounded-md",
                   active
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground",
