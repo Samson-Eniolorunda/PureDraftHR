@@ -41,7 +41,10 @@ export function AppNav() {
         </Link>
 
         {/* Links */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav
+          aria-label="Main navigation"
+          className="flex-1 px-3 py-4 space-y-1"
+        >
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
             const active = pathname === href;
             return (
@@ -74,7 +77,10 @@ export function AppNav() {
       </aside>
 
       {/* ── Mobile Bottom Tab Bar ── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 safe-bottom">
+      <nav
+        aria-label="Main navigation"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-30 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 safe-bottom"
+      >
         <div className="flex items-center justify-around h-16">
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
             const active = pathname === href;

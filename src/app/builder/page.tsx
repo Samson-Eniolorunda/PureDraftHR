@@ -238,10 +238,18 @@ export default function BuilderPage() {
     onError(err) {
       console.error("[Builder] Stream error:", err);
       const msg = err.message || "";
-      if (msg.includes("429") || msg.includes("rate") || msg.includes("slow down")) {
-        setStreamError("Our AI is currently processing a high volume of documents. Please wait just a few seconds and try again! \u23f3");
+      if (
+        msg.includes("429") ||
+        msg.includes("rate") ||
+        msg.includes("slow down")
+      ) {
+        setStreamError(
+          "Our AI is currently processing a high volume of documents. Please wait just a few seconds and try again! \u23f3",
+        );
       } else {
-        setStreamError(msg || "An error occurred. The document may be too large.");
+        setStreamError(
+          msg || "An error occurred. The document may be too large.",
+        );
       }
     },
   });
@@ -727,6 +735,7 @@ Key Details: ${keyDetails}`,
               </p>
               <button
                 onClick={() => setStreamError(null)}
+                aria-label="Dismiss error"
                 className="text-red-500 hover:text-red-700 dark:hover:text-red-300 ml-2"
               >
                 &times;

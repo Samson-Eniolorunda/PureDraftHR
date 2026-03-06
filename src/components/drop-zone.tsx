@@ -64,9 +64,15 @@ export function DropZone({ onTextExtracted, disabled }: DropZoneProps) {
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
+
   const handleFile = useCallback(
     async (file: File) => {
       setError(null);
+      if (file.size > MAX_FILE_SIZE) {
+        setError("File is too large. Maximum size is 25 MB.");
+        return;
+      }
       setFileName(file.name);
       setLoading(true);
       try {
@@ -116,6 +122,7 @@ export function DropZone({ onTextExtracted, disabled }: DropZoneProps) {
         ref={inputRef}
         type="file"
         accept=".txt,.pdf,.docx,.csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
+        aria-label="Upload a document (PDF, DOCX, TXT, XLSX, CSV)"
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0];

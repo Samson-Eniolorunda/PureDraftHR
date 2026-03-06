@@ -11,7 +11,11 @@ export function ThemeToggleButton() {
   return (
     <>
       {/* Desktop: Sun | System | Moon */}
-      <div className="hidden sm:flex items-center gap-1 rounded-lg border border-input bg-muted p-1">
+      <div
+        role="group"
+        aria-label="Theme selection"
+        className="hidden sm:flex items-center gap-1 rounded-lg border border-input bg-muted p-1"
+      >
         <Button
           variant={theme === "light" ? "default" : "ghost"}
           size="sm"
@@ -59,7 +63,11 @@ export function ThemeToggleButton() {
       </div>
 
       {/* Mobile: Sun | Mobile | Moon (system as default) */}
-      <div className="sm:hidden flex items-center gap-1 rounded-lg border border-input bg-muted p-1">
+      <div
+        role="group"
+        aria-label="Theme selection"
+        className="sm:hidden flex items-center gap-1 rounded-lg border border-input bg-muted p-1"
+      >
         <Button
           variant={theme === "light" ? "default" : "ghost"}
           size="sm"

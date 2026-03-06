@@ -249,6 +249,7 @@ export default function AssistantPage() {
                     ref={fileInputRef}
                     type="file"
                     accept=".pdf,.docx,.txt,.csv,.xlsx,.xls"
+                    aria-label="Upload a document"
                     onChange={handleDocumentUpload}
                     disabled={isProcessingFile || isLoading}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
@@ -309,11 +310,14 @@ export default function AssistantPage() {
         {/* ── Response Section ── */}
         <div ref={resultRef}>
           {streamError && (
-            <div className="mb-4 flex items-center justify-between rounded-lg border border-red-300 bg-red-50 p-3">
-              <p className="text-sm text-red-700">{streamError}</p>
+            <div className="mb-4 flex items-center justify-between rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3">
+              <p className="text-sm text-red-700 dark:text-red-400">
+                {streamError}
+              </p>
               <button
                 onClick={() => setStreamError(null)}
-                className="text-red-500 ml-2"
+                aria-label="Dismiss error"
+                className="text-red-500 hover:text-red-700 dark:hover:text-red-300 ml-2"
               >
                 &times;
               </button>

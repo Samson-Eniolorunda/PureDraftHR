@@ -82,7 +82,6 @@ export const viewport: Viewport = {
   themeColor: "#2563eb",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -134,11 +133,21 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <ThemeProvider>
+          {/* Skip to main content — accessibility */}
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground focus:text-sm focus:font-medium"
+          >
+            Skip to main content
+          </a>
           <MobileHeader />
           <AppNav />
 
           {/* Main content area — offset for sidebar on desktop, header+bottom-bar on mobile */}
-          <main className="md:ml-64 pt-16 md:pt-0 pb-20 md:pb-20">
+          <main
+            id="main-content"
+            className="md:ml-64 pt-16 md:pt-0 pb-20 md:pb-20"
+          >
             <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8 min-h-screen">
               {children}
             </div>
@@ -147,19 +156,6 @@ export default function RootLayout({
           <Footer />
           <PwaRegister />
         </ThemeProvider>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              console.log('[Layout] App initialized at:', new Date().toISOString());
-              console.log('[Layout] Favicon version:', '${FAVICON_VERSION}');
-              if (navigator.serviceWorker) {
-                navigator.serviceWorker.ready.then(() => {
-                  console.log('[Layout] Service Worker is ready');
-                });
-              }
-            `,
-          }}
-        />
         {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
           <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
         )}

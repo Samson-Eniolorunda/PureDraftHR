@@ -72,7 +72,8 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
     const containerRef = React.useRef<HTMLDivElement | null>(null);
     const optionsRef = React.useRef<Array<HTMLDivElement | null>>([]);
     const dropdownRef = React.useRef<HTMLDivElement | null>(null);
-    const [dropdownStyle, setDropdownStyle] = React.useState<React.CSSProperties>({});
+    const [dropdownStyle, setDropdownStyle] =
+      React.useState<React.CSSProperties>({});
 
     // Sync controlled value
     React.useEffect(() => {
@@ -98,11 +99,25 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
     React.useEffect(() => {
       if (!isOpen || !containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
+      const maxDropdownHeight = 240;
+      const spaceBelow = window.innerHeight - rect.bottom - 8;
+      const spaceAbove = rect.top - 8;
+      const openAbove =
+        spaceBelow < maxDropdownHeight && spaceAbove > spaceBelow;
       setDropdownStyle({
         position: "fixed",
-        top: rect.bottom + 4,
-        left: rect.left,
+        ...(openAbove
+          ? { bottom: window.innerHeight - rect.top + 4 }
+          : { top: rect.bottom + 4 }),
+        left: Math.max(
+          4,
+          Math.min(rect.left, window.innerWidth - rect.width - 4),
+        ),
         width: rect.width,
+        maxHeight: Math.min(
+          maxDropdownHeight,
+          openAbove ? spaceAbove : spaceBelow,
+        ),
         zIndex: 9999,
       });
     }, [isOpen]);
@@ -160,7 +175,7 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
           id={id}
           type="button"
           aria-haspopup="listbox"
-          aria-expanded={isOpen ? "true" : "false"}
+          aria-expanded={isOpen}
           title={selectedLabel}
           disabled={disabled}
           onClick={() => setIsOpen((s) => !s)}
@@ -203,79 +218,79 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
               tabIndex={-1}
               title="Select an option"
               className="overflow-auto rounded-lg border border-input bg-card shadow-lg p-1"
-              style={{ ...dropdownStyle, maxHeight: 240 }}
+              style={dropdownStyle}
               aria-activedescendant={selected}
             >
-            {(() => {
-              let lastGroup: string | undefined;
-              let flatIdx = 0;
-              return options.map((o, i) => {
-                const showGroupHeader = o.group && o.group !== lastGroup;
-                lastGroup = o.group;
-                const idx = flatIdx++;
-                return (
-                  <React.Fragment key={`${o.group ?? ""}-${o.value}-${i}`}>
-                    {showGroupHeader && (
-                      <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1 first:mt-0">
-                        {o.group}
+              {(() => {
+                let lastGroup: string | undefined;
+                let flatIdx = 0;
+                return options.map((o, i) => {
+                  const showGroupHeader = o.group && o.group !== lastGroup;
+                  lastGroup = o.group;
+                  const idx = flatIdx++;
+                  return (
+                    <React.Fragment key={`${o.group ?? ""}-${o.value}-${i}`}>
+                      {showGroupHeader && (
+                        <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1 first:mt-0">
+                          {o.group}
+                        </div>
+                      )}
+                      <div
+                        role="option"
+                        aria-selected={o.value === selected}
+                        tabIndex={0}
+                        ref={(el) => {
+                          if (el) optionsRef.current[idx] = el;
+                        }}
+                        onClick={() => selectValue(o.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") selectValue(o.value);
+                          if (e.key === "ArrowDown") {
+                            e.preventDefault();
+                            optionsRef.current[
+                              Math.min(idx + 1, options.length - 1)
+                            ]?.focus();
+                          }
+                          if (e.key === "ArrowUp") {
+                            e.preventDefault();
+                            optionsRef.current[Math.max(idx - 1, 0)]?.focus();
+                          }
+                          if (e.key === "Escape") setIsOpen(false);
+                        }}
+                        className={cn(
+                          "px-3 py-2 rounded-md m-1 text-sm flex items-center justify-between",
+                          o.disabled
+                            ? "opacity-50 cursor-not-allowed"
+                            : "cursor-pointer hover:bg-primary/10",
+                          o.value === selected
+                            ? "bg-primary/10 font-semibold"
+                            : "",
+                        )}
+                      >
+                        <span className="truncate">{o.label}</span>
+                        {o.value === selected && (
+                          <svg
+                            className="h-4 w-4 text-primary"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        )}
                       </div>
-                    )}
-                    <div
-                      role="option"
-                      aria-selected={o.value === selected ? "true" : "false"}
-                      tabIndex={0}
-                      ref={(el) => {
-                        if (el) optionsRef.current[idx] = el;
-                      }}
-                      onClick={() => selectValue(o.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") selectValue(o.value);
-                        if (e.key === "ArrowDown") {
-                          e.preventDefault();
-                          optionsRef.current[
-                            Math.min(idx + 1, options.length - 1)
-                          ]?.focus();
-                        }
-                        if (e.key === "ArrowUp") {
-                          e.preventDefault();
-                          optionsRef.current[Math.max(idx - 1, 0)]?.focus();
-                        }
-                        if (e.key === "Escape") setIsOpen(false);
-                      }}
-                      className={cn(
-                        "px-3 py-2 rounded-md m-1 text-sm flex items-center justify-between",
-                        o.disabled
-                          ? "opacity-50 cursor-not-allowed"
-                          : "cursor-pointer hover:bg-primary/10",
-                        o.value === selected
-                          ? "bg-primary/10 font-semibold"
-                          : "",
-                      )}
-                    >
-                      <span className="truncate">{o.label}</span>
-                      {o.value === selected && (
-                        <svg
-                          className="h-4 w-4 text-primary"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      )}
-                    </div>
-                  </React.Fragment>
-                );
-              });
-            })()}
-          </div>,
-          document.body,
-        )}
+                    </React.Fragment>
+                  );
+                });
+              })()}
+            </div>,
+            document.body,
+          )}
       </div>
     );
   },

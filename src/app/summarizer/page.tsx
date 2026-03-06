@@ -160,11 +160,14 @@ export default function SummarizerPage() {
         <div ref={resultRef}>
           {/* Error banner */}
           {streamError && (
-            <div className="mb-4 flex items-center justify-between rounded-lg border border-red-300 bg-red-50 p-3">
-              <p className="text-sm text-red-700">{streamError}</p>
+            <div className="mb-4 flex items-center justify-between rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3">
+              <p className="text-sm text-red-700 dark:text-red-400">
+                {streamError}
+              </p>
               <button
                 onClick={() => setStreamError(null)}
-                className="text-red-500 hover:text-red-700 ml-2"
+                aria-label="Dismiss error"
+                className="text-red-500 hover:text-red-700 dark:hover:text-red-300 ml-2"
               >
                 &times;
               </button>

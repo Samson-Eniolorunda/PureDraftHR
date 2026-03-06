@@ -208,7 +208,7 @@ export default function ContactPage() {
 
                 {/* Status Messages */}
                 {status === "success" && (
-                  <p className="text-sm text-green-600 bg-green-50 p-3 rounded-lg">
+                  <p className="text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30 p-3 rounded-lg">
                     Thank you! Your message has been sent successfully.
                   </p>
                 )}

@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from "next/server";
 /*  Runs on the Node.js runtime (not Edge) for fs/buffer access.       */
 /* ------------------------------------------------------------------ */
 
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -14,6 +16,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: "File is too large. Maximum size is 25 MB." },
+        { status: 413 },
+      );
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
     const name = file.name.toLowerCase();
     let text = "";
@@ -21,7 +30,6 @@ export async function POST(req: NextRequest) {
     if (name.endsWith(".txt")) {
       text = buffer.toString("utf-8");
     } else if (name.endsWith(".pdf")) {
-      // Dynamic import to avoid bundling when not needed
       const pdfParse = (await import("pdf-parse")).default;
       const data = await pdfParse(buffer);
       text = data.text;
@@ -39,8 +47,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ text });
   } catch (err) {
     console.error("Extraction error:", err);
+    const message = err instanceof Error ? err.message : "Unknown error";
+    if (message.includes("password") || message.includes("encrypt")) {
+      return NextResponse.json(
+        { error: "This file appears to be password-protected or encrypted." },
+        { status: 422 },
+      );
+    }
     return NextResponse.json(
-      { error: "Failed to extract text" },
+      {
+        error:
+          "Failed to extract text from this file. It may be corrupted or in an unsupported format.",
+      },
       { status: 500 },
     );
   }

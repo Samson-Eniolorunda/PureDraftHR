@@ -3,6 +3,24 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+/* ── In-memory rate limiter (3 submissions per 10 min per IP) ── */
+const CONTACT_RATE_WINDOW = 600_000;
+const CONTACT_RATE_MAX = 3;
+const contactIpHits = new Map<string, number[]>();
+
+function isContactRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const hits = contactIpHits.get(ip) ?? [];
+  const recent = hits.filter((t) => now - t < CONTACT_RATE_WINDOW);
+  if (recent.length >= CONTACT_RATE_MAX) {
+    contactIpHits.set(ip, recent);
+    return true;
+  }
+  recent.push(now);
+  contactIpHits.set(ip, recent);
+  return false;
+}
+
 /** Escape HTML special chars to prevent XSS in email templates */
 function escapeHtml(str: string): string {
   return str
@@ -20,10 +38,10 @@ interface ContactFormData {
   message: string;
 }
 
-// Validate email format
+// Validate email format (requires TLD)
 function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  return emailRegex.test(email) && email.length <= 254;
 }
 
 // Validate form data
@@ -48,11 +66,33 @@ function validateFormData(data: ContactFormData): string | null {
     return "Message must be at least 10 characters long";
   }
 
+  if (
+    data.name.length > 200 ||
+    data.subject.length > 300 ||
+    data.message.length > 5000
+  ) {
+    return "One or more fields exceed the maximum length";
+  }
+
   return null;
 }
 
 export async function POST(request: NextRequest) {
   try {
+    /* ── Rate limit check ── */
+    const forwarded = request.headers.get("x-forwarded-for");
+    const ip = forwarded?.split(",")[0]?.trim() || "unknown";
+    if (isContactRateLimited(ip)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Too many submissions. Please wait a few minutes and try again.",
+        },
+        { status: 429 },
+      );
+    }
+
     const body = (await request.json()) as ContactFormData;
 
     // Validate form data
@@ -69,7 +109,10 @@ export async function POST(request: NextRequest) {
     if (!contactEmail) {
       console.error("❌ CONTACT_EMAIL env var is not set");
       return NextResponse.json(
-        { success: false, error: "Server misconfigured. Please try again later." },
+        {
+          success: false,
+          error: "Server misconfigured. Please try again later.",
+        },
         { status: 500 },
       );
     }
@@ -109,7 +152,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("📧 Contact form email sent successfully to", process.env.CONTACT_EMAIL);
+    console.log(
+      "📧 Contact form email sent successfully to",
+      process.env.CONTACT_EMAIL,
+    );
 
     return NextResponse.json(
       {
