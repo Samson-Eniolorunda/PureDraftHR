@@ -797,6 +797,7 @@ Key Details: ${keyDetails}`,
                       content={result}
                       filename={`hr-${resolvedDocType.toLowerCase().replace(/\s+/g, "-")}-${idx + 1}`}
                       styling={styling}
+                      tool="builder"
                     />
                   </CardContent>
                 </Card>
@@ -811,6 +812,7 @@ Key Details: ${keyDetails}`,
                     content={bulkResults.join("\n\n---\n\n# ---\n\n")}
                     filename={`hr-bulk-${resolvedDocType.toLowerCase().replace(/\s+/g, "-")}`}
                     styling={styling}
+                    tool="builder"
                   />
                 </CardContent>
               </Card>
@@ -853,6 +855,7 @@ Key Details: ${keyDetails}`,
                       content={resultContent}
                       filename={`hr-${resolvedDocType.toLowerCase().replace(/\s+/g, "-")}`}
                       styling={styling}
+                      tool="builder"
                     />
 
                     {/* Refine Document */}

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import { AppNav } from "@/components/app-nav";
@@ -132,31 +133,33 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <ThemeProvider>
-          {/* Skip to main content — accessibility */}
-          <a
-            href="#main-content"
-            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground focus:text-sm focus:font-medium"
-          >
-            Skip to main content
-          </a>
-          <MobileHeader />
-          <AppNav />
+        <ClerkProvider>
+          <ThemeProvider>
+            {/* Skip to main content — accessibility */}
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground focus:text-sm focus:font-medium"
+            >
+              Skip to main content
+            </a>
+            <MobileHeader />
+            <AppNav />
 
-          {/* Main content area — offset for sidebar on desktop, header+bottom-bar on mobile */}
-          <main
-            id="main-content"
-            className="md:ml-64 pt-14 md:pt-0 pb-36 md:pb-20"
-          >
-            <div className="mx-auto max-w-4xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8 min-h-screen">
-              {children}
-            </div>
-          </main>
+            {/* Main content area — offset for sidebar on desktop, header+bottom-bar on mobile */}
+            <main
+              id="main-content"
+              className="md:ml-64 pt-14 md:pt-0 pb-36 md:pb-20"
+            >
+              <div className="mx-auto max-w-4xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8 min-h-screen">
+                {children}
+              </div>
+            </main>
 
-          <Footer />
-          <PwaRegister />
-          <SonnerToaster />
-        </ThemeProvider>
+            <Footer />
+            <PwaRegister />
+            <SonnerToaster />
+          </ThemeProvider>
+        </ClerkProvider>
         {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
           <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
         )}

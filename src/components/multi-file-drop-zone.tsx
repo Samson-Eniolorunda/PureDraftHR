@@ -100,8 +100,7 @@ export function MultiFileDropZone({
           return updated;
         });
       } catch (err) {
-        const msg =
-          err instanceof Error ? err.message : "Extraction failed";
+        const msg = err instanceof Error ? err.message : "Extraction failed";
         setFiles((prev) =>
           prev.map((f) =>
             f.id === entry.id

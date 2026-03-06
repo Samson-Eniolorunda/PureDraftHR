@@ -284,6 +284,7 @@ export default function FormatterPage() {
                       content={resultContent}
                       filename="hr-formatted-document"
                       styling={styling}
+                      tool="formatter"
                     />
 
                     {/* Refine Document */}

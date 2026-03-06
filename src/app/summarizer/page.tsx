@@ -25,7 +25,14 @@ import {
 } from "@/components/language-selector";
 import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
 import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
-import { Loader2, Wand2, StopCircle, Paintbrush, FileStack, FileText } from "lucide-react";
+import {
+  Loader2,
+  Wand2,
+  StopCircle,
+  Paintbrush,
+  FileStack,
+  FileText,
+} from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /* /summarizer — AI-powered HR document summarizer                    */
@@ -82,10 +89,7 @@ export default function SummarizerPage() {
     const isBatch = mode === "batch";
     const textToSummarize = isBatch
       ? batchFiles
-          .map(
-            (f, i) =>
-              `--- Document ${i + 1}: ${f.name} ---\n\n${f.text}`,
-          )
+          .map((f, i) => `--- Document ${i + 1}: ${f.name} ---\n\n${f.text}`)
           .join("\n\n")
       : inputText;
 
@@ -102,7 +106,15 @@ export default function SummarizerPage() {
     setTimeout(() => {
       resultRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 300);
-  }, [inputText, batchFiles, mode, isLoading, isConsented, append, setMessages]);
+  }, [
+    inputText,
+    batchFiles,
+    mode,
+    isLoading,
+    isConsented,
+    append,
+    setMessages,
+  ]);
 
   /** Send a refinement follow-up */
   const handleRefine = useCallback(() => {
@@ -259,6 +271,7 @@ export default function SummarizerPage() {
                         <ExportButtons
                           content={resultContent}
                           filename="hr-summary"
+                          tool="summarizer"
                         />
                         <Button
                           variant="secondary"

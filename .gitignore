@@ -41,3 +41,6 @@ yarn-error.log*
 Thumbs.db
 .vercel
 .env*.local
+
+/src/generated/prisma
+*.tsbuildinfo

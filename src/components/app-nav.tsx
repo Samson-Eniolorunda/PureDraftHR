@@ -3,8 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
+import { SignInButton, UserButton, useAuth } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
-import { FileText, ClipboardList, PenTool, MessageCircle } from "lucide-react";
+import {
+  FileText,
+  ClipboardList,
+  PenTool,
+  MessageCircle,
+  LayoutDashboard,
+  LogIn,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const ThemeToggleButton = dynamic(
   () => import("./theme-toggle-button").then((mod) => mod.ThemeToggleButton),
@@ -23,6 +32,7 @@ const NAV_ITEMS = [
 
 export function AppNav() {
   const pathname = usePathname();
+  const { isSignedIn } = useAuth();
 
   return (
     <>
@@ -65,12 +75,41 @@ export function AppNav() {
           })}
         </nav>
 
-        {/* Footer with Theme Toggle */}
+        {/* Dashboard link — auth-gated */}
+        {isSignedIn && (
+          <div className="px-3 pt-2">
+            <Link
+              href="/dashboard"
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                pathname === "/dashboard"
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+              )}
+            >
+              <LayoutDashboard className="h-5 w-5 shrink-0" />
+              My Documents
+            </Link>
+          </div>
+        )}
+
+        {/* Footer with Auth + Theme Toggle */}
         <div className="px-6 py-4 border-t">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs text-muted-foreground">
-              Stateless &bull; No data saved
-            </span>
+            {isSignedIn ? (
+              <UserButton />
+            ) : (
+              <SignInButton mode="modal">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 h-8 text-xs"
+                >
+                  <LogIn className="h-3.5 w-3.5" />
+                  Sign In
+                </Button>
+              </SignInButton>
+            )}
             <ThemeToggleButton />
           </div>
         </div>

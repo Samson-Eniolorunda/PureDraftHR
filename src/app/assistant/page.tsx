@@ -350,6 +350,7 @@ export default function AssistantPage() {
                             <ExportButtons
                               content={meetingData.remainingText}
                               filename="hr-assistant"
+                              tool="assistant"
                             />
                             <Button
                               variant="secondary"
@@ -387,6 +388,7 @@ export default function AssistantPage() {
                         <ExportButtons
                           content={latestResponse}
                           filename="hr-assistant"
+                          tool="assistant"
                         />
                         <Button
                           variant="secondary"

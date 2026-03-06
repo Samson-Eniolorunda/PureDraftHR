@@ -5,7 +5,16 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Download, Copy, Check, FileSpreadsheet, Pencil, Mail } from "lucide-react";
+import {
+  Download,
+  Copy,
+  Check,
+  FileSpreadsheet,
+  Pencil,
+  Mail,
+  Save,
+} from "lucide-react";
+import { useAuth } from "@clerk/nextjs";
 import type { DocumentStyling } from "@/hooks/useDocumentStyling";
 import { markdownToHtml, BULLET_SYMBOLS } from "@/lib/markdown-to-html";
 import { EmailDocumentModal } from "@/components/email-document-modal";
@@ -43,16 +52,24 @@ interface ExportButtonsProps {
   filename?: string;
   /** Document styling configuration */
   styling?: DocumentStyling;
+  /** Which tool generated this document (for save) */
+  tool?: string;
+  /** Document type (for save) */
+  docType?: string;
 }
 
 export function ExportButtons({
   content,
   filename = "HR_Document",
   styling,
+  tool,
+  docType,
 }: ExportButtonsProps) {
+  const { isSignedIn } = useAuth();
   const [copied, setCopied] = useState(false);
   const [exportFileName, setExportFileName] = useState("");
   const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const dynamicFilename = extractFilename(content, filename);
 
@@ -297,6 +314,42 @@ export function ExportButtons({
           <Mail className="h-4 w-4" />
           Email
         </Button>
+        {isSignedIn && tool && (
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={saving}
+            onClick={async () => {
+              setSaving(true);
+              try {
+                const res = await fetch("/api/documents", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    title: resolvedFilename,
+                    content,
+                    tool,
+                    docType,
+                  }),
+                });
+                if (!res.ok) {
+                  const data = await res.json();
+                  toast.error(data.error || "Failed to save document.");
+                  return;
+                }
+                toast.success("Document saved!");
+              } catch {
+                toast.error("Failed to save document.");
+              } finally {
+                setSaving(false);
+              }
+            }}
+            className="gap-2"
+          >
+            <Save className="h-4 w-4" />
+            {saving ? "Saving…" : "Save"}
+          </Button>
+        )}
       </div>
 
       <EmailDocumentModal

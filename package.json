@@ -4,14 +4,18 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.2.22",
+    "@clerk/nextjs": "^7.0.1",
     "@google/generative-ai": "^0.12.0",
     "@next/third-parties": "^16.1.6",
+    "@prisma/adapter-pg": "^7.4.2",
+    "@prisma/client": "^7.4.2",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.36.3",
     "ai": "^4.3.0",
@@ -23,7 +27,9 @@
     "lucide-react": "^0.475.0",
     "mammoth": "^1.9.0",
     "next": "^15.3.4",
+    "next-themes": "^0.4.6",
     "pdf-parse": "^1.1.1",
+    "pg": "^8.20.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-markdown": "^10.1.0",
@@ -39,12 +45,14 @@
     "@tailwindcss/typography": "^0.5.16",
     "@types/file-saver": "^2.0.7",
     "@types/node": "^22.14.0",
+    "@types/pg": "^8.18.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.22.0",
     "eslint-config-next": "15.3.3",
     "postcss": "^8.5.3",
+    "prisma": "^7.4.2",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.2"
   }

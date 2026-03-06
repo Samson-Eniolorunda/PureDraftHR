@@ -206,9 +206,7 @@ export function DropZone({ onTextExtracted, disabled }: DropZoneProps) {
           <Upload
             className={cn(
               "h-8 w-8 transition-transform duration-200",
-              dragging
-                ? "text-primary scale-110"
-                : "text-muted-foreground",
+              dragging ? "text-primary scale-110" : "text-muted-foreground",
             )}
           />
           <p className="text-sm font-medium">
