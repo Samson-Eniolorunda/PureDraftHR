@@ -46,7 +46,6 @@ export const metadata: Metadata = {
   ],
   manifest: "/manifest.json",
   metadataBase: new URL(SITE_URL),
-  alternates: { canonical: "/" },
   icons: {
     icon: `/favicon.svg?v=${FAVICON_VERSION}`,
     shortcut: `/favicon.svg?v=${FAVICON_VERSION}`,

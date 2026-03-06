@@ -5,6 +5,7 @@ import Link from "next/link";
 export const metadata = {
   title: "FAQ | PureDraft HR",
   description: "Frequently Asked Questions about PureDraft HR",
+  alternates: { canonical: "/faq" },
 };
 
 export default function FAQPage() {

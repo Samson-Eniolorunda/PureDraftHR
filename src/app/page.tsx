@@ -1,6 +1,6 @@
-import { redirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 
-/** Root page redirects to the Assistant tool */
+/** Root page permanently redirects to the Assistant tool (308 for SEO) */
 export default function Home() {
-  redirect("/assistant");
+  permanentRedirect("/assistant");
 }

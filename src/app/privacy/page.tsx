@@ -6,6 +6,7 @@ export const metadata = {
   title: "Privacy Policy | PureDraft HR",
   description:
     "PureDraft HR Privacy Policy - No data storage, stateless processing",
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {
