@@ -19,3 +19,10 @@ export const contactLimiter = new Ratelimit({
   limiter: Ratelimit.slidingWindow(3, "600 s"),
   prefix: "ratelimit:contact",
 });
+
+/** Email document: 5 sends per 10-minute sliding window */
+export const emailLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, "600 s"),
+  prefix: "ratelimit:email",
+});
