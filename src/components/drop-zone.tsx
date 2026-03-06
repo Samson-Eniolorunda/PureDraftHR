@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useState, useRef } from "react";
+import { toast } from "sonner";
 import { Upload, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -78,6 +79,7 @@ export function DropZone({ onTextExtracted, disabled }: DropZoneProps) {
       try {
         const text = await extractText(file);
         onTextExtracted(text);
+        toast.success(`${file.name} extracted successfully`);
       } catch (err) {
         const msg =
           err instanceof Error && err.message

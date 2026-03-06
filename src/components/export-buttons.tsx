@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState, useEffect } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -87,6 +88,7 @@ export function ExportButtons({
         .trim();
       await navigator.clipboard.writeText(plainText);
       setCopied(true);
+      toast.success("Copied to clipboard!");
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Fallback for older browsers
@@ -125,6 +127,7 @@ export function ExportButtons({
     };
 
     html2pdf().set(opt).from(container).save();
+    toast.success("PDF downloaded!");
   }, [content, resolvedFilename, styling]);
 
   /* ── Excel Export via xlsx (lazy loaded) ── */
@@ -178,6 +181,7 @@ export function ExportButtons({
     }
 
     XLSX.writeFile(wb, `${resolvedFilename}.xlsx`);
+    toast.success("Excel downloaded!");
   }, [content, resolvedFilename]);
 
   /* ── DOCX Export via the docx library (lazy-loaded) ── */
@@ -214,9 +218,10 @@ export function ExportButtons({
       // 4. Pack and save
       const blob = await docx.Packer.toBlob(doc);
       saveAs(blob, `${resolvedFilename}.docx`);
+      toast.success("Word document downloaded!");
     } catch (error) {
       console.error("Failed to generate DOCX:", error);
-      alert("Failed to download Word document. Please try again.");
+      toast.error("Failed to download Word document. Please try again.");
     }
   }, [content, resolvedFilename, styling]);
 

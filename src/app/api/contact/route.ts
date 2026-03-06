@@ -1,25 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { contactLimiter } from "@/lib/rate-limit";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-
-/* ── In-memory rate limiter (3 submissions per 10 min per IP) ── */
-const CONTACT_RATE_WINDOW = 600_000;
-const CONTACT_RATE_MAX = 3;
-const contactIpHits = new Map<string, number[]>();
-
-function isContactRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const hits = contactIpHits.get(ip) ?? [];
-  const recent = hits.filter((t) => now - t < CONTACT_RATE_WINDOW);
-  if (recent.length >= CONTACT_RATE_MAX) {
-    contactIpHits.set(ip, recent);
-    return true;
-  }
-  recent.push(now);
-  contactIpHits.set(ip, recent);
-  return false;
-}
 
 /** Escape HTML special chars to prevent XSS in email templates */
 function escapeHtml(str: string): string {
@@ -79,10 +62,11 @@ function validateFormData(data: ContactFormData): string | null {
 
 export async function POST(request: NextRequest) {
   try {
-    /* ── Rate limit check ── */
+    /* ── Rate limit check (persistent via Upstash Redis) ── */
     const forwarded = request.headers.get("x-forwarded-for");
     const ip = forwarded?.split(",")[0]?.trim() || "unknown";
-    if (isContactRateLimited(ip)) {
+    const { success: rateLimitOk } = await contactLimiter.limit(ip);
+    if (!rateLimitOk) {
       return NextResponse.json(
         {
           success: false,

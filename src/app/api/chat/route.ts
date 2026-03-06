@@ -1,46 +1,12 @@
 import { streamText, type CoreMessage } from "ai";
 import { google } from "@ai-sdk/google";
+import { chatLimiter } from "@/lib/rate-limit";
 
 export const maxDuration = 60;
 
 /* ── Safe text truncation to prevent Vercel/Gemini payload limits ── */
 const MAX_REFERENCE_CHARS = 30_000; // ~7,500 tokens
 const MAX_MESSAGE_CHARS = 40_000;
-
-/* ── In-memory IP rate limiter (5 req/min per IP) ── */
-const RATE_WINDOW_MS = 60_000;
-const RATE_MAX_REQUESTS = 5;
-const ipHits = new Map<string, number[]>();
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const hits = ipHits.get(ip) ?? [];
-  // Prune old entries
-  const recent = hits.filter((t) => now - t < RATE_WINDOW_MS);
-  if (recent.length >= RATE_MAX_REQUESTS) {
-    ipHits.set(ip, recent);
-    return true;
-  }
-  recent.push(now);
-  ipHits.set(ip, recent);
-  return false;
-}
-
-// Periodically clean stale IPs to prevent memory leaks (every 5 min)
-if (typeof globalThis !== "undefined") {
-  const key = "__pureDraftHR_rateLimitCleanup__";
-  if (!(globalThis as Record<string, unknown>)[key]) {
-    (globalThis as Record<string, unknown>)[key] = true;
-    setInterval(() => {
-      const cutoff = Date.now() - RATE_WINDOW_MS;
-      for (const [ip, hits] of ipHits.entries()) {
-        const fresh = hits.filter((t) => t > cutoff);
-        if (fresh.length === 0) ipHits.delete(ip);
-        else ipHits.set(ip, fresh);
-      }
-    }, 300_000);
-  }
-}
 
 /* ── Exponential backoff helper for Gemini 429s ── */
 const MAX_RETRIES = 3;
@@ -287,10 +253,11 @@ Output in markdown. No meta-commentary or preamble unless needed for clarificati
 
 export async function POST(req: Request) {
   try {
-    /* ── IP rate limiting ── */
+    /* ── IP rate limiting (persistent via Upstash Redis) ── */
     const forwarded = req.headers.get("x-forwarded-for");
     const ip = forwarded?.split(",")[0]?.trim() || "unknown";
-    if (isRateLimited(ip)) {
+    const { success: rateLimitOk } = await chatLimiter.limit(ip);
+    if (!rateLimitOk) {
       console.warn("[API/chat] Rate-limited IP:", ip);
       return new Response(
         JSON.stringify({

@@ -7,6 +7,7 @@ import { MobileHeader } from "@/components/mobile-header";
 import { PwaRegister } from "@/components/pwa-register";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Footer } from "@/components/footer";
+import { SonnerToaster } from "@/components/sonner-toaster";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -154,6 +155,7 @@ export default function RootLayout({
 
           <Footer />
           <PwaRegister />
+          <SonnerToaster />
         </ThemeProvider>
         {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
           <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
