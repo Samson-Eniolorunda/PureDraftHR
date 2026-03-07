@@ -315,7 +315,7 @@ export default function DashboardPage() {
             className="pl-9"
           />
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
           <Button
             variant={toolFilter === null ? "default" : "outline"}
             size="sm"
@@ -369,7 +369,7 @@ export default function DashboardPage() {
                 className="cursor-pointer hover:shadow-md transition-shadow"
                 onClick={() => handleView(doc.id)}
               >
-                <CardHeader className="pb-2">
+                <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-base line-clamp-2 break-words">
                       {doc.title}
@@ -401,7 +401,7 @@ export default function DashboardPage() {
                     )}
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-0">
                   <p className="text-sm text-muted-foreground line-clamp-3">
                     {doc.preview.replace(/[#*_|]/g, "")}
                   </p>

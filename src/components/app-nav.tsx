@@ -12,6 +12,7 @@ import {
   MessageCircle,
   LayoutDashboard,
   LogIn,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -32,7 +33,7 @@ const NAV_ITEMS = [
 
 export function AppNav() {
   const pathname = usePathname();
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
 
   return (
     <>
@@ -96,7 +97,11 @@ export function AppNav() {
         {/* Footer with Auth + Theme Toggle */}
         <div className="px-6 py-3 border-t border-border/50">
           <div className="flex items-center justify-between">
-            {isSignedIn ? (
+            {!isLoaded ? (
+              <div className="h-8 w-8 flex items-center justify-center">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              </div>
+            ) : isSignedIn ? (
               <UserButton />
             ) : (
               <SignInButton mode="modal">

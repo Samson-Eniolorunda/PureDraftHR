@@ -1,15 +1,8 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useChat } from "ai/react";
 import { useRouter } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,8 +12,6 @@ import {
   LanguageSelector,
   type LanguageValue,
 } from "@/components/language-selector";
-import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
-import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
 import {
   MeetingCard,
   parseMeetingFromResponse,
@@ -36,23 +27,26 @@ import {
   FileText,
   StopCircle,
   Paintbrush,
+  Bot,
+  User,
+  Sparkles,
+  Globe,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
-/* /assistant — Freeform HR Copilot                                  */
+/* /assistant — ChatGPT / Gemini-style Chat UX                       */
 /* ------------------------------------------------------------------ */
 export default function AssistantPage() {
   const router = useRouter();
-  const showSkeletonPreview = useDevSkeletonPreview();
 
   const [userPrompt, setUserPrompt] = useState("");
   const [language, setLanguage] = useState<LanguageValue>("English");
-  const [refineText, setRefineText] = useState("");
   const [streamError, setStreamError] = useState<string | null>(null);
   const [referenceText, setReferenceText] = useState("");
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
-  const resultRef = useRef<HTMLDivElement>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -72,7 +66,7 @@ export default function AssistantPage() {
         msg.includes("slow down")
       ) {
         setStreamError(
-          "Our AI is currently processing a high volume of documents. Please wait just a few seconds and try again! ⏳",
+          "Our AI is currently busy. Please wait a few seconds and try again! ⏳",
         );
       } else {
         setStreamError(
@@ -82,14 +76,27 @@ export default function AssistantPage() {
     },
   });
 
-  const assistantMessages = messages.filter((m) => m.role === "assistant");
-  const latestResponse =
-    assistantMessages[assistantMessages.length - 1]?.content ?? "";
-  const displayLoading = isLoading || showSkeletonPreview;
+  const hasMessages = messages.length > 0;
+  const lastAssistantMsg = [...messages]
+    .reverse()
+    .find((m) => m.role === "assistant");
+  const latestResponse = lastAssistantMsg?.content ?? "";
 
-  const meetingData = latestResponse
-    ? parseMeetingFromResponse(latestResponse)
-    : null;
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isLoading]);
+
+  // Auto-resize textarea
+  const handleTextareaChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setUserPrompt(e.target.value);
+      const ta = e.target;
+      ta.style.height = "auto";
+      ta.style.height = Math.min(ta.scrollHeight, 200) + "px";
+    },
+    [],
+  );
 
   const handleDocumentUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -153,18 +160,17 @@ export default function AssistantPage() {
   const handleSend = useCallback(() => {
     if (!userPrompt.trim() || isLoading) return;
 
-    setMessages([]);
     append({
       role: "user",
       content: userPrompt,
     });
 
     setUserPrompt("");
-
-    setTimeout(() => {
-      resultRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 300);
-  }, [userPrompt, isLoading, append, setMessages]);
+    // Reset textarea height
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+  }, [userPrompt, isLoading, append]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -176,187 +182,152 @@ export default function AssistantPage() {
     [handleSend],
   );
 
-  const handleRefine = useCallback(() => {
-    if (!refineText.trim() || isLoading) return;
-    append({
-      role: "user",
-      content: refineText.trim(),
-    });
-    setRefineText("");
-    setTimeout(() => {
-      resultRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 300);
-  }, [refineText, isLoading, append]);
+  const handleNewChat = useCallback(() => {
+    setMessages([]);
+    setStreamError(null);
+    setUserPrompt("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
+  }, [setMessages]);
 
   // Push to Formatter Action
   const handleRouteToFormatter = (text: string) => {
     localStorage.setItem("puredraft_formatter_payload", text);
-    router.push("/formatter"); // Navigates to your formatter page
+    router.push("/formatter");
   };
 
   return (
-    <div className="space-y-6">
-      {/* ── Page Header ── */}
-      <div className="text-center sm:text-left">
-        <div className="flex items-center gap-2.5 justify-center sm:justify-start">
-          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <MessageCircle className="h-5 w-5 text-primary" />
+    <div className="flex flex-col h-[calc(100vh-8rem)] sm:h-[calc(100vh-6rem)] max-w-3xl mx-auto">
+      {/* ── Top Bar ── */}
+      <div className="flex items-center justify-between px-1 py-3 border-b border-border/50 shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <MessageCircle className="h-4 w-4 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            HR Assistant
-          </h1>
+          <div>
+            <h1 className="text-base font-semibold leading-tight">
+              PureDraft Assistant
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              HR, writing, analysis & more
+            </p>
+          </div>
         </div>
-        <p className="mt-2 text-muted-foreground max-w-lg mx-auto sm:mx-0">
-          Ask HR questions, draft emails and documents, analyze uploads, or get
-          help with any professional task.
-        </p>
+        <div className="flex items-center gap-1.5">
+          {hasMessages && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleNewChat}
+              className="text-xs gap-1.5 h-8"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              New Chat
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowSettings(!showSettings)}
+            className="text-xs gap-1.5 h-8"
+          >
+            <Globe className="h-3.5 w-3.5" />
+            {language}
+          </Button>
+        </div>
       </div>
 
-      {/* ── Chat Interface ── */}
-      <div className="space-y-6 max-w-3xl">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">What can I help you with?</CardTitle>
-            <CardDescription>
-              Ask anything — HR, business writing, analysis, or general
-              questions. Press Enter to send.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Document Upload */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Chat with a Document (Optional)
-              </Label>
+      {/* Language / Settings Row (collapsible) */}
+      {showSettings && (
+        <div className="px-1 py-3 border-b border-border/30 shrink-0 animate-in slide-in-from-top-2 duration-200">
+          <LanguageSelector
+            value={language}
+            onChange={(v) => {
+              setLanguage(v);
+              setShowSettings(false);
+            }}
+            disabled={isLoading}
+          />
+        </div>
+      )}
 
-              {uploadedFileName ? (
-                <div className="flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-2.5">
-                  <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
-                  <span className="text-sm font-medium text-green-700 dark:text-green-400 truncate flex-1">
-                    {uploadedFileName} loaded
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-                    onClick={handleRemoveDocument}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="relative">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf,.docx,.txt,.csv,.xlsx,.xls"
-                    aria-label="Upload a document"
-                    onChange={handleDocumentUpload}
-                    disabled={isProcessingFile || isLoading}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={isProcessingFile || isLoading}
-                    className="w-full gap-2"
-                  >
-                    <Upload className="h-4 w-4" />
-                    {isProcessingFile ? "Processing..." : "Upload Document"}
-                  </Button>
-                  <div className="flex flex-wrap gap-1 mt-1 justify-center">
-                    {["PDF", "DOCX", "TXT", "XLSX", "CSV"].map((ext) => (
-                      <span
-                        key={ext}
-                        className="inline-block rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
-                      >
-                        {ext}
-                      </span>
-                    ))}
-                  </div>
+      {/* ── Chat Messages Area ── */}
+      <div className="flex-1 overflow-y-auto px-1 py-4 space-y-1 scrollbar-thin">
+        {/* Empty state */}
+        {!hasMessages && !isLoading && (
+          <div className="flex flex-col items-center justify-center h-full text-center px-4">
+            <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
+              <Sparkles className="h-8 w-8 text-primary" />
+            </div>
+            <h2 className="text-xl font-semibold mb-2">
+              What can I help you with?
+            </h2>
+            <p className="text-sm text-muted-foreground max-w-md mb-8">
+              Ask HR questions, draft emails and documents, analyze uploads, or
+              get help with any professional task.
+            </p>
+            {/* Suggestion chips */}
+            <div className="flex flex-wrap gap-2 justify-center max-w-lg">
+              {[
+                "Draft an employee offer letter",
+                "Write a professional email",
+                "Summarize company policies",
+                "Create a meeting agenda",
+              ].map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => {
+                    setUserPrompt(suggestion);
+                    textareaRef.current?.focus();
+                  }}
+                  className="rounded-xl border border-border/60 bg-card px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/5 transition-all duration-200"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Message bubbles */}
+        {messages.map((msg) => {
+          const isUser = msg.role === "user";
+          const meetingData = !isUser
+            ? parseMeetingFromResponse(msg.content)
+            : null;
+
+          return (
+            <div
+              key={msg.id}
+              className={`flex gap-3 py-4 ${isUser ? "justify-end" : "justify-start"}`}
+            >
+              {/* Avatar - assistant */}
+              {!isUser && (
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <Bot className="h-4 w-4 text-primary" />
                 </div>
               )}
-            </div>
 
-            <LanguageSelector
-              value={language}
-              onChange={setLanguage}
-              disabled={isLoading}
-            />
-
-            <div className="space-y-2">
-              <Label htmlFor="assistant-prompt">Your Message</Label>
-              <Textarea
-                ref={textareaRef}
-                id="assistant-prompt"
-                rows={4}
-                value={userPrompt}
-                onChange={(e) => setUserPrompt(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={
-                  uploadedFileName
-                    ? `Ask a question about "${uploadedFileName}"...`
-                    : "Ask an HR question or request a draft..."
-                }
-                disabled={isLoading}
-                className="resize-y min-h-[100px]"
-              />
-            </div>
-
-            {/* Action buttons */}
-            <Button
-              onClick={handleSend}
-              disabled={!userPrompt.trim() || isLoading}
-              className="w-full gap-2"
-            >
-              <Send className="h-4 w-4" />
-              {isLoading ? "Thinking..." : "Send"}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* ── Response Section ── */}
-        <div ref={resultRef}>
-          {streamError && (
-            <div className="mb-4 flex items-center justify-between rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3">
-              <p className="text-sm text-red-700 dark:text-red-400">
-                {streamError}
-              </p>
-              <button
-                onClick={() => setStreamError(null)}
-                aria-label="Dismiss error"
-                className="text-red-500 hover:text-red-700 dark:hover:text-red-300 ml-2"
+              {/* Message content */}
+              <div
+                className={`max-w-[85%] sm:max-w-[75%] ${
+                  isUser
+                    ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md px-4 py-2.5"
+                    : "flex-1 min-w-0"
+                }`}
               >
-                &times;
-              </button>
-            </div>
-          )}
-
-          {(latestResponse || isLoading) && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Response</CardTitle>
-                {isLoading && (
-                  <CardDescription className="flex items-center gap-2">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    AI is thinking…
-                  </CardDescription>
-                )}
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {displayLoading && !latestResponse ? (
-                  <ResultSkeleton />
+                {isUser ? (
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                    {msg.content}
+                  </p>
                 ) : meetingData ? (
-                  <>
+                  <div className="space-y-3">
                     <MeetingCard meeting={meetingData.meeting} />
                     {meetingData.remainingText && (
                       <>
                         <MarkdownRenderer content={meetingData.remainingText} />
                         {!isLoading && (
-                          <div className="mt-4 flex flex-wrap items-center gap-2 pt-2">
+                          <div className="flex flex-wrap items-center gap-2 pt-2">
                             <ExportButtons
                               content={meetingData.remainingText}
                               filename="hr-assistant"
@@ -364,89 +335,183 @@ export default function AssistantPage() {
                             />
                             <Button
                               variant="secondary"
+                              size="sm"
                               onClick={() =>
                                 handleRouteToFormatter(
                                   meetingData.remainingText,
                                 )
                               }
-                              className="gap-2"
+                              className="gap-1.5"
                             >
-                              <Paintbrush className="h-4 w-4" />
-                              Format Document
+                              <Paintbrush className="h-3.5 w-3.5" />
+                              Format
                             </Button>
                           </div>
                         )}
                       </>
                     )}
-                  </>
+                  </div>
                 ) : (
-                  <>
-                    <MarkdownRenderer content={latestResponse} />
-                    {isLoading && (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="mt-3 gap-2"
-                        onClick={() => stop()}
-                      >
-                        <StopCircle className="h-4 w-4" />
-                        Stop Generating
-                      </Button>
-                    )}
-                    {!isLoading && latestResponse && (
-                      <div className="mt-4 flex flex-wrap items-center gap-2 pt-2">
+                  <div className="space-y-2">
+                    <MarkdownRenderer content={msg.content} />
+                    {!isLoading && msg.id === lastAssistantMsg?.id && (
+                      <div className="flex flex-wrap items-center gap-2 pt-2">
                         <ExportButtons
-                          content={latestResponse}
+                          content={msg.content}
                           filename="hr-assistant"
                           tool="assistant"
                         />
                         <Button
                           variant="secondary"
-                          onClick={() => handleRouteToFormatter(latestResponse)}
-                          className="gap-2"
+                          size="sm"
+                          onClick={() => handleRouteToFormatter(msg.content)}
+                          className="gap-1.5"
                         >
-                          <Paintbrush className="h-4 w-4" />
-                          Format Document
+                          <Paintbrush className="h-3.5 w-3.5" />
+                          Format
                         </Button>
                       </div>
                     )}
-                  </>
-                )}
-
-                {/* Refine Response */}
-                {!isLoading && latestResponse && (
-                  <div className="mt-4 space-y-2 border-t pt-4">
-                    <Label className="text-sm font-medium">
-                      Refine Response
-                    </Label>
-                    <Textarea
-                      rows={2}
-                      value={refineText}
-                      onChange={(e) => setRefineText(e.target.value)}
-                      placeholder='e.g. "Make it shorter"…'
-                      className="resize-y min-h-[60px]"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          handleRefine();
-                        }
-                      }}
-                    />
-                    <Button
-                      size="sm"
-                      onClick={handleRefine}
-                      disabled={!refineText.trim()}
-                      className="gap-2"
-                    >
-                      <Wand2 className="h-4 w-4" />
-                      Refine
-                    </Button>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          )}
+              </div>
+
+              {/* Avatar - user */}
+              {isUser && (
+                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Typing indicator */}
+        {isLoading && !latestResponse && (
+          <div className="flex gap-3 py-4">
+            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <Bot className="h-4 w-4 text-primary" />
+            </div>
+            <div className="flex items-center gap-1.5 py-2">
+              <span className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:0ms]" />
+              <span className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:150ms]" />
+              <span className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:300ms]" />
+            </div>
+          </div>
+        )}
+
+        {/* Stop generating button */}
+        {isLoading && latestResponse && (
+          <div className="flex justify-center py-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 rounded-full"
+              onClick={() => stop()}
+            >
+              <StopCircle className="h-3.5 w-3.5" />
+              Stop generating
+            </Button>
+          </div>
+        )}
+
+        {/* Error */}
+        {streamError && (
+          <div className="mx-auto max-w-md rounded-xl border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3 flex items-center justify-between">
+            <p className="text-sm text-red-700 dark:text-red-400">
+              {streamError}
+            </p>
+            <button
+              onClick={() => setStreamError(null)}
+              aria-label="Dismiss error"
+              className="text-red-500 hover:text-red-700 dark:hover:text-red-300 ml-2"
+            >
+              &times;
+            </button>
+          </div>
+        )}
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* ── Input Area (pinned to bottom) ── */}
+      <div className="shrink-0 border-t border-border/50 bg-background pt-3 pb-2 px-1">
+        {/* Attached document pill */}
+        {uploadedFileName && (
+          <div className="flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-1.5 mb-2 max-w-sm">
+            <CheckCircle className="h-3.5 w-3.5 text-green-600 shrink-0" />
+            <span className="text-xs font-medium text-green-700 dark:text-green-400 truncate flex-1">
+              {uploadedFileName}
+            </span>
+            <button
+              type="button"
+              onClick={handleRemoveDocument}
+              className="text-muted-foreground hover:text-destructive"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+
+        {/* Input row */}
+        <div className="flex items-end gap-2">
+          {/* Upload button */}
+          <div className="relative shrink-0">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.docx,.txt,.csv,.xlsx,.xls"
+              aria-label="Upload a document"
+              onChange={handleDocumentUpload}
+              disabled={isProcessingFile || isLoading}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              disabled={isProcessingFile || isLoading}
+              className="h-10 w-10 rounded-xl"
+            >
+              {isProcessingFile ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+
+          {/* Text input */}
+          <div className="flex-1 relative">
+            <Textarea
+              ref={textareaRef}
+              rows={1}
+              value={userPrompt}
+              onChange={handleTextareaChange}
+              onKeyDown={handleKeyDown}
+              placeholder={
+                uploadedFileName
+                  ? `Ask about "${uploadedFileName}"...`
+                  : "Message PureDraft Assistant..."
+              }
+              disabled={isLoading}
+              className="resize-none min-h-[44px] max-h-[200px] pr-12 rounded-xl"
+            />
+            <Button
+              type="button"
+              size="icon"
+              disabled={!userPrompt.trim() || isLoading}
+              onClick={handleSend}
+              className="absolute right-1.5 bottom-1.5 h-8 w-8 rounded-lg"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
+
+        <p className="text-[10px] text-muted-foreground/60 text-center mt-2">
+          PureDraft can make mistakes. Verify important information.
+        </p>
       </div>
     </div>
   );
