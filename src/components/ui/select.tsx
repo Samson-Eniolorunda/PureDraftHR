@@ -20,6 +20,17 @@ interface ParsedOption {
   group?: string;
 }
 
+/** Flatten React children into a plain text string (handles arrays, fragments, etc.) */
+function childrenToText(children: React.ReactNode): string {
+  if (children == null || typeof children === "boolean") return "";
+  if (typeof children === "string" || typeof children === "number")
+    return String(children);
+  if (Array.isArray(children)) return children.map(childrenToText).join("");
+  if (React.isValidElement(children))
+    return childrenToText((children as React.ReactElement<any>).props.children);
+  return "";
+}
+
 /** Recursively parse <option> and <optgroup> children into flat list */
 function parseChildren(children: React.ReactNode): ParsedOption[] {
   const result: ParsedOption[] = [];
@@ -34,18 +45,20 @@ function parseChildren(children: React.ReactNode): ParsedOption[] {
         (groupChild: React.ReactNode) => {
           if (!React.isValidElement(groupChild)) return;
           const opt = groupChild as React.ReactElement<any>;
+          const text = childrenToText(opt.props.children);
           result.push({
-            value: opt.props.value ?? String(opt.props.children ?? ""),
-            label: String(opt.props.children ?? opt.props.value ?? ""),
+            value: (opt.props.value ?? text) || "",
+            label: text || opt.props.value || "",
             disabled: opt.props.disabled ?? false,
             group: groupLabel,
           });
         },
       );
     } else {
+      const text = childrenToText(el.props.children);
       result.push({
-        value: el.props.value ?? String(el.props.children ?? ""),
-        label: String(el.props.children ?? el.props.value ?? ""),
+        value: (el.props.value ?? text) || "",
+        label: text || el.props.value || "",
         disabled: el.props.disabled ?? false,
       });
     }
@@ -217,7 +230,7 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
               role="listbox"
               tabIndex={-1}
               title="Select an option"
-              className="overflow-auto rounded-xl border border-input bg-card shadow-lg p-1"
+              className="overflow-auto rounded-xl border border-input bg-card shadow-lg p-1 scrollbar-none"
               style={dropdownStyle}
               aria-activedescendant={selected}
             >

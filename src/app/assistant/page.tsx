@@ -76,6 +76,7 @@ export default function AssistantPage() {
   const [isProcessingFile, setIsProcessingFile] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hasSentRef = useRef(false);
@@ -114,7 +115,10 @@ export default function AssistantPage() {
   // Auto-scroll to bottom only after user has actually sent a message
   useEffect(() => {
     if (hasSentRef.current && (messages.length > 0 || isLoading)) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      const container = messagesContainerRef.current;
+      if (container) {
+        container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+      }
     }
   }, [messages, isLoading]);
 
@@ -287,7 +291,10 @@ export default function AssistantPage() {
       </div>
 
       {/* ── Chat Messages Area ── */}
-      <div className="flex-1 overflow-y-auto overscroll-contain px-1 py-4 space-y-1 scrollbar-none md:scrollbar-thin">
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto overscroll-contain px-1 py-4 space-y-1 scrollbar-none md:scrollbar-thin"
+      >
         {/* Empty state */}
         {!hasMessages && !isLoading && (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">

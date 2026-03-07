@@ -372,7 +372,7 @@ export function ExportButtons({
             <MoreVertical className="h-4 w-4" />
           </Button>
           {menuOpen && (
-            <div className="absolute right-0 top-full mt-1 bg-popover border border-border rounded-xl shadow-lg py-1 min-w-[200px] z-50">
+            <div className="absolute right-0 bottom-full mb-1 bg-popover border border-border rounded-xl shadow-lg py-1 min-w-[200px] z-50 max-h-[70vh] overflow-y-auto scrollbar-none">
               {/* Filename rename step — shown only after picking a download type */}
               {pendingDownload ? (
                 <div className="px-3 py-2.5 space-y-2">
