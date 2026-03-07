@@ -118,12 +118,12 @@ npm run dev
 
 ### Vercel Build Settings (auto-detected)
 
-| Setting           | Value                            |
-| ----------------- | -------------------------------- |
-| Framework         | Next.js                          |
-| Build Command     | `prisma generate && next build`  |
-| Output Directory  | `.next`                          |
-| Install Command   | `npm install`                    |
+| Setting          | Value                           |
+| ---------------- | ------------------------------- |
+| Framework        | Next.js                         |
+| Build Command    | `prisma generate && next build` |
+| Output Directory | `.next`                         |
+| Install Command  | `npm install`                   |
 
 ---
 
@@ -139,10 +139,10 @@ npm run dev
 
 ## Troubleshooting
 
-| Issue | Fix |
-| --- | --- |
+| Issue                   | Fix                                                                    |
+| ----------------------- | ---------------------------------------------------------------------- |
 | `prisma generate` fails | Ensure `DATABASE_URL` is set (even a placeholder works for generation) |
-| Auth not working | Check Clerk publishable key starts with `pk_` |
-| Save button not showing | Sign in first — Save is only visible to authenticated users |
-| Rate limit errors | Verify Upstash Redis URL and token are correct |
-| Email sending fails | Verify Resend API key and domain |
+| Auth not working        | Check Clerk publishable key starts with `pk_`                          |
+| Save button not showing | Sign in first — Save is only visible to authenticated users            |
+| Rate limit errors       | Verify Upstash Redis URL and token are correct                         |
+| Email sending fails     | Verify Resend API key and domain                                       |
