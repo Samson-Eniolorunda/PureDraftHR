@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useChat } from "ai/react";
 import { useRouter } from "next/navigation";
 import {
@@ -19,7 +19,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
 import { DocumentFormFooter } from "@/components/document-form-footer";
-import { type LanguageValue } from "@/components/language-selector";
+import { useTranslation } from "@/components/i18n-provider";
 import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
 import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
 import {
@@ -42,7 +42,7 @@ export default function SummarizerPage() {
   const [inputText, setInputText] = useState("");
   const [referenceText, setReferenceText] = useState("");
   const [isConsented, setIsConsented] = useState(false);
-  const [language, setLanguage] = useState<LanguageValue>("English");
+  const { language, t } = useTranslation();
   const [refineText, setRefineText] = useState("");
   const [streamError, setStreamError] = useState<string | null>(null);
   const [mode, setMode] = useState<"single" | "batch">("single");
@@ -50,19 +50,6 @@ export default function SummarizerPage() {
     { name: string; text: string }[]
   >([]);
   const resultRef = useRef<HTMLDivElement>(null);
-
-  // Sync language from sidebar via custom event + localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem("puredraft_language");
-    if (saved) setLanguage(saved as LanguageValue);
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail as LanguageValue;
-      if (detail) setLanguage(detail);
-    };
-    window.addEventListener("puredraft-language-change", handler);
-    return () =>
-      window.removeEventListener("puredraft-language-change", handler);
-  }, []);
 
   const { messages, isLoading, append, setMessages, stop } = useChat({
     api: "/api/chat",
@@ -79,13 +66,9 @@ export default function SummarizerPage() {
         msg.includes("rate") ||
         msg.includes("slow down")
       ) {
-        setStreamError(
-          "Our AI is currently processing a high volume of documents. Please wait just a few seconds and try again! ⏳",
-        );
+        setStreamError(t("error.rateLimit"));
       } else {
-        setStreamError(
-          msg || "An error occurred. The document may be too large.",
-        );
+        setStreamError(msg || t("error.generic"));
       }
     },
   });
@@ -155,12 +138,11 @@ export default function SummarizerPage() {
             <FileStack className="h-5 w-5 text-primary" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            Document Summarizer
+            {t("summarizer.title")}
           </h1>
         </div>
         <p className="mt-2 text-muted-foreground max-w-lg mx-auto sm:mx-0">
-          Paste or upload a lengthy HR document and get a clear, human-sounding
-          summary in seconds.
+          {t("summarizer.subtitle")}
         </p>
       </div>
 
@@ -169,10 +151,8 @@ export default function SummarizerPage() {
         {/* ── Input Section ── */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Input</CardTitle>
-            <CardDescription>
-              Upload a file (.txt, .pdf, .docx) or paste your text directly.
-            </CardDescription>
+            <CardTitle className="text-lg">{t("summarizer.input")}</CardTitle>
+            <CardDescription>{t("summarizer.inputDesc")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Single / Batch toggle */}
@@ -184,11 +164,11 @@ export default function SummarizerPage() {
               <TabsList>
                 <TabsTrigger value="single" className="gap-2">
                   <FileText className="h-4 w-4" />
-                  Single
+                  {t("summarizer.single")}
                 </TabsTrigger>
                 <TabsTrigger value="batch" className="gap-2">
                   <FileStack className="h-4 w-4" />
-                  Batch
+                  {t("summarizer.batch")}
                 </TabsTrigger>
               </TabsList>
 
@@ -196,7 +176,7 @@ export default function SummarizerPage() {
                 <DualInput
                   onTextReady={setInputText}
                   disabled={isLoading}
-                  placeholder="Paste the full text of the HR document you want summarized…"
+                  placeholder={t("summarizer.pastePlaceholder")}
                 />
               </TabsContent>
 
@@ -207,8 +187,9 @@ export default function SummarizerPage() {
                 />
                 {batchFiles.length > 0 && (
                   <p className="mt-2 text-xs text-muted-foreground">
-                    {batchFiles.length} document{batchFiles.length !== 1 && "s"}{" "}
-                    ready for summarization
+                    {t("summarizer.docsReady", {
+                      count: String(batchFiles.length),
+                    })}
                   </p>
                 )}
               </TabsContent>
@@ -223,7 +204,7 @@ export default function SummarizerPage() {
               onConsentChange={setIsConsented}
               onReferenceTextChange={setReferenceText}
               onSubmit={handleSummarizeClick}
-              submitLabel="Summarize"
+              submitLabel={t("summarizer.summarize")}
             />
           </CardContent>
         </Card>
@@ -250,12 +231,14 @@ export default function SummarizerPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">
-                  {mode === "batch" ? "Batch Summary" : "Summary"}
+                  {mode === "batch"
+                    ? t("summarizer.batchSummary")
+                    : t("summarizer.summary")}
                 </CardTitle>
                 {isLoading && (
                   <CardDescription className="flex items-center gap-2">
                     <Loader2 className="h-3 w-3 animate-spin" />
-                    AI is writing…
+                    {t("summarizer.aiWriting")}
                   </CardDescription>
                 )}
               </CardHeader>
@@ -273,7 +256,7 @@ export default function SummarizerPage() {
                         onClick={() => stop()}
                       >
                         <StopCircle className="h-4 w-4" />
-                        Stop Generating
+                        {t("refine.stopGenerating")}
                       </Button>
                     )}
 
@@ -290,7 +273,7 @@ export default function SummarizerPage() {
                           className="gap-2"
                         >
                           <Paintbrush className="h-4 w-4" />
-                          Format Document
+                          {t("summarizer.formatDoc")}
                         </Button>
                       </div>
                     )}
@@ -302,7 +285,7 @@ export default function SummarizerPage() {
                           rows={1}
                           value={refineText}
                           onChange={(e) => setRefineText(e.target.value)}
-                          placeholder="Ask to refine this summary…"
+                          placeholder={t("refine.placeholder")}
                           className="resize-none min-h-[42px] max-h-[120px] pr-11 rounded-xl text-sm"
                           onKeyDown={(e) => {
                             if (e.key === "Enter" && !e.shiftKey) {

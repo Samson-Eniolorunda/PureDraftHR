@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { DropZone } from "@/components/drop-zone";
 import { Upload, Type } from "lucide-react";
+import { useTranslation } from "@/components/i18n-provider";
 
 /* ------------------------------------------------------------------ */
 /*  DualInput — Tabs component with "Upload File" & "Paste Text"       */
@@ -25,6 +26,7 @@ export function DualInput({
   placeholder = "Paste your text here…",
   initialText,
 }: DualInputProps) {
+  const { t } = useTranslation();
   const [pastedText, setPastedText] = useState(initialText ?? "");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const initialApplied = useRef(false);
@@ -68,11 +70,11 @@ export function DualInput({
       <TabsList>
         <TabsTrigger value="upload" className="gap-2">
           <Upload className="h-4 w-4" />
-          Upload File
+          {t("dualInput.uploadFile")}
         </TabsTrigger>
         <TabsTrigger value="paste" className="gap-2">
           <Type className="h-4 w-4" />
-          Paste Text
+          {t("dualInput.pasteText")}
         </TabsTrigger>
       </TabsList>
 

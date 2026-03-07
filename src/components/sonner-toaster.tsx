@@ -8,10 +8,9 @@ export function SonnerToaster() {
 
   return (
     <Toaster
-      position="bottom-right"
+      position="top-center"
       richColors
       theme={resolvedTheme === "dark" ? "dark" : "light"}
-      toastOptions={{ className: "mb-16 md:mb-0" }}
     />
   );
 }

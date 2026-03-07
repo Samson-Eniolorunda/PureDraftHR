@@ -7,6 +7,7 @@ import { AppNav } from "@/components/app-nav";
 import { MobileHeader } from "@/components/mobile-header";
 import { PwaRegister } from "@/components/pwa-register";
 import { ThemeProvider } from "@/components/theme-provider";
+import { I18nProvider } from "@/components/i18n-provider";
 import { SonnerToaster } from "@/components/sonner-toaster";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -135,28 +136,30 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         <ClerkProvider>
           <ThemeProvider>
-            {/* Skip to main content — accessibility */}
-            <a
-              href="#main-content"
-              className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground focus:text-sm focus:font-medium"
-            >
-              Skip to main content
-            </a>
-            <MobileHeader />
-            <AppNav />
+            <I18nProvider>
+              {/* Skip to main content — accessibility */}
+              <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground focus:text-sm focus:font-medium"
+              >
+                Skip to main content
+              </a>
+              <MobileHeader />
+              <AppNav />
 
-            {/* Main content area — offset for sidebar on desktop, header+bottom-bar on mobile */}
-            <main
-              id="main-content"
-              className="md:ml-64 pt-14 md:pt-0 pb-16 md:pb-0 overflow-x-hidden"
-            >
-              <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-6 lg:px-8 min-h-screen">
-                {children}
-              </div>
-            </main>
+              {/* Main content area — offset for sidebar on desktop, header+bottom-bar on mobile */}
+              <main
+                id="main-content"
+                className="md:ml-64 pt-14 md:pt-0 pb-16 md:pb-0 overflow-x-hidden"
+              >
+                <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-6 lg:px-8 min-h-screen">
+                  {children}
+                </div>
+              </main>
 
-            <PwaRegister />
-            <SonnerToaster />
+              <PwaRegister />
+              <SonnerToaster />
+            </I18nProvider>
           </ThemeProvider>
         </ClerkProvider>
         {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (

@@ -6,6 +6,30 @@ All notable changes to PureDraft HR will be documented in this file.
 
 ### Added
 
+- 🌐 **Full i18n (Internationalization)**: Language selector now changes ALL website UI content — not just AI output. Supports 8 languages: English, Spanish, French, German, Mandarin, Portuguese, Arabic, Hindi
+- 🌐 **Translation system**: New `src/lib/translations.ts` with 115+ translation keys across 8 languages, and `src/components/i18n-provider.tsx` React context with `useTranslation()` hook
+- 🌐 **RTL support for Arabic**: Automatically sets `dir="rtl"` on the HTML element when Arabic is selected
+- 📱 **Mobile 3-dot slide-out menu**: Moved "More" from bottom tab bar to a 3-dot button next to the login button in the mobile header; opens a right-side slide drawer with theme toggle, language dropdown, nav links, and Gemini attribution
+- 📱 **Mobile language dropdown**: Language picker on mobile now uses a proper `<Select>` dropdown instead of chips
+
+### Changed
+
+- 🔔 **Toast notification position**: Moved from `bottom-right` to `top-center` for better visibility on both desktop and mobile
+- 🎤 **Mic error toasts**: Microphone permission errors now use sonner `toast.error()` instead of inline error banner — always visible regardless of scroll position
+- 📱 **Bottom nav simplified**: Removed "More" tab from mobile bottom bar — 3-dot menu is now in the mobile header
+- 🔄 **Centralized language state**: All pages and components now use `useTranslation()` context instead of per-component localStorage sync
+
+### Fixed
+
+- 🐛 **"Microphone access denied" toast hiding**: Toast was hidden behind bottom nav bar on mobile — now shows at top-center
+- 🐛 **Language state drift**: Eliminated duplicate language state management across components
+
+---
+
+## [Previous]
+
+### Added
+
 - ✨ **Powered by Google Gemini**: Attribution badge in desktop sidebar footer and mobile More panel
 - 📱 **Mobile "More" tab**: New bottom-nav tab with language picker, theme toggle, Privacy/Terms/FAQ/Contact links, and Gemini attribution
 - 🏷️ **AI Output Language label**: Sidebar and mobile More panel now show "AI Output Language" above the language chip picker

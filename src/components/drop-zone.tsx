@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/components/i18n-provider";
 
 /* ------------------------------------------------------------------ */
 /*  DropZone — drag-and-drop + click-to-upload for documents & sheets  */
@@ -94,6 +95,7 @@ export function DropZone({ onTextExtracted, disabled }: DropZoneProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { t } = useTranslation();
 
   const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
 
@@ -101,7 +103,7 @@ export function DropZone({ onTextExtracted, disabled }: DropZoneProps) {
     async (file: File) => {
       setError(null);
       if (file.size > MAX_FILE_SIZE) {
-        setError("File is too large. Maximum size is 25 MB.");
+        setError(t("dropzone.fileTooLarge"));
         return;
       }
       setFileName(file.name);
@@ -167,7 +169,7 @@ export function DropZone({ onTextExtracted, disabled }: DropZoneProps) {
         <div className="flex flex-col items-center gap-2">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <span className="text-sm text-muted-foreground">
-            Extracting text…
+            {t("dropzone.extracting")}
           </span>
         </div>
       ) : fileName ? (
@@ -185,7 +187,7 @@ export function DropZone({ onTextExtracted, disabled }: DropZoneProps) {
           </div>
           <div className="flex items-center gap-2">
             <p className="text-xs text-muted-foreground">
-              Click or drop another file to replace
+              {t("dropzone.replaceFile")}
             </p>
             <Button
               variant="ghost"
@@ -197,7 +199,7 @@ export function DropZone({ onTextExtracted, disabled }: DropZoneProps) {
                 setFileSize(null);
                 onTextExtracted("");
               }}
-              aria-label="Remove uploaded file"
+              aria-label={t("dropzone.removeFile")}
             >
               <X className="h-3.5 w-3.5" />
             </Button>
@@ -211,11 +213,9 @@ export function DropZone({ onTextExtracted, disabled }: DropZoneProps) {
               dragging ? "text-primary scale-110" : "text-muted-foreground",
             )}
           />
-          <p className="text-sm font-medium">
-            Drop a file here or click to upload
-          </p>
+          <p className="text-sm font-medium">{t("dropzone.dropOrClick")}</p>
           <p className="text-xs text-muted-foreground text-center whitespace-nowrap">
-            Supported: .txt, .pdf, .docx, .xlsx, .csv (max 25 MB)
+            {t("dropzone.supported")}
           </p>
         </>
       )}

@@ -16,7 +16,7 @@ import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
 import { DocumentFormFooter } from "@/components/document-form-footer";
 import { DocumentStylingUI } from "@/components/document-styling-ui";
-import { type LanguageValue } from "@/components/language-selector";
+import { useTranslation } from "@/components/i18n-provider";
 import { Modal } from "@/components/ui/modal";
 import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
 import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
@@ -45,7 +45,7 @@ export default function FormatterPage() {
   } = useDocumentStyling();
   const [referenceText, setReferenceText] = useState("");
   const [isConsented, setIsConsented] = useState(false);
-  const [language, setLanguage] = useState<LanguageValue>("English");
+  const { language, t } = useTranslation();
   const [showStylingModal, setShowStylingModal] = useState(false);
   const [refineText, setRefineText] = useState("");
   const [streamError, setStreamError] = useState<string | null>(null);
@@ -59,19 +59,6 @@ export default function FormatterPage() {
       setPrefillText(payload);
       localStorage.removeItem("puredraft_formatter_payload");
     }
-  }, []);
-
-  // Sync language from sidebar via custom event + localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem("puredraft_language");
-    if (saved) setLanguage(saved as LanguageValue);
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail as LanguageValue;
-      if (detail) setLanguage(detail);
-    };
-    window.addEventListener("puredraft-language-change", handler);
-    return () =>
-      window.removeEventListener("puredraft-language-change", handler);
   }, []);
 
   const { messages, isLoading, append, setMessages, stop } = useChat({
@@ -89,13 +76,9 @@ export default function FormatterPage() {
         msg.includes("rate") ||
         msg.includes("slow down")
       ) {
-        setStreamError(
-          "Our AI is currently processing a high volume of documents. Please wait just a few seconds and try again! \u23f3",
-        );
+        setStreamError(t("error.rateLimit"));
       } else {
-        setStreamError(
-          msg || "An error occurred. The document may be too large.",
-        );
+        setStreamError(msg || t("error.generic"));
       }
     },
   });
@@ -147,12 +130,11 @@ export default function FormatterPage() {
             <Wand2 className="h-5 w-5 text-primary" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            Document Formatter
+            {t("formatter.title")}
           </h1>
         </div>
         <p className="mt-2 text-muted-foreground max-w-lg mx-auto sm:mx-0">
-          Turn messy notes into perfectly structured HR documents. Provide your
-          text and let AI do the formatting.
+          {t("formatter.subtitle")}
         </p>
       </div>
 
@@ -161,17 +143,15 @@ export default function FormatterPage() {
         {/* ── Input Section ── */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Input</CardTitle>
-            <CardDescription>
-              Upload or paste your unstructured text to format.
-            </CardDescription>
+            <CardTitle className="text-lg">{t("formatter.input")}</CardTitle>
+            <CardDescription>{t("formatter.inputDesc")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Dual input: upload or paste */}
             <DualInput
               onTextReady={setInputText}
               disabled={isLoading}
-              placeholder="Paste the messy/unstructured text you want formatted…"
+              placeholder={t("formatter.pastePlaceholder")}
               initialText={prefillText}
             />
 
@@ -182,7 +162,7 @@ export default function FormatterPage() {
               onConsentChange={setIsConsented}
               onReferenceTextChange={setReferenceText}
               onSubmit={handleFormatClick}
-              submitLabel="Format Document"
+              submitLabel={t("formatter.formatDoc")}
             />
           </CardContent>
         </Card>
@@ -207,11 +187,13 @@ export default function FormatterPage() {
           {(resultContent || isLoading) && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Formatted Document</CardTitle>
+                <CardTitle className="text-lg">
+                  {t("formatter.formattedDoc")}
+                </CardTitle>
                 {isLoading && (
                   <CardDescription className="flex items-center gap-2">
                     <Loader2 className="h-3 w-3 animate-spin" />
-                    AI is formatting…
+                    {t("formatter.aiFormatting")}
                   </CardDescription>
                 )}
               </CardHeader>
@@ -232,7 +214,7 @@ export default function FormatterPage() {
                         onClick={() => stop()}
                       >
                         <StopCircle className="h-4 w-4" />
-                        Stop Generating
+                        {t("refine.stopGenerating")}
                       </Button>
                     )}
                     <ExportButtons
@@ -249,7 +231,7 @@ export default function FormatterPage() {
                           rows={1}
                           value={refineText}
                           onChange={(e) => setRefineText(e.target.value)}
-                          placeholder="Ask to refine this document…"
+                          placeholder={t("refine.placeholder")}
                           className="resize-none min-h-[42px] max-h-[120px] pr-11 rounded-xl text-sm"
                           onKeyDown={(e) => {
                             if (e.key === "Enter" && !e.shiftKey) {
@@ -281,18 +263,18 @@ export default function FormatterPage() {
       <Modal
         open={showStylingModal}
         onClose={() => setShowStylingModal(false)}
-        title="Document Styling"
+        title={t("styling.title")}
         footer={
           <>
             <Button
               variant="outline"
               onClick={() => setShowStylingModal(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button onClick={handleConfirmGenerate}>
               <Wand2 className="h-4 w-4 mr-2" />
-              Confirm &amp; Generate
+              {t("styling.confirmGenerate")}
             </Button>
           </>
         }

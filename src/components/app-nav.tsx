@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -17,10 +17,10 @@ import {
   Globe,
   ChevronDown,
   Sparkles,
-  MoreHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { LANGUAGES, type LanguageValue } from "@/components/language-selector";
+import { LANGUAGES } from "@/components/language-selector";
+import { useTranslation } from "@/components/i18n-provider";
 
 const ThemeToggleButton = dynamic(
   () => import("./theme-toggle-button").then((mod) => mod.ThemeToggleButton),
@@ -31,36 +31,17 @@ const ThemeToggleButton = dynamic(
 /*  Navigation items shared between sidebar & bottom tabs              */
 /* ------------------------------------------------------------------ */
 const NAV_ITEMS = [
-  { href: "/assistant", label: "Assistant", icon: MessageCircle },
-  { href: "/builder", label: "Builder", icon: PenTool },
-  { href: "/formatter", label: "Formatter", icon: FileText },
-  { href: "/summarizer", label: "Summarizer", icon: ClipboardList },
+  { href: "/assistant", labelKey: "nav.assistant", icon: MessageCircle },
+  { href: "/builder", labelKey: "nav.builder", icon: PenTool },
+  { href: "/formatter", labelKey: "nav.formatter", icon: FileText },
+  { href: "/summarizer", labelKey: "nav.summarizer", icon: ClipboardList },
 ] as const;
 
 export function AppNav() {
   const pathname = usePathname();
   const { isSignedIn, isLoaded } = useAuth();
   const [showLangPicker, setShowLangPicker] = useState(false);
-  const [language, setLanguage] = useState<LanguageValue>("English");
-  const [showMobileMore, setShowMobileMore] = useState(false);
-
-  // Persist language choice to localStorage and broadcast via custom event
-  useEffect(() => {
-    const saved = localStorage.getItem("puredraft_language");
-    if (saved) setLanguage(saved as LanguageValue);
-  }, []);
-
-  // Close mobile More panel on page navigation
-  useEffect(() => {
-    setShowMobileMore(false);
-  }, [pathname]);
-
-  useEffect(() => {
-    localStorage.setItem("puredraft_language", language);
-    window.dispatchEvent(
-      new CustomEvent("puredraft-language-change", { detail: language }),
-    );
-  }, [language]);
+  const { language, setLanguage, t } = useTranslation();
 
   return (
     <>
@@ -83,7 +64,7 @@ export function AppNav() {
           aria-label="Main navigation"
           className="flex-1 px-3 py-4 space-y-1"
         >
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+          {NAV_ITEMS.map(({ href, labelKey, icon: Icon }) => {
             const active = pathname === href;
             return (
               <Link
@@ -97,7 +78,7 @@ export function AppNav() {
                 )}
               >
                 <Icon className="h-5 w-5 shrink-0" />
-                {label}
+                {t(labelKey)}
               </Link>
             );
           })}
@@ -113,7 +94,7 @@ export function AppNav() {
               )}
             >
               <LayoutDashboard className="h-5 w-5 shrink-0" />
-              My Documents
+              {t("nav.myDocuments")}
             </Link>
           )}
         </nav>
@@ -135,16 +116,16 @@ export function AppNav() {
                   className="gap-2 h-8 text-xs"
                 >
                   <LogIn className="h-3.5 w-3.5" />
-                  Sign In
+                  {t("common.signIn")}
                 </Button>
               </SignInButton>
             )}
             <ThemeToggleButton />
           </div>
-          {/* Language selector (AI output language) */}
+          {/* Language selector */}
           <div className="relative mt-2">
             <p className="text-[9px] text-muted-foreground/50 text-center mb-0.5">
-              AI Output Language
+              {t("common.language")}
             </p>
             <button
               type="button"
@@ -182,108 +163,33 @@ export function AppNav() {
               href="/privacy"
               className="hover:text-foreground transition-colors"
             >
-              Privacy
+              {t("common.privacy")}
             </Link>
             <Link
               href="/terms"
               className="hover:text-foreground transition-colors"
             >
-              Terms
+              {t("common.terms")}
             </Link>
             <Link
               href="/faq"
               className="hover:text-foreground transition-colors"
             >
-              FAQ
+              {t("common.faq")}
             </Link>
             <Link
               href="/contact"
               className="hover:text-foreground transition-colors"
             >
-              Contact
+              {t("common.contact")}
             </Link>
           </div>
           <p className="text-[10px] text-muted-foreground/50 text-center mt-2 flex items-center justify-center gap-1">
             <Sparkles className="h-3 w-3" />
-            Powered by Google Gemini
+            {t("common.poweredByGemini")}
           </p>
         </div>
       </aside>
-
-      {/* ── Mobile "More" Panel ── */}
-      {showMobileMore && (
-        <>
-          <div
-            className="md:hidden fixed inset-0 z-[29] bg-black/40"
-            onClick={() => setShowMobileMore(false)}
-          />
-          <div className="md:hidden fixed bottom-16 left-0 right-0 z-[31] bg-card border-t border-border/50 rounded-t-2xl shadow-xl p-4 space-y-3">
-            {/* Theme toggle */}
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Theme</span>
-              <ThemeToggleButton />
-            </div>
-            {/* Language selector */}
-            <div>
-              <p className="text-[10px] text-muted-foreground mb-1">
-                AI Output Language
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {LANGUAGES.map((lang) => (
-                  <button
-                    key={lang.value}
-                    type="button"
-                    onClick={() => setLanguage(lang.value)}
-                    className={`text-xs rounded-lg px-2.5 py-1.5 transition-colors border ${
-                      language === lang.value
-                        ? "bg-primary/10 text-primary border-primary/30 font-medium"
-                        : "text-muted-foreground border-border/50 hover:bg-accent"
-                    }`}
-                  >
-                    {lang.value}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {/* Links */}
-            <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
-              <Link
-                href="/privacy"
-                onClick={() => setShowMobileMore(false)}
-                className="hover:text-foreground transition-colors"
-              >
-                Privacy
-              </Link>
-              <Link
-                href="/terms"
-                onClick={() => setShowMobileMore(false)}
-                className="hover:text-foreground transition-colors"
-              >
-                Terms
-              </Link>
-              <Link
-                href="/faq"
-                onClick={() => setShowMobileMore(false)}
-                className="hover:text-foreground transition-colors"
-              >
-                FAQ
-              </Link>
-              <Link
-                href="/contact"
-                onClick={() => setShowMobileMore(false)}
-                className="hover:text-foreground transition-colors"
-              >
-                Contact
-              </Link>
-            </div>
-            {/* Attribution */}
-            <p className="text-[10px] text-muted-foreground/50 text-center flex items-center justify-center gap-1">
-              <Sparkles className="h-3 w-3" />
-              Powered by Google Gemini
-            </p>
-          </div>
-        </>
-      )}
 
       {/* ── Mobile Bottom Tab Bar ── */}
       <nav
@@ -291,7 +197,7 @@ export function AppNav() {
         className="md:hidden fixed bottom-0 left-0 right-0 z-30 border-t border-border/50 bg-card/95 backdrop-blur-xl supports-[backdrop-filter]:bg-card/75 safe-bottom"
       >
         <div className="flex items-center justify-around h-16 px-2">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+          {NAV_ITEMS.map(({ href, labelKey, icon: Icon }) => {
             const active = pathname === href;
             return (
               <Link
@@ -311,7 +217,7 @@ export function AppNav() {
                   )}
                 />
                 <span className={cn("truncate", active && "font-semibold")}>
-                  {label}
+                  {t(labelKey)}
                 </span>
               </Link>
             );
@@ -335,31 +241,10 @@ export function AppNav() {
               <span
                 className={cn(pathname === "/dashboard" && "font-semibold")}
               >
-                Docs
+                {t("nav.docs")}
               </span>
             </Link>
           )}
-          {/* More button */}
-          <button
-            type="button"
-            onClick={() => setShowMobileMore(!showMobileMore)}
-            className={cn(
-              "flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 min-h-[2.75rem] px-1 py-1 text-[11px] font-medium transition-all duration-200 rounded-xl",
-              showMobileMore
-                ? "text-primary bg-primary/10"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <MoreHorizontal
-              className={cn(
-                "h-5 w-5 transition-transform duration-200",
-                showMobileMore && "stroke-[2.5] scale-110",
-              )}
-            />
-            <span className={cn("truncate", showMobileMore && "font-semibold")}>
-              More
-            </span>
-          </button>
         </div>
       </nav>
     </>

@@ -18,7 +18,7 @@ import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
 import { DocumentFormFooter } from "@/components/document-form-footer";
 import { DocumentStylingUI } from "@/components/document-styling-ui";
-import { type LanguageValue } from "@/components/language-selector";
+import { useTranslation } from "@/components/i18n-provider";
 import { Modal } from "@/components/ui/modal";
 import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
 import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
@@ -209,7 +209,7 @@ export default function BuilderPage() {
   const [customDocumentType, setCustomDocumentType] = useState("");
   const [keyDetails, setKeyDetails] = useState("");
   const [tone, setTone] = useState<string>(TONES[0]);
-  const [language, setLanguage] = useState<LanguageValue>("English");
+  const { language, t } = useTranslation();
   const [referenceText, setReferenceText] = useState("");
   const [isConsented, setIsConsented] = useState(false);
   const [step, setStep] = useState(1); // Wizard step 1-3
@@ -219,19 +219,6 @@ export default function BuilderPage() {
   const [streamError, setStreamError] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const bulkAbortRef = useRef<AbortController | null>(null);
-
-  // Sync language from sidebar via custom event + localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem("puredraft_language");
-    if (saved) setLanguage(saved as LanguageValue);
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail as LanguageValue;
-      if (detail) setLanguage(detail);
-    };
-    window.addEventListener("puredraft-language-change", handler);
-    return () =>
-      window.removeEventListener("puredraft-language-change", handler);
-  }, []);
 
   // Bulk CSV state
   const [bulkMode, setBulkMode] = useState(false);
@@ -272,13 +259,9 @@ export default function BuilderPage() {
         msg.includes("rate") ||
         msg.includes("slow down")
       ) {
-        setStreamError(
-          "Our AI is currently processing a high volume of documents. Please wait just a few seconds and try again! \u23f3",
-        );
+        setStreamError(t("error.rateLimit"));
       } else {
-        setStreamError(
-          msg || "An error occurred. The document may be too large.",
-        );
+        setStreamError(msg || t("error.generic"));
       }
     },
   });
@@ -465,12 +448,11 @@ Key Details: ${keyDetails}`,
             <Wand2 className="h-5 w-5 text-primary" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            Document Builder
+            {t("builder.title")}
           </h1>
         </div>
         <p className="mt-2 text-muted-foreground max-w-lg mx-auto sm:mx-0">
-          Build a complete HR document from scratch. Fill in the details and let
-          AI draft it for you.
+          {t("builder.subtitle")}
         </p>
       </div>
 
@@ -479,19 +461,17 @@ Key Details: ${keyDetails}`,
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">
-              Step {step} of 3 —{" "}
+              {`${step}/3 — `}
               {step === 1
-                ? "Document Template"
+                ? t("builder.step1")
                 : step === 2
-                  ? "Key Details"
-                  : "Tone & Generate"}
+                  ? t("builder.step2")
+                  : t("builder.step3")}
             </CardTitle>
             <CardDescription>
-              {step === 1 && "What kind of HR document do you need?"}
-              {step === 2 &&
-                "Provide the key information to include in the document."}
-              {step === 3 &&
-                "Choose the writing tone and generate your document."}
+              {step === 1 && t("builder.step1Desc")}
+              {step === 2 && t("builder.step2Desc")}
+              {step === 3 && t("builder.step3Desc")}
             </CardDescription>
 
             {/* Step indicator */}
@@ -512,7 +492,7 @@ Key Details: ${keyDetails}`,
             {step === 1 && (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="doc-type">Document Template</Label>
+                  <Label htmlFor="doc-type">{t("builder.docTemplate")}</Label>
                   <Select
                     id="doc-type"
                     value={docType}
@@ -534,14 +514,14 @@ Key Details: ${keyDetails}`,
                 {docType === "Other (Custom)" && (
                   <div className="space-y-2">
                     <Label htmlFor="custom-doc-type">
-                      Custom Document Title
+                      {t("builder.customDocTitle")}
                     </Label>
                     <Input
                       id="custom-doc-type"
                       type="text"
                       value={customDocumentType}
                       onChange={(e) => setCustomDocumentType(e.target.value)}
-                      placeholder="Enter custom document title (e.g., Exit Interview Form)..."
+                      placeholder={t("builder.customDocPlaceholder")}
                       className="text-sm"
                     />
                   </div>
@@ -555,7 +535,7 @@ Key Details: ${keyDetails}`,
                     <div className="flex items-center gap-2 min-w-0">
                       <FileSpreadsheet className="h-4 w-4 text-muted-foreground shrink-0" />
                       <Label className="text-sm font-medium truncate">
-                        Bulk Generation (CSV)
+                        {t("builder.bulkGeneration")}
                       </Label>
                     </div>
                     <Button
@@ -592,21 +572,19 @@ Key Details: ${keyDetails}`,
                       }}
                     >
                       {bulkToggleFeedback === "enabled"
-                        ? "Enabled!"
+                        ? t("common.enabled")
                         : bulkToggleFeedback === "disabled"
-                          ? "Disabled!"
+                          ? t("common.disabled")
                           : bulkMode
-                            ? "Disable"
-                            : "Enable"}
+                            ? t("common.disable")
+                            : t("common.enable")}
                     </Button>
                   </div>
 
                   {bulkMode && (
                     <div className="space-y-2">
                       <p className="text-xs text-muted-foreground">
-                        Upload a CSV with a header row (e.g., Name, Role,
-                        Salary, Start Date). A document will be generated for
-                        each row.
+                        {t("builder.bulkDesc")}
                       </p>
                       <div className="relative">
                         <input
@@ -623,7 +601,7 @@ Key Details: ${keyDetails}`,
                           className="w-full gap-2"
                         >
                           <Upload className="h-4 w-4" />
-                          {csvFile ? csvFile.name : "Choose CSV File"}
+                          {csvFile ? csvFile.name : t("builder.chooseCsv")}
                         </Button>
                       </div>
                       {csvData && (
@@ -641,7 +619,7 @@ Key Details: ${keyDetails}`,
             {/* Step 2: Key Details */}
             {step === 2 && (
               <div className="space-y-2">
-                <Label htmlFor="key-details">Key Details</Label>
+                <Label htmlFor="key-details">{t("builder.keyDetails")}</Label>
                 <Textarea
                   id="key-details"
                   rows={6}
@@ -670,7 +648,9 @@ Key Details: ${keyDetails}`,
             {step === 3 && (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="tone-select">Writing Tone</Label>
+                  <Label htmlFor="tone-select">
+                    {t("builder.writingTone")}
+                  </Label>
                   <Select
                     id="tone-select"
                     value={tone}
@@ -720,20 +700,20 @@ Key Details: ${keyDetails}`,
                   onClick={() => setStep((s) => Math.max(1, s - 1))}
                   disabled={step === 1}
                 >
-                  Back
+                  {t("common.back")}
                 </Button>
                 <Button
                   onClick={() => setStep((s) => Math.min(3, s + 1))}
                   disabled={!canProceed}
                 >
-                  Next
+                  {t("common.next")}
                 </Button>
               </div>
             ) : (
               <>
                 <div className="flex justify-start">
                   <Button variant="outline" onClick={() => setStep(2)}>
-                    Back
+                    {t("common.back")}
                   </Button>
                 </div>
                 {/* Consent & Reference Template Footer */}
@@ -745,8 +725,8 @@ Key Details: ${keyDetails}`,
                   onSubmit={handleGenerateClick}
                   submitLabel={
                     bulkMode && csvData
-                      ? `Generate ${csvData.rows.length} Documents`
-                      : "Generate Document"
+                      ? `${t("builder.generateDoc")} (${csvData.rows.length})`
+                      : t("builder.generateDoc")
                   }
                 />
               </>
@@ -779,11 +759,13 @@ Key Details: ${keyDetails}`,
                   <Loader2 className="h-5 w-5 animate-spin text-primary" />
                   <div>
                     <p className="font-medium">
-                      Generating document {bulkProgress.current} of{" "}
-                      {bulkProgress.total}...
+                      {t("builder.generatingDoc", {
+                        current: String(bulkProgress.current),
+                        total: String(bulkProgress.total),
+                      })}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Please don&apos;t close this page ⏳
+                      {t("builder.dontClose")}
                     </p>
                     <div className="mt-2 h-2 w-full rounded-full bg-muted overflow-hidden">
                       <div
@@ -801,7 +783,7 @@ Key Details: ${keyDetails}`,
                     onClick={handleCancelBulk}
                   >
                     <StopCircle className="h-4 w-4" />
-                    Cancel
+                    {t("common.cancel")}
                   </Button>
                 </div>
               </CardContent>
@@ -852,11 +834,13 @@ Key Details: ${keyDetails}`,
           {!bulkMode && (resultContent || isLoading) && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Generated Document</CardTitle>
+                <CardTitle className="text-lg">
+                  {t("builder.generatedDoc")}
+                </CardTitle>
                 {isLoading && (
                   <CardDescription className="flex items-center gap-2">
                     <Loader2 className="h-3 w-3 animate-spin" />
-                    AI is drafting…
+                    {t("builder.aiGenerating")}
                   </CardDescription>
                 )}
               </CardHeader>
@@ -877,7 +861,7 @@ Key Details: ${keyDetails}`,
                         onClick={() => stop()}
                       >
                         <StopCircle className="h-4 w-4" />
-                        Stop Generating
+                        {t("refine.stopGenerating")}
                       </Button>
                     )}
                     <ExportButtons
@@ -894,7 +878,7 @@ Key Details: ${keyDetails}`,
                           rows={1}
                           value={refineText}
                           onChange={(e) => setRefineText(e.target.value)}
-                          placeholder="Ask to refine this document…"
+                          placeholder={t("refine.placeholder")}
                           className="resize-none min-h-[42px] max-h-[120px] pr-11 rounded-xl text-sm"
                           onKeyDown={(e) => {
                             if (e.key === "Enter" && !e.shiftKey) {
@@ -926,14 +910,14 @@ Key Details: ${keyDetails}`,
       <Modal
         open={showStylingModal}
         onClose={() => setShowStylingModal(false)}
-        title="Document Styling"
+        title={t("styling.title")}
         footer={
           <>
             <Button
               variant="outline"
               onClick={() => setShowStylingModal(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={
@@ -942,8 +926,8 @@ Key Details: ${keyDetails}`,
             >
               <Wand2 className="h-4 w-4 mr-2" />
               {bulkMode && csvData
-                ? `Generate ${csvData.rows.length} Docs`
-                : "Confirm & Generate"}
+                ? `${t("builder.generateDoc")} (${csvData.rows.length})`
+                : t("styling.confirmGenerate")}
             </Button>
           </>
         }

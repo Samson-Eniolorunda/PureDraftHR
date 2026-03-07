@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Upload, CheckCircle, X } from "lucide-react";
 import { TemplateLibrary } from "@/components/template-library";
+import { useTranslation } from "@/components/i18n-provider";
 
 interface DocumentFormFooterProps {
   isLoading: boolean;
@@ -31,6 +32,7 @@ export function DocumentFormFooter({
   const [uploadedFileText, setUploadedFileText] = useState<string>("");
   const [pastedRefText, setPastedRefText] = useState<string>("");
   const [refUploadError, setRefUploadError] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   /** Combine file + pasted reference: pasted text takes priority, or combine */
   const updateCombinedReference = (fileText: string, pastedText: string) => {
@@ -72,9 +74,7 @@ export function DocumentFormFooter({
       updateCombinedReference(text, pastedRefText);
     } catch (error) {
       console.error("Reference upload error:", error);
-      setRefUploadError(
-        "Failed to process reference template. Please try a different file.",
-      );
+      setRefUploadError(t("formFooter.refUploadError"));
     } finally {
       setIsProcessingRef(false);
     }
@@ -97,11 +97,10 @@ export function DocumentFormFooter({
       <Card className="p-4 bg-muted/50 border-dashed">
         <div className="space-y-3">
           <Label className="text-sm font-medium">
-            Reference Template (Optional)
+            {t("formFooter.referenceTemplate")}
           </Label>
           <p className="text-xs text-muted-foreground">
-            Upload a document or paste text to mimic its structure, tone, and
-            formatting style
+            {t("formFooter.referenceDesc")}
           </p>
 
           {/* File Upload */}
@@ -143,7 +142,9 @@ export function DocumentFormFooter({
                 className="w-full"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                {isProcessingRef ? "Processing..." : "Choose Reference File"}
+                {isProcessingRef
+                  ? t("common.processing")
+                  : t("formFooter.chooseRefFile")}
               </Button>
             </div>
           )}
@@ -161,14 +162,14 @@ export function DocumentFormFooter({
               htmlFor="reference-paste"
               className="text-xs text-muted-foreground"
             >
-              Or paste reference template text:
+              {t("formFooter.pasteRefLabel")}
             </Label>
             <Textarea
               id="reference-paste"
               rows={3}
               value={pastedRefText}
               onChange={(e) => handlePastedRefChange(e.target.value)}
-              placeholder="Paste a reference format or template text here..."
+              placeholder={t("formFooter.pasteRefPlaceholder")}
               disabled={isLoading}
               className="resize-y min-h-[70px] text-sm"
             />
@@ -218,18 +219,14 @@ export function DocumentFormFooter({
             >
               Privacy Policy
             </a>
-            , and understand this tool uses PureDraft AI which can make
-            mistakes.
+            . {t("formFooter.consent")}
           </Label>
         </div>
       </div>
 
       {/* AI Disclaimer */}
       <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded border border-border/50">
-        <p>
-          Note: PureDraft AI is used to generate documents. Always review the
-          output for accuracy before using.
-        </p>
+        <p>{t("formFooter.aiDisclaimer")}</p>
       </div>
 
       {/* Submit Button */}
@@ -239,7 +236,7 @@ export function DocumentFormFooter({
         className="w-full"
         size="lg"
       >
-        {isLoading ? "Processing..." : submitLabel}
+        {isLoading ? t("common.processing") : submitLabel}
       </Button>
     </div>
   );

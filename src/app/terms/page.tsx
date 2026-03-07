@@ -59,16 +59,16 @@ export default function TermsPage() {
             <span className="text-primary mt-1 shrink-0">&bull;</span>
             <span>
               <strong className="text-foreground">Builder</strong> — Generate
-              complete HR documents from scratch across 31 document templates with
-              optional Bulk CSV generation.
+              complete HR documents from scratch across 31 document templates
+              with optional Bulk CSV generation.
             </span>
           </li>
           <li className="flex gap-2">
             <span className="text-primary mt-1 shrink-0">&bull;</span>
             <span>
-              <strong className="text-foreground">Formatter</strong> —
-              Upload or paste unstructured text and let AI restructure it into a
-              clean, professionally formatted document.
+              <strong className="text-foreground">Formatter</strong> — Upload or
+              paste unstructured text and let AI restructure it into a clean,
+              professionally formatted document.
             </span>
           </li>
           <li className="flex gap-2">

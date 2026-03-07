@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
-import { type LanguageValue } from "@/components/language-selector";
+import { useTranslation } from "@/components/i18n-provider";
+import { toast } from "sonner";
 import {
   MeetingCard,
   parseMeetingFromResponse,
@@ -68,7 +69,7 @@ export default function AssistantPage() {
   const router = useRouter();
 
   const [userPrompt, setUserPrompt] = useState("");
-  const [language, setLanguage] = useState<LanguageValue>("English");
+  const { language, t } = useTranslation();
   const [streamError, setStreamError] = useState<string | null>(null);
   const [referenceText, setReferenceText] = useState("");
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
@@ -97,13 +98,9 @@ export default function AssistantPage() {
         msg.includes("rate") ||
         msg.includes("slow down")
       ) {
-        setStreamError(
-          "Our AI is currently busy. Please wait a few seconds and try again! ⏳",
-        );
+        setStreamError(t("error.rateLimit"));
       } else {
-        setStreamError(
-          msg || "An error occurred. The document may be too large.",
-        );
+        setStreamError(msg || t("error.generic"));
       }
     },
   });
@@ -175,9 +172,7 @@ export default function AssistantPage() {
         setReferenceText(text);
       } catch (error) {
         console.error("Document upload error:", error);
-        setStreamError(
-          "Failed to process document. Please try a different file.",
-        );
+        setStreamError(t("error.uploadFailed"));
       } finally {
         setIsProcessingFile(false);
       }
@@ -230,7 +225,7 @@ export default function AssistantPage() {
     }
     const recognition = createSpeechRecognition();
     if (!recognition) {
-      setStreamError("Speech recognition is not supported in this browser.");
+      toast.error(t("assistant.micNotSupported"));
       return;
     }
     recognition.lang = LANG_TO_LOCALE[language] || "en-US";
@@ -249,31 +244,15 @@ export default function AssistantPage() {
     recognition.onerror = (event: { error: string }) => {
       setIsListening(false);
       if (event.error === "not-allowed") {
-        setStreamError(
-          "Microphone access denied. Please allow microphone permission.",
-        );
+        toast.error(t("assistant.micDenied"));
       } else if (event.error !== "no-speech" && event.error !== "aborted") {
-        setStreamError("Voice input error: " + event.error);
+        toast.error(t("assistant.voiceError") + ": " + event.error);
       }
     };
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
   }, [isListening, language]);
-
-  // Sync language from sidebar via custom event + localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem("puredraft_language");
-    if (saved) setLanguage(saved as LanguageValue);
-
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail as LanguageValue;
-      if (detail) setLanguage(detail);
-    };
-    window.addEventListener("puredraft-language-change", handler);
-    return () =>
-      window.removeEventListener("puredraft-language-change", handler);
-  }, []);
 
   return (
     <div className="flex flex-col h-[calc(100dvh-9.5rem)] md:h-[calc(100dvh-3rem)] max-w-3xl mx-auto overflow-hidden">
@@ -285,10 +264,10 @@ export default function AssistantPage() {
           </div>
           <div>
             <h1 className="text-base font-semibold leading-tight">
-              PureDraft Assistant
+              {t("assistant.title")}
             </h1>
             <p className="text-xs text-muted-foreground">
-              HR, writing, analysis & more
+              {t("assistant.subtitle")}
             </p>
           </div>
         </div>
@@ -301,7 +280,7 @@ export default function AssistantPage() {
               className="text-xs gap-1.5 h-8"
             >
               <Sparkles className="h-3.5 w-3.5" />
-              New Chat
+              {t("assistant.newChat")}
             </Button>
           )}
         </div>
@@ -316,19 +295,18 @@ export default function AssistantPage() {
               <Sparkles className="h-8 w-8 text-primary" />
             </div>
             <h2 className="text-xl font-semibold mb-2">
-              What can I help you with?
+              {t("assistant.emptyTitle")}
             </h2>
             <p className="text-sm text-muted-foreground max-w-md mb-8">
-              Ask HR questions, draft emails and documents, analyze uploads, or
-              get help with any professional task.
+              {t("assistant.emptyDesc")}
             </p>
             {/* Suggestion chips */}
             <div className="flex flex-wrap gap-2 justify-center max-w-lg">
               {[
-                "Draft an employee offer letter",
-                "Write a professional email",
-                "Summarize company policies",
-                "Create a meeting agenda",
+                t("assistant.chip1"),
+                t("assistant.chip2"),
+                t("assistant.chip3"),
+                t("assistant.chip4"),
               ].map((suggestion) => (
                 <button
                   key={suggestion}
@@ -465,7 +443,7 @@ export default function AssistantPage() {
               type="button"
               onClick={handleRemoveDocument}
               className="text-muted-foreground hover:text-destructive"
-              aria-label="Remove document"
+              aria-label={t("assistant.removeDocument")}
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -509,8 +487,8 @@ export default function AssistantPage() {
               onChange={handleTextareaChange}
               placeholder={
                 uploadedFileName
-                  ? `Ask about "${uploadedFileName}"...`
-                  : "Message PureDraft..."
+                  ? `${t("assistant.placeholder")} "${uploadedFileName}"...`
+                  : t("assistant.placeholder")
               }
               disabled={isLoading}
               className="resize-none min-h-[44px] max-h-[200px] overflow-y-auto scrollbar-none pr-20 rounded-xl"
@@ -520,7 +498,11 @@ export default function AssistantPage() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                title={isListening ? "Stop listening" : "Voice input"}
+                title={
+                  isListening
+                    ? t("assistant.stopListening")
+                    : t("assistant.voiceInput")
+                }
                 onClick={toggleListening}
                 disabled={isLoading}
                 className={`h-8 w-8 rounded-lg ${isListening ? "text-red-500 bg-red-500/10" : ""}`}
@@ -537,7 +519,7 @@ export default function AssistantPage() {
                   size="icon"
                   onClick={() => stop()}
                   className="h-8 w-8 rounded-lg bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-                  title="Stop generating"
+                  title={t("assistant.stopGenerating")}
                 >
                   <StopCircle className="h-4 w-4" />
                 </Button>
@@ -558,7 +540,7 @@ export default function AssistantPage() {
 
         {/* Disclaimer — always visible */}
         <p className="text-[10px] text-muted-foreground/60 text-center mt-2">
-          PureDraft can make mistakes. Verify important information.
+          {t("assistant.disclaimer")}
         </p>
       </div>
     </div>

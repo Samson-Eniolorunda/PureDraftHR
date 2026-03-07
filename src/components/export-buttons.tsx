@@ -23,6 +23,7 @@ import { useAuth } from "@clerk/nextjs";
 import type { DocumentStyling } from "@/hooks/useDocumentStyling";
 import { markdownToHtml, BULLET_SYMBOLS } from "@/lib/markdown-to-html";
 import { EmailDocumentModal } from "@/components/email-document-modal";
+import { useTranslation } from "@/components/i18n-provider";
 
 /** Lazy-loaded docx module type */
 type DocxModule = typeof import("docx");
@@ -74,6 +75,7 @@ export function ExportButtons({
   onFormat,
 }: ExportButtonsProps) {
   const { isSignedIn } = useAuth();
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const [exportFileName, setExportFileName] = useState("");
   const [emailModalOpen, setEmailModalOpen] = useState(false);
@@ -119,7 +121,7 @@ export function ExportButtons({
         await navigator.clipboard.writeText(plainText);
       }
       setCopied(true);
-      toast.success("Copied with formatting!");
+      toast.success(t("export.copiedFormatting"));
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Fallback for older browsers
@@ -158,7 +160,7 @@ export function ExportButtons({
     };
 
     html2pdf().set(opt).from(container).save();
-    toast.success("PDF downloaded!");
+    toast.success(t("export.pdfDownloaded"));
   }, [content, resolvedFilename, styling]);
 
   /* ── Excel Export via xlsx (lazy loaded) ── */
@@ -212,7 +214,7 @@ export function ExportButtons({
     }
 
     XLSX.writeFile(wb, `${resolvedFilename}.xlsx`);
-    toast.success("Excel downloaded!");
+    toast.success(t("export.excelDownloaded"));
   }, [content, resolvedFilename]);
 
   /* ── DOCX Export via the docx library (lazy-loaded) ── */
@@ -249,10 +251,10 @@ export function ExportButtons({
       // 4. Pack and save
       const blob = await docx.Packer.toBlob(doc);
       saveAs(blob, `${resolvedFilename}.docx`);
-      toast.success("Word document downloaded!");
+      toast.success(t("export.wordDownloaded"));
     } catch (error) {
       console.error("Failed to generate DOCX:", error);
-      toast.error("Failed to download Word document. Please try again.");
+      toast.error(t("export.docxError"));
     }
   }, [content, resolvedFilename, styling]);
 
@@ -326,7 +328,7 @@ export function ExportButtons({
           variant="ghost"
           size="icon"
           className="h-8 w-8"
-          title={copied ? "Copied!" : "Copy"}
+          title={copied ? t("export.copied") : t("export.copy")}
           onClick={handleCopy}
         >
           {copied ? (
@@ -339,7 +341,7 @@ export function ExportButtons({
           variant="ghost"
           size="icon"
           className="h-8 w-8"
-          title="Share"
+          title={t("export.share")}
           onClick={handleShare}
         >
           <Share2 className="h-4 w-4" />
@@ -348,7 +350,7 @@ export function ExportButtons({
           variant="ghost"
           size="icon"
           className="h-8 w-8"
-          title={speaking ? "Stop reading" : "Read aloud"}
+          title={speaking ? t("export.stopReading") : t("export.readAloud")}
           onClick={handleTextToSpeech}
         >
           {speaking ? (
@@ -364,7 +366,7 @@ export function ExportButtons({
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            title="More options"
+            title={t("export.moreOptions")}
             onClick={() => setMenuOpen((v) => !v)}
           >
             <MoreVertical className="h-4 w-4" />
@@ -376,7 +378,7 @@ export function ExportButtons({
                 <div className="px-3 py-2.5 space-y-2">
                   <label className="text-[10px] text-muted-foreground flex items-center gap-1">
                     <Pencil className="h-3 w-3" />
-                    File Name
+                    {t("export.fileName")}
                   </label>
                   <Input
                     type="text"
@@ -418,7 +420,8 @@ export function ExportButtons({
                       }}
                     >
                       <Download className="h-3 w-3" />
-                      Download
+                      {t("export.downloadPdf").split(" ").slice(-1)[0] ||
+                        "Download"}
                     </Button>
                   </div>
                 </div>
@@ -430,7 +433,7 @@ export function ExportButtons({
                     onClick={() => setPendingDownload("pdf")}
                   >
                     <Download className="h-4 w-4" />
-                    Download PDF
+                    {t("export.downloadPdf")}
                   </button>
                   <button
                     type="button"
@@ -438,7 +441,7 @@ export function ExportButtons({
                     onClick={() => setPendingDownload("docx")}
                   >
                     <Download className="h-4 w-4" />
-                    Download Word
+                    {t("export.downloadWord")}
                   </button>
                   <button
                     type="button"
@@ -451,7 +454,7 @@ export function ExportButtons({
                     }
                   >
                     <FileSpreadsheet className="h-4 w-4" />
-                    Download Excel
+                    {t("export.downloadExcel")}
                   </button>
                   <div className="my-1 border-t border-border/50" />
                   {onFormat && (
@@ -464,7 +467,7 @@ export function ExportButtons({
                       }}
                     >
                       <Paintbrush className="h-4 w-4" />
-                      Format
+                      {t("export.format")}
                     </button>
                   )}
                   <button
@@ -476,7 +479,7 @@ export function ExportButtons({
                     }}
                   >
                     <Mail className="h-4 w-4" />
-                    Email
+                    {t("export.email")}
                   </button>
                   {isSignedIn && tool && (
                     <button
@@ -498,14 +501,12 @@ export function ExportButtons({
                           });
                           if (!res.ok) {
                             const data = await res.json();
-                            toast.error(
-                              data.error || "Failed to save document.",
-                            );
+                            toast.error(data.error || t("export.saveError"));
                             return;
                           }
-                          toast.success("Document saved!");
+                          toast.success(t("export.savedSuccess"));
                         } catch {
-                          toast.error("Failed to save document.");
+                          toast.error(t("export.saveError"));
                         } finally {
                           setSaving(false);
                           setMenuOpen(false);
@@ -513,7 +514,7 @@ export function ExportButtons({
                       }}
                     >
                       <Save className="h-4 w-4" />
-                      {saving ? "Saving…" : "Save"}
+                      {saving ? "…" : t("export.save")}
                     </button>
                   )}
                 </>
