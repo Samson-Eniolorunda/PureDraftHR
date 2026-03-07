@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { Sparkles } from "lucide-react";
+
+const ThemeToggleButton = dynamic(
+  () => import("./theme-toggle-button").then((mod) => mod.ThemeToggleButton),
+  { ssr: false },
+);
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -84,6 +90,11 @@ export function Footer() {
             >
               Contact
             </Link>
+          </div>
+
+          {/* Theme toggle on mobile */}
+          <div className="flex justify-center">
+            <ThemeToggleButton />
           </div>
 
           {/* Copyright - Last on mobile */}

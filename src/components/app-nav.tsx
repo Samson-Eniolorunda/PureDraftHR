@@ -94,8 +94,8 @@ export function AppNav() {
         )}
 
         {/* Footer with Auth + Theme Toggle */}
-        <div className="px-6 py-4 border-t">
-          <div className="flex items-center justify-between mb-3">
+        <div className="px-6 py-3 border-t">
+          <div className="flex items-center justify-between">
             {isSignedIn ? (
               <UserButton />
             ) : (
