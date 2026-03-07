@@ -14,21 +14,21 @@ export function ThemeToggleButton() {
       <div
         role="group"
         aria-label="Theme selection"
-        className="hidden sm:flex items-center gap-1 rounded-lg border border-input bg-muted p-1"
+        className="hidden sm:flex items-center gap-0.5 rounded-full border border-input bg-muted/60 p-0.5"
       >
         <Button
           variant={theme === "light" ? "default" : "ghost"}
           size="sm"
           onClick={() => setTheme("light")}
           className={cn(
-            "h-8 px-2",
+            "h-7 w-7 p-0 rounded-full",
             theme === "light"
-              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+              ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
           )}
           title="Light mode"
         >
-          <Sun className="h-4 w-4" />
+          <Sun className="h-3.5 w-3.5" />
         </Button>
 
         <Button
@@ -36,14 +36,14 @@ export function ThemeToggleButton() {
           size="sm"
           onClick={() => setTheme("system")}
           className={cn(
-            "h-8 px-2",
+            "h-7 w-7 p-0 rounded-full",
             theme === "system"
-              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+              ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
           )}
           title="System theme"
         >
-          <Monitor className="h-4 w-4" />
+          <Monitor className="h-3.5 w-3.5" />
         </Button>
 
         <Button
@@ -51,14 +51,14 @@ export function ThemeToggleButton() {
           size="sm"
           onClick={() => setTheme("dark")}
           className={cn(
-            "h-8 px-2",
+            "h-7 w-7 p-0 rounded-full",
             theme === "dark"
-              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+              ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
           )}
           title="Dark mode"
         >
-          <Moon className="h-4 w-4" />
+          <Moon className="h-3.5 w-3.5" />
         </Button>
       </div>
 
@@ -66,21 +66,21 @@ export function ThemeToggleButton() {
       <div
         role="group"
         aria-label="Theme selection"
-        className="sm:hidden flex items-center gap-1 rounded-lg border border-input bg-muted p-1"
+        className="sm:hidden flex items-center gap-0.5 rounded-full border border-input bg-muted/60 p-0.5"
       >
         <Button
           variant={theme === "light" ? "default" : "ghost"}
           size="sm"
           onClick={() => setTheme("light")}
           className={cn(
-            "h-8 px-2",
+            "h-7 w-7 p-0 rounded-full",
             theme === "light"
-              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+              ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
           )}
           title="Light mode"
         >
-          <Sun className="h-4 w-4" />
+          <Sun className="h-3.5 w-3.5" />
         </Button>
 
         <Button
@@ -88,14 +88,14 @@ export function ThemeToggleButton() {
           size="sm"
           onClick={() => setTheme("system")}
           className={cn(
-            "h-8 px-2",
+            "h-7 w-7 p-0 rounded-full",
             theme === "system"
-              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+              ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
           )}
           title="System theme"
         >
-          <Smartphone className="h-4 w-4" />
+          <Smartphone className="h-3.5 w-3.5" />
         </Button>
 
         <Button
@@ -103,14 +103,14 @@ export function ThemeToggleButton() {
           size="sm"
           onClick={() => setTheme("dark")}
           className={cn(
-            "h-8 px-2",
+            "h-7 w-7 p-0 rounded-full",
             theme === "dark"
-              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+              ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
           )}
           title="Dark mode"
         >
-          <Moon className="h-4 w-4" />
+          <Moon className="h-3.5 w-3.5" />
         </Button>
       </div>
     </>

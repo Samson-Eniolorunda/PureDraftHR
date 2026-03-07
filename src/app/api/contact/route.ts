@@ -109,7 +109,8 @@ export async function POST(request: NextRequest) {
 
     // Send email via Resend
     const { error: sendError } = await resend.emails.send({
-      from: "Acme <onboarding@resend.dev>",
+      from:
+        process.env.RESEND_FROM_EMAIL || "PureDraftHR <onboarding@resend.dev>",
       to: contactEmail,
       subject: `New Contact Form Submission - HR App: ${body.subject}`,
       html: `

@@ -82,10 +82,12 @@ export function ExportButtons({
   const resolvedFilename =
     exportFileName.trim().replace(/\.[^.]+$/, "") || dynamicFilename;
 
-  /* ── Copy to Clipboard ── */
+  /* ── Copy to Clipboard (rich-text HTML + plain text fallback) ── */
   const handleCopy = useCallback(async () => {
     try {
-      // Copy plain text (strip markdown syntax for cleaner paste)
+      // Convert markdown to styled HTML for rich-text paste (Word, Docs, etc.)
+      const html = markdownToHtml(content, styling);
+      // Also prepare a clean plain text version for plain-text editors
       const plainText = content
         .replace(/^#{1,6}\s+/gm, "")
         .replace(/\*\*\*(.+?)\*\*\*/g, "$1")
@@ -93,9 +95,23 @@ export function ExportButtons({
         .replace(/\*(.+?)\*/g, "$1")
         .replace(/^[-*]\s+/gm, "- ")
         .trim();
-      await navigator.clipboard.writeText(plainText);
+
+      // Use ClipboardItem API for rich-text (HTML) copying when available
+      if (typeof ClipboardItem !== "undefined") {
+        const htmlBlob = new Blob([html], { type: "text/html" });
+        const textBlob = new Blob([plainText], { type: "text/plain" });
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "text/html": htmlBlob,
+            "text/plain": textBlob,
+          }),
+        ]);
+      } else {
+        // Fallback: just copy plain text
+        await navigator.clipboard.writeText(plainText);
+      }
       setCopied(true);
-      toast.success("Copied to clipboard!");
+      toast.success("Copied with formatting!");
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Fallback for older browsers
@@ -108,7 +124,7 @@ export function ExportButtons({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
-  }, [content]);
+  }, [content, styling]);
 
   /* ── PDF Export via html2pdf.js (lazy loaded) ── */
   const handlePdfExport = useCallback(async () => {

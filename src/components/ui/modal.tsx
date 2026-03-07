@@ -53,7 +53,7 @@ export function Modal({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/40 backdrop-blur-md"
         onClick={onClose}
       />
 
@@ -63,7 +63,7 @@ export function Modal({
         aria-modal="true"
         aria-label={title}
         className={cn(
-          "relative z-50 w-full max-w-lg max-h-[90vh] overflow-visible rounded-xl border bg-card shadow-2xl mx-3 sm:mx-4",
+          "relative z-50 w-full max-w-lg max-h-[90vh] overflow-visible rounded-2xl border border-border/50 bg-card shadow-2xl mx-3 sm:mx-4",
           className,
         )}
       >

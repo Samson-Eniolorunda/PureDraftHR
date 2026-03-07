@@ -13,7 +13,7 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t bg-card py-6 px-4 md:ml-64 pb-24 md:pb-6 text-sm text-muted-foreground md:fixed md:bottom-0 md:left-0 md:right-0 md:z-40">
+    <footer className="border-t border-border/50 bg-card/80 backdrop-blur-sm py-6 px-4 md:ml-64 pb-24 md:pb-6 text-sm text-muted-foreground md:fixed md:bottom-0 md:left-0 md:right-0 md:z-40">
       <div className="mx-auto max-w-4xl">
         {/* Desktop: 3-column layout (Copyright | Links | Contact) */}
         <div className="hidden md:flex md:flex-row md:items-center md:justify-between gap-4">

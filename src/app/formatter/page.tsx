@@ -150,11 +150,16 @@ export default function FormatterPage() {
   return (
     <div className="space-y-6">
       {/* ── Page Header ── */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-          Document Formatter
-        </h1>
-        <p className="mt-1 text-muted-foreground">
+      <div className="text-center sm:text-left">
+        <div className="flex items-center gap-2.5 justify-center sm:justify-start">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Wand2 className="h-5 w-5 text-primary" />
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            Document Formatter
+          </h1>
+        </div>
+        <p className="mt-2 text-muted-foreground max-w-lg mx-auto sm:mx-0">
           Turn messy notes into perfectly structured HR documents. Pick a
           template, provide your text, and let AI do the formatting.
         </p>

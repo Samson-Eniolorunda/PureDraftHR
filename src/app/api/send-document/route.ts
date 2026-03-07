@@ -62,6 +62,9 @@ export async function POST(request: NextRequest) {
     /* ── Convert markdown to styled HTML ── */
     const htmlBody = markdownToHtml(content);
 
+    const fromAddress =
+      process.env.RESEND_FROM_EMAIL || "PureDraftHR <onboarding@resend.dev>";
+
     const emailHtml = `
       <div style="max-width: 700px; margin: 0 auto; font-family: Arial, sans-serif; color: #1a1a1a;">
         ${htmlBody}
@@ -74,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     /* ── Send via Resend ── */
     const { error: sendError } = await resend.emails.send({
-      from: "PureDraftHR <onboarding@resend.dev>",
+      from: fromAddress,
       to: recipientEmail,
       subject: subject.trim(),
       html: emailHtml,
@@ -82,10 +85,25 @@ export async function POST(request: NextRequest) {
 
     if (sendError) {
       console.error("❌ Resend send-document error:", sendError);
-      return NextResponse.json(
-        { error: "Failed to send email. Please try again." },
-        { status: 500 },
-      );
+      const errMsg =
+        typeof sendError === "object" && "message" in sendError
+          ? (sendError as { message: string }).message
+          : "Failed to send email.";
+      // Common Resend errors: unverified sender domain
+      if (
+        errMsg.includes("verify") ||
+        errMsg.includes("not allowed") ||
+        errMsg.includes("domain")
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Email sending is not yet configured. The site owner needs to verify a sender domain in Resend.",
+          },
+          { status: 500 },
+        );
+      }
+      return NextResponse.json({ error: errMsg }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });

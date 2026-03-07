@@ -197,16 +197,18 @@ export default function AssistantPage() {
   return (
     <div className="space-y-6">
       {/* ── Page Header ── */}
-      <div>
-        <div className="flex items-center gap-2">
-          <MessageCircle className="h-6 w-6 text-primary" />
+      <div className="text-center sm:text-left">
+        <div className="flex items-center gap-2.5 justify-center sm:justify-start">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <MessageCircle className="h-5 w-5 text-primary" />
+          </div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
             HR Assistant
           </h1>
         </div>
-        <p className="mt-1 text-muted-foreground">
-          Ask HR questions, draft workplace emails, or chat with an uploaded
-          document.
+        <p className="mt-2 text-muted-foreground max-w-lg mx-auto sm:mx-0">
+          Ask HR questions, draft emails and documents, analyze uploads, or get
+          help with any professional task.
         </p>
       </div>
 
@@ -214,9 +216,10 @@ export default function AssistantPage() {
       <div className="space-y-6 max-w-3xl">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">How can I help you?</CardTitle>
+            <CardTitle className="text-lg">What can I help you with?</CardTitle>
             <CardDescription>
-              Ask a question or request a draft. Press Enter to send.
+              Ask anything — HR, business writing, analysis, or general
+              questions. Press Enter to send.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

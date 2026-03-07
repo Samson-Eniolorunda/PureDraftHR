@@ -181,9 +181,9 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
           onClick={() => setIsOpen((s) => !s)}
           onKeyDown={handleTriggerKey}
           className={cn(
-            "w-full text-left rounded-lg border border-input bg-background px-3 py-2.5 pr-10 text-sm transition-all duration-150",
-            "hover:border-primary/50 hover:shadow-sm",
-            "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+            "w-full text-left rounded-xl border border-input bg-background px-3 py-2.5 pr-10 text-sm transition-all duration-200",
+            "hover:border-primary/40 hover:shadow-sm",
+            "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-0 focus-visible:border-primary/50",
             disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
             "font-medium text-foreground",
           )}
@@ -217,7 +217,7 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
               role="listbox"
               tabIndex={-1}
               title="Select an option"
-              className="overflow-auto rounded-lg border border-input bg-card shadow-lg p-1"
+              className="overflow-auto rounded-xl border border-input bg-card shadow-lg p-1"
               style={dropdownStyle}
               aria-activedescendant={selected}
             >
