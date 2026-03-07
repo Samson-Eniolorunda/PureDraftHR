@@ -54,27 +54,27 @@ interface DocumentFull {
 }
 
 const TOOL_ICONS: Record<string, React.ReactNode> = {
+  assistant: <MessageCircle className="h-4 w-4" />,
   builder: <PenTool className="h-4 w-4" />,
   formatter: <FileText className="h-4 w-4" />,
   summarizer: <ClipboardList className="h-4 w-4" />,
-  assistant: <MessageCircle className="h-4 w-4" />,
 };
 
 const TOOL_LABELS: Record<string, string> = {
+  assistant: "Assistant",
   builder: "Builder",
   formatter: "Formatter",
   summarizer: "Summarizer",
-  assistant: "Assistant",
 };
 
 const TOOL_COLORS: Record<string, string> = {
+  assistant:
+    "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
   builder: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
   formatter:
     "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
   summarizer:
     "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-  assistant:
-    "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
 };
 
 /* ------------------------------------------------------------------ */

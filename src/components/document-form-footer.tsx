@@ -217,15 +217,16 @@ export function DocumentFormFooter({
             >
               Privacy Policy
             </a>
-            , and understand this tool uses Gemini AI which can make mistakes.
+            , and understand this tool uses PureDraft AI which can make
+            mistakes.
           </Label>
         </div>
       </div>
 
-      {/* Gemini AI Disclaimer */}
+      {/* AI Disclaimer */}
       <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded border border-border/50">
         <p>
-          Note: Gemini AI is used to generate documents. Always review the
+          Note: PureDraft AI is used to generate documents. Always review the
           output for accuracy before using.
         </p>
       </div>

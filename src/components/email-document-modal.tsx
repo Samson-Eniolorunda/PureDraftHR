@@ -104,20 +104,23 @@ export function EmailDocumentModal({
 }: EmailDocumentModalProps) {
   const [recipientEmail, setRecipientEmail] = useState("");
   const [subject, setSubject] = useState(defaultSubject);
+  const [selectedProvider, setSelectedProvider] = useState(
+    EMAIL_PROVIDERS[0].name,
+  );
 
   const plainBody = useMemo(() => markdownToPlainText(content), [content]);
 
-  const handleProviderClick = useCallback(
-    (provider: EmailProvider) => {
-      const url = provider.buildUrl(
-        recipientEmail.trim(),
-        subject.trim() || defaultSubject,
-        plainBody,
-      );
-      window.open(url, "_blank", "noopener,noreferrer");
-    },
-    [recipientEmail, subject, defaultSubject, plainBody],
-  );
+  const handleSendEmail = useCallback(() => {
+    const provider =
+      EMAIL_PROVIDERS.find((p) => p.name === selectedProvider) ??
+      EMAIL_PROVIDERS[0];
+    const url = provider.buildUrl(
+      recipientEmail.trim(),
+      subject.trim() || defaultSubject,
+      plainBody,
+    );
+    window.open(url, "_blank", "noopener,noreferrer");
+  }, [recipientEmail, subject, defaultSubject, plainBody, selectedProvider]);
 
   return (
     <Modal open={open} onClose={onClose} title="Send via Email">
@@ -149,27 +152,34 @@ export function EmailDocumentModal({
           </div>
         </div>
 
-        {/* Provider Grid */}
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
-            <Mail className="h-4 w-4" />
-            Choose your email provider
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            {EMAIL_PROVIDERS.map((provider) => (
-              <button
-                key={provider.name}
-                type="button"
-                onClick={() => handleProviderClick(provider)}
-                className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-200 active:scale-[0.98] ${provider.color}`}
-              >
-                <span className="text-lg">{provider.icon}</span>
-                <span className="flex-1 text-left">{provider.name}</span>
-                <ExternalLink className="h-3.5 w-3.5 opacity-50" />
-              </button>
-            ))}
+        {/* Provider dropdown + Send button */}
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="email-provider"
+              className="text-sm flex items-center gap-1.5"
+            >
+              <Mail className="h-4 w-4" />
+              Email Provider
+            </Label>
+            <select
+              id="email-provider"
+              value={selectedProvider}
+              onChange={(ev) => setSelectedProvider(ev.target.value)}
+              className="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              {EMAIL_PROVIDERS.map((p) => (
+                <option key={p.name} value={p.name}>
+                  {p.icon} {p.name}
+                </option>
+              ))}
+            </select>
           </div>
-          <p className="text-xs text-muted-foreground text-center pt-1">
+          <Button onClick={handleSendEmail} className="w-full gap-2">
+            <ExternalLink className="h-4 w-4" />
+            Open in {selectedProvider}
+          </Button>
+          <p className="text-xs text-muted-foreground text-center">
             This will open your email provider with the document pre-filled.
           </p>
         </div>

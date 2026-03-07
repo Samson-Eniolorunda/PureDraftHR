@@ -121,10 +121,10 @@ A full-stack web application that empowers HR teams to format, summarize, and ge
 
 ### 11. **AI Transparency & Disclaimers**
 
-- ⚠️ AI disclaimer under generate buttons: "Gemini AI can make mistakes"
-- 📄 Dedicated Terms of Service page with Gemini AI disclosure (Section 4)
-- 🔒 Privacy Policy page with Gemini AI processing information
-- 🔗 "Powered by Google Gemini" attribution in footer with Sparkles icon
+- ⚠️ AI disclaimer under generate buttons: "PureDraft AI can make mistakes"
+- 📄 Dedicated Terms of Service page with AI accuracy disclosure (Section 5)
+- 🔒 Privacy Policy page with AI processing information
+- 🤖 AI assistant branded as "PureDraft" throughout the app
 
 ### 12. **Smart Meeting Scheduler**
 

@@ -148,9 +148,9 @@ export default function PrivacyPage() {
         </h2>
         <ul className="list-disc list-inside space-y-2 leading-relaxed">
           <li>
-            Document sharing via email and contact form submissions are handled
-            by <strong>Resend</strong>. Your email address and message content
-            are transmitted to deliver the email.
+            Document sharing via email opens a compose window in your chosen
+            email provider (Gmail, Outlook, Yahoo, etc.) — no server-side email
+            processing is involved.
           </li>
           <li>Authentication emails (verification codes) are sent by Clerk.</li>
           <li>

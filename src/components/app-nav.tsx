@@ -74,11 +74,8 @@ export function AppNav() {
               </Link>
             );
           })}
-        </nav>
-
-        {/* Dashboard link — auth-gated */}
-        {isSignedIn && (
-          <div className="px-3 pt-2">
+          {/* My Documents — auth-gated */}
+          {isSignedIn && (
             <Link
               href="/dashboard"
               className={cn(
@@ -91,8 +88,8 @@ export function AppNav() {
               <LayoutDashboard className="h-5 w-5 shrink-0" />
               My Documents
             </Link>
-          </div>
-        )}
+          )}
+        </nav>
 
         {/* Footer with Auth + Theme Toggle */}
         <div className="px-6 py-3 border-t border-border/50">
@@ -116,6 +113,26 @@ export function AppNav() {
               </SignInButton>
             )}
             <ThemeToggleButton />
+          </div>
+          <div className="flex items-center justify-center gap-3 mt-2 text-[11px] text-muted-foreground">
+            <Link
+              href="/privacy"
+              className="hover:text-foreground transition-colors"
+            >
+              Privacy
+            </Link>
+            <Link
+              href="/terms"
+              className="hover:text-foreground transition-colors"
+            >
+              Terms
+            </Link>
+            <Link
+              href="/faq"
+              className="hover:text-foreground transition-colors"
+            >
+              FAQ
+            </Link>
           </div>
         </div>
       </aside>

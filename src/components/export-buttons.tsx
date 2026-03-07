@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,10 @@ import {
   Pencil,
   Mail,
   Save,
+  MoreVertical,
+  Share2,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import type { DocumentStyling } from "@/hooks/useDocumentStyling";
@@ -248,6 +252,62 @@ export function ExportButtons({
     }
   }, [content, resolvedFilename, styling]);
 
+  const [speaking, setSpeaking] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
+
+  /* ── Text-to-Speech ── */
+  const handleTextToSpeech = useCallback(() => {
+    if (speaking) {
+      window.speechSynthesis.cancel();
+      setSpeaking(false);
+      return;
+    }
+    const plainText = content
+      .replace(/^#{1,6}\s+/gm, "")
+      .replace(/\*\*(.+?)\*\*/g, "$1")
+      .replace(/\*(.+?)\*/g, "$1")
+      .replace(/^[-*]\s+/gm, "- ")
+      .replace(/\|[^|]*\|/g, "")
+      .trim();
+    const utterance = new SpeechSynthesisUtterance(plainText);
+    utterance.onend = () => setSpeaking(false);
+    utterance.onerror = () => setSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+    setSpeaking(true);
+  }, [content, speaking]);
+
+  /* ── Share via Web Share API (fallback to copy) ── */
+  const handleShare = useCallback(async () => {
+    const plainText = content
+      .replace(/^#{1,6}\s+/gm, "")
+      .replace(/\*\*(.+?)\*\*/g, "$1")
+      .replace(/\*(.+?)\*/g, "$1")
+      .trim();
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: resolvedFilename, text: plainText });
+      } catch {
+        // User cancelled or share failed
+      }
+    } else {
+      // Fallback: open email modal
+      setEmailModalOpen(true);
+    }
+  }, [content, resolvedFilename]);
+
   if (!content) return null;
 
   return (
@@ -271,38 +331,8 @@ export function ExportButtons({
         />
       </div>
 
-      {/* Export buttons */}
-      <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-3">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handlePdfExport}
-          className="gap-2"
-        >
-          <Download className="h-4 w-4" />
-          PDF
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleDocxExport}
-          className="gap-2"
-        >
-          <Download className="h-4 w-4" />
-          Word
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleExcelExport}
-          className="gap-2"
-          title={
-            hasTable ? "Export table data to Excel" : "Export text to Excel"
-          }
-        >
-          <FileSpreadsheet className="h-4 w-4" />
-          Excel
-        </Button>
+      {/* Action row: Copy + Share + TTS + 3-dot menu */}
+      <div className="flex items-center gap-2">
         <Button
           variant="outline"
           size="sm"
@@ -322,50 +352,130 @@ export function ExportButtons({
           )}
         </Button>
         <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setEmailModalOpen(true)}
-          className="gap-2"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          title="Share"
+          onClick={handleShare}
         >
-          <Mail className="h-4 w-4" />
-          Email
+          <Share2 className="h-4 w-4" />
         </Button>
-        {isSignedIn && tool && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          title={speaking ? "Stop reading" : "Read aloud"}
+          onClick={handleTextToSpeech}
+        >
+          {speaking ? (
+            <VolumeX className="h-4 w-4 text-primary" />
+          ) : (
+            <Volume2 className="h-4 w-4" />
+          )}
+        </Button>
+
+        {/* 3-dot dropdown menu */}
+        <div className="relative" ref={menuRef}>
           <Button
-            variant="outline"
-            size="sm"
-            disabled={saving}
-            onClick={async () => {
-              setSaving(true);
-              try {
-                const res = await fetch("/api/documents", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    title: resolvedFilename,
-                    content,
-                    tool,
-                    docType,
-                  }),
-                });
-                if (!res.ok) {
-                  const data = await res.json();
-                  toast.error(data.error || "Failed to save document.");
-                  return;
-                }
-                toast.success("Document saved!");
-              } catch {
-                toast.error("Failed to save document.");
-              } finally {
-                setSaving(false);
-              }
-            }}
-            className="gap-2"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            title="More options"
+            onClick={() => setMenuOpen((v) => !v)}
           >
-            <Save className="h-4 w-4" />
-            {saving ? "Saving…" : "Save"}
+            <MoreVertical className="h-4 w-4" />
           </Button>
-        )}
+          {menuOpen && (
+            <div className="absolute right-0 top-full mt-1 bg-popover border border-border rounded-xl shadow-lg py-1 min-w-[160px] z-50">
+              <button
+                type="button"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
+                onClick={() => {
+                  handlePdfExport();
+                  setMenuOpen(false);
+                }}
+              >
+                <Download className="h-4 w-4" />
+                Download PDF
+              </button>
+              <button
+                type="button"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
+                onClick={() => {
+                  handleDocxExport();
+                  setMenuOpen(false);
+                }}
+              >
+                <Download className="h-4 w-4" />
+                Download Word
+              </button>
+              <button
+                type="button"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
+                onClick={() => {
+                  handleExcelExport();
+                  setMenuOpen(false);
+                }}
+                title={
+                  hasTable
+                    ? "Export table data to Excel"
+                    : "Export text to Excel"
+                }
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                Download Excel
+              </button>
+              <div className="my-1 border-t border-border/50" />
+              <button
+                type="button"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
+                onClick={() => {
+                  setEmailModalOpen(true);
+                  setMenuOpen(false);
+                }}
+              >
+                <Mail className="h-4 w-4" />
+                Email
+              </button>
+              {isSignedIn && tool && (
+                <button
+                  type="button"
+                  disabled={saving}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors disabled:opacity-50"
+                  onClick={async () => {
+                    setSaving(true);
+                    try {
+                      const res = await fetch("/api/documents", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          title: resolvedFilename,
+                          content,
+                          tool,
+                          docType,
+                        }),
+                      });
+                      if (!res.ok) {
+                        const data = await res.json();
+                        toast.error(data.error || "Failed to save document.");
+                        return;
+                      }
+                      toast.success("Document saved!");
+                    } catch {
+                      toast.error("Failed to save document.");
+                    } finally {
+                      setSaving(false);
+                      setMenuOpen(false);
+                    }
+                  }}
+                >
+                  <Save className="h-4 w-4" />
+                  {saving ? "Saving…" : "Save"}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       <EmailDocumentModal

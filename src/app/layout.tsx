@@ -7,7 +7,6 @@ import { AppNav } from "@/components/app-nav";
 import { MobileHeader } from "@/components/mobile-header";
 import { PwaRegister } from "@/components/pwa-register";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Footer } from "@/components/footer";
 import { SonnerToaster } from "@/components/sonner-toaster";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -149,14 +148,13 @@ export default function RootLayout({
             {/* Main content area — offset for sidebar on desktop, header+bottom-bar on mobile */}
             <main
               id="main-content"
-              className="md:ml-64 pt-14 md:pt-0 pb-40 md:pb-24"
+              className="md:ml-64 pt-14 md:pt-0 pb-16 md:pb-0"
             >
               <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-6 lg:px-8 min-h-screen">
                 {children}
               </div>
             </main>
 
-            <Footer />
             <PwaRegister />
             <SonnerToaster />
           </ThemeProvider>

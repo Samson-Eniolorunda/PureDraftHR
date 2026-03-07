@@ -45,3 +45,4 @@ Thumbs.db
 /src/generated/prisma
 *.tsbuildinfo
 *.tmp
+nul

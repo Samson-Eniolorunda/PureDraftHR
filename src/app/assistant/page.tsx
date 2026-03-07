@@ -4,34 +4,53 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useChat } from "ai/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
-import {
-  LanguageSelector,
-  type LanguageValue,
-} from "@/components/language-selector";
+import { LANGUAGES, type LanguageValue } from "@/components/language-selector";
 import {
   MeetingCard,
   parseMeetingFromResponse,
 } from "@/components/meeting-card";
 import {
   Loader2,
-  Wand2,
   MessageCircle,
   Send,
   Upload,
   CheckCircle,
   X,
-  FileText,
   StopCircle,
   Paintbrush,
   Bot,
   User,
   Sparkles,
   Globe,
+  ChevronDown,
+  Mic,
+  MicOff,
 } from "lucide-react";
+
+/* ── Speech Recognition helper ── */
+interface SpeechRecognitionResultList {
+  readonly length: number;
+  [index: number]: { readonly [index: number]: { transcript: string } };
+}
+
+function createSpeechRecognition() {
+  const W = window as unknown as Record<string, unknown>;
+  const SR = W.SpeechRecognition || W.webkitSpeechRecognition;
+  if (!SR) return null;
+  return new (SR as new () => {
+    lang: string;
+    interimResults: boolean;
+    continuous: boolean;
+    onresult: ((e: { results: SpeechRecognitionResultList }) => void) | null;
+    onend: (() => void) | null;
+    onerror: (() => void) | null;
+    start: () => void;
+    stop: () => void;
+  })();
+}
 
 /* ------------------------------------------------------------------ */
 /* /assistant — ChatGPT / Gemini-style Chat UX                       */
@@ -45,10 +64,15 @@ export default function AssistantPage() {
   const [referenceText, setReferenceText] = useState("");
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+  const [showLangPicker, setShowLangPicker] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const hasSentRef = useRef(false);
+  const recognitionRef = useRef<ReturnType<
+    typeof createSpeechRecognition
+  > | null>(null);
 
   const { messages, isLoading, append, setMessages, stop } = useChat({
     api: "/api/chat",
@@ -82,9 +106,11 @@ export default function AssistantPage() {
     .find((m) => m.role === "assistant");
   const latestResponse = lastAssistantMsg?.content ?? "";
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom only after user has actually sent a message
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (hasSentRef.current && (messages.length > 0 || isLoading)) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages, isLoading]);
 
   // Auto-resize textarea
@@ -160,6 +186,7 @@ export default function AssistantPage() {
   const handleSend = useCallback(() => {
     if (!userPrompt.trim() || isLoading) return;
 
+    hasSentRef.current = true;
     append({
       role: "user",
       content: userPrompt,
@@ -186,6 +213,7 @@ export default function AssistantPage() {
     setMessages([]);
     setStreamError(null);
     setUserPrompt("");
+    hasSentRef.current = false;
     if (textareaRef.current) textareaRef.current.style.height = "auto";
   }, [setMessages]);
 
@@ -195,8 +223,39 @@ export default function AssistantPage() {
     router.push("/formatter");
   };
 
+  // Voice-to-text toggle
+  const toggleListening = useCallback(() => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+    const recognition = createSpeechRecognition();
+    if (!recognition) {
+      setStreamError("Speech recognition is not supported in this browser.");
+      return;
+    }
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+    recognition.continuous = false;
+    recognition.onresult = (event: {
+      results: SpeechRecognitionResultList;
+    }) => {
+      const transcript = event.results[0]?.[0]?.transcript ?? "";
+      if (transcript) {
+        setUserPrompt((prev) => (prev ? prev + " " + transcript : transcript));
+        textareaRef.current?.focus();
+      }
+    };
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+  }, [isListening]);
+
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] sm:h-[calc(100vh-6rem)] max-w-3xl mx-auto">
+    <div className="flex flex-col h-[calc(100dvh-3.5rem)] md:h-dvh max-w-3xl mx-auto">
       {/* ── Top Bar ── */}
       <div className="flex items-center justify-between px-1 py-3 border-b border-border/50 shrink-0">
         <div className="flex items-center gap-2.5">
@@ -224,34 +283,11 @@ export default function AssistantPage() {
               New Chat
             </Button>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowSettings(!showSettings)}
-            className="text-xs gap-1.5 h-8"
-          >
-            <Globe className="h-3.5 w-3.5" />
-            {language}
-          </Button>
         </div>
       </div>
 
-      {/* Language / Settings Row (collapsible) */}
-      {showSettings && (
-        <div className="px-1 py-3 border-b border-border/30 shrink-0 animate-in slide-in-from-top-2 duration-200">
-          <LanguageSelector
-            value={language}
-            onChange={(v) => {
-              setLanguage(v);
-              setShowSettings(false);
-            }}
-            disabled={isLoading}
-          />
-        </div>
-      )}
-
       {/* ── Chat Messages Area ── */}
-      <div className="flex-1 overflow-y-auto px-1 py-4 space-y-1 scrollbar-thin">
+      <div className="flex-1 overflow-y-auto px-1 py-4 space-y-1 scrollbar-none md:scrollbar-thin">
         {/* Empty state */}
         {!hasMessages && !isLoading && (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
@@ -447,6 +483,7 @@ export default function AssistantPage() {
               type="button"
               onClick={handleRemoveDocument}
               className="text-muted-foreground hover:text-destructive"
+              aria-label="Remove document"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -481,6 +518,23 @@ export default function AssistantPage() {
             </Button>
           </div>
 
+          {/* Mic button — voice to text */}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            title={isListening ? "Stop listening" : "Voice input"}
+            onClick={toggleListening}
+            disabled={isLoading}
+            className={`h-10 w-10 rounded-xl shrink-0 ${isListening ? "text-red-500 bg-red-500/10" : ""}`}
+          >
+            {isListening ? (
+              <MicOff className="h-4 w-4" />
+            ) : (
+              <Mic className="h-4 w-4" />
+            )}
+          </Button>
+
           {/* Text input */}
           <div className="flex-1 relative">
             <Textarea
@@ -509,9 +563,44 @@ export default function AssistantPage() {
           </div>
         </div>
 
-        <p className="text-[10px] text-muted-foreground/60 text-center mt-2">
-          PureDraft can make mistakes. Verify important information.
-        </p>
+        {/* Language picker + Disclaimer */}
+        <div className="relative flex items-center mt-2 gap-2">
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowLangPicker(!showLangPicker)}
+              className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-muted-foreground transition-colors rounded-md px-1.5 py-0.5 hover:bg-accent/50"
+            >
+              <Globe className="h-3 w-3" />
+              {language}
+              <ChevronDown className="h-2.5 w-2.5" />
+            </button>
+            {showLangPicker && (
+              <div className="absolute bottom-full left-0 mb-1 bg-popover border border-border rounded-xl shadow-lg p-1 min-w-[140px] z-50">
+                {LANGUAGES.map((lang) => (
+                  <button
+                    key={lang.value}
+                    type="button"
+                    onClick={() => {
+                      setLanguage(lang.value);
+                      setShowLangPicker(false);
+                    }}
+                    className={`w-full text-left text-sm rounded-lg px-3 py-1.5 transition-colors ${
+                      language === lang.value
+                        ? "bg-primary/10 text-primary font-medium"
+                        : "text-foreground hover:bg-accent"
+                    }`}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <p className="text-[10px] text-muted-foreground/60 text-center flex-1">
+            PureDraft can make mistakes. Verify important information.
+          </p>
+        </div>
       </div>
     </div>
   );

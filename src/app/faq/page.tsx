@@ -36,7 +36,7 @@ export default function FAQPage() {
     },
     {
       q: "Is there a cost to use PureDraft HR?",
-      a: "No, PureDraft HR is completely free. It uses free tiers of Google Gemini, Clerk, Supabase, Upstash, and Resend.",
+      a: "No, PureDraft HR is completely free. It uses free tiers of Google Gemini, Clerk, Supabase, and Upstash.",
     },
     {
       q: "What tools are available?",
@@ -76,7 +76,7 @@ export default function FAQPage() {
     },
     {
       q: "Can I email a document to someone?",
-      a: "Yes. Each tool has an \u201cEmail Document\u201d option that lets you send the generated content to any email address via Resend. No email client setup is required.",
+      a: "Yes. Each tool has an \u201cEmail Document\u201d option. Choose your email provider (Gmail, Outlook, Yahoo, Zoho, ProtonMail, or your default email app) and the document is pre-filled in a compose window ready to send.",
     },
     {
       q: "Can I use PureDraft HR offline?",

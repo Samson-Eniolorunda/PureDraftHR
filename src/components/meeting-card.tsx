@@ -208,15 +208,14 @@ export function MeetingCard({ meeting }: MeetingCardProps) {
             href={googleCalUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 flex-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+            className="inline-flex items-center justify-center gap-2 flex-1 rounded-md bg-primary px-3 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             <ExternalLink className="h-4 w-4" />
             Add to Google Calendar
           </a>
           <Button
             variant="outline"
-            size="sm"
-            className="gap-2 flex-1"
+            className="gap-2 flex-1 px-3 py-2.5 h-auto text-sm font-medium"
             onClick={handleDownloadIcs}
           >
             <Download className="h-4 w-4" />

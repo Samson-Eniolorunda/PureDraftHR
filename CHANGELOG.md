@@ -6,6 +6,48 @@ All notable changes to PureDraft HR will be documented in this file.
 
 ### Added
 
+- 💬 **ChatGPT/Gemini-style Assistant UX**: Full chat bubble interface with message history, typing indicator, suggestion chips, pinned input bar, and "New Chat" button
+- 📩 **Email Provider Selection**: Users choose their own email provider (Gmail, Outlook, Yahoo, Zoho, ProtonMail, or default app) via a dropdown — opens a pre-filled compose window instead of server-side email sending
+- 📅 **Smart Meeting Scheduler** (Assistant): AI-extracted meeting details rendered as a Meeting Card with "Add to Google Calendar" and "Download Outlook Invite (.ics)" buttons
+- 🌍 **Multi-Language Translation**: Output language selector on all 4 tools supporting 8 languages — English, Spanish, French, German, Mandarin Chinese, Portuguese, Arabic, Hindi
+- 📂 **My Templates Library**: Save, load, and delete reference text snippets with localStorage; integrated into Builder, Formatter, and Summarizer
+- ✏️ **Custom Document Type ("Other (Custom)")**: Builder and Formatter include a freeform text input for unlisted document/template types
+- 📊 **Bulk CSV Generation** (Builder): Toggle bulk mode, upload a CSV, batch-generate one document per row with live progress bar
+- 🎚️ **Document Styling System**: Typography modal with font family, heading/body font sizes, line spacing, and 7 bullet styles — preserved across PDF, DOCX, and clipboard exports
+- 📋 **Rich Copy to Clipboard**: Copies HTML-formatted content for pasting into Word, Docs, etc.
+- 🏷️ **Dynamic export filenames**: Extracted from H1 heading with sanitized fallback
+- 📄 Privacy, Terms of Service, and FAQ pages with full feature coverage
+- 📖 Contact page with working form
+- 🔗 **PWA icon updated**: Icon now displays "PD" (PureDraft) instead of "HR"
+
+### Changed
+
+- 🤖 **AI branding**: Disclaimer text changed from "Gemini AI" to "PureDraft AI" across Builder, Formatter, and Summarizer notes
+- 🧭 **Dashboard filter order**: Assistant tab now appears first after "All" in the My Documents filter bar
+- 🧭 **My Documents in sidebar**: Dashboard link moved into the main nav list alongside Assistant, Builder, Formatter, and Summarizer (still auth-gated)
+- 🚫 **Footer removed**: Global footer removed from layout — essential links (Privacy, Terms, FAQ) remain in sidebar
+- 📩 **Email: no server dependency**: Removed Resend server-side email for documents — now uses client-side provider-specific compose URLs
+- 📄 **FAQ updated**: Email answer reflects new provider-based approach; cost answer updated to remove Resend reference
+- 🔒 **Privacy Policy updated**: Email section rewritten to clarify client-side email handling
+- 🛡️ **Sign-in flash fix**: Uses `isLoaded` from `useAuth()` to prevent layout shift on page load
+- 📜 **Assistant scroll fix**: Auto-scroll only triggers after user sends a message (prevents scroll-to-bottom on page load)
+- 📱 **Mobile text wrap**: "Supported formats" text in drop-zone now uses `whitespace-nowrap` to prevent line break on small screens
+
+### Fixed
+
+- 🔧 Service Worker message listener to prevent "message channel closed" errors
+- 📱 Mobile textarea keyboard coverage with focus-scroll delay
+- 🔍 Favicon caching on Vercel with cache-bust query params
+- 🧩 Font Family dropdown group parsing bug
+- 📋 PDF/DOCX bullet export with inline character injection
+- 📤 File upload UI state reset
+
+---
+
+## Previous Releases
+
+### Added (from earlier unreleased)
+
 - 💬 **HR Assistant page** (`/assistant`): Freeform HR Copilot for Q&A, drafting workplace emails, and policy guidance — with file upload, styled send, quick send (Enter key), and full export support
 - 📄 **Chat with a Document**: Upload a PDF, DOCX, or TXT to the Assistant page and ask questions about its contents; document text injected as reference context for the AI
 - 🌍 **Multi-Language Translation**: Output language selector on all 4 tools (Formatter, Summarizer, Builder, Assistant) supporting 8 languages — English, Spanish, French, German, Mandarin Chinese, Portuguese, Arabic, Hindi
