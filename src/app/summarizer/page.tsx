@@ -26,7 +26,6 @@ import {
   Loader2,
   Wand2,
   StopCircle,
-  Paintbrush,
   FileStack,
   FileText,
   Send,
@@ -266,15 +265,8 @@ export default function SummarizerPage() {
                           content={resultContent}
                           filename="hr-summary"
                           tool="summarizer"
+                          onFormat={handleRouteToFormatter}
                         />
-                        <Button
-                          variant="secondary"
-                          onClick={() => handleRouteToFormatter(resultContent)}
-                          className="gap-2"
-                        >
-                          <Paintbrush className="h-4 w-4" />
-                          {t("summarizer.formatDoc")}
-                        </Button>
                       </div>
                     )}
 

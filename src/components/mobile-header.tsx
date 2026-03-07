@@ -99,54 +99,58 @@ export function MobileHeader() {
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <div className="p-4 space-y-5 overflow-y-auto h-[calc(100%-3.5rem)]">
-          {/* Theme toggle */}
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">{t("common.theme")}</span>
-            <ThemeToggleButton />
-          </div>
+        <div className="flex flex-col h-[calc(100%-3.5rem)]">
+          <div className="p-4 space-y-5 overflow-y-auto flex-1">
+            {/* Theme toggle */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">{t("common.theme")}</span>
+              <ThemeToggleButton />
+            </div>
 
-          {/* Language selector (dropdown) */}
-          <div className="space-y-1.5">
-            <label className="text-xs text-muted-foreground">
-              {t("common.language")}
-            </label>
-            <Select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value as typeof language)}
-            >
-              {LANGUAGES.map((lang) => (
-                <option key={lang.value} value={lang.value}>
-                  {lang.label}
-                </option>
-              ))}
-            </Select>
-          </div>
-
-          {/* Links */}
-          <div className="space-y-1">
-            {[
-              { href: "/privacy", label: t("common.privacy") },
-              { href: "/terms", label: t("common.terms") },
-              { href: "/faq", label: t("common.faq") },
-              { href: "/contact", label: t("common.contact") },
-            ].map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setOpen(false)}
-                className="block rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            {/* Language selector (dropdown) */}
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground">
+                {t("common.language")}
+              </label>
+              <Select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as typeof language)}
               >
-                {link.label}
-              </Link>
-            ))}
+                {LANGUAGES.map((lang) => (
+                  <option key={lang.value} value={lang.value}>
+                    {lang.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            {/* Links */}
+            <div className="space-y-1">
+              {[
+                { href: "/privacy", label: t("common.privacy") },
+                { href: "/terms", label: t("common.terms") },
+                { href: "/faq", label: t("common.faq") },
+                { href: "/contact", label: t("common.contact") },
+              ].map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setOpen(false)}
+                  className="block rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
           </div>
 
-          {/* Attribution */}
-          <p className="text-[10px] text-muted-foreground/50 text-center flex items-center justify-center gap-1 pt-2">
-            <Sparkles className="h-3 w-3" />
-            {t("common.poweredByGemini")}
-          </p>
+          {/* Attribution — pinned to bottom */}
+          <div className="shrink-0 border-t border-border/50 px-4 py-3">
+            <p className="text-[10px] text-muted-foreground/50 text-center flex items-center justify-center gap-1">
+              <Sparkles className="h-3 w-3" />
+              {t("common.poweredByGemini")}
+            </p>
+          </div>
         </div>
       </div>
     </>

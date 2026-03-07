@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useChat } from "ai/react";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -191,6 +192,7 @@ function parseCSV(text: string): {
 /*  Wizard UI: Doc Type + Key Details + Tone → complete draft          */
 /* ------------------------------------------------------------------ */
 export default function BuilderPage() {
+  const router = useRouter();
   const showSkeletonPreview = useDevSkeletonPreview();
   const {
     styling,
@@ -219,6 +221,12 @@ export default function BuilderPage() {
   const [streamError, setStreamError] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const bulkAbortRef = useRef<AbortController | null>(null);
+
+  // Push to Formatter Action
+  const handleRouteToFormatter = (text: string) => {
+    localStorage.setItem("puredraft_formatter_payload", text);
+    router.push("/formatter");
+  };
 
   // Bulk CSV state
   const [bulkMode, setBulkMode] = useState(false);
@@ -809,6 +817,7 @@ Key Details: ${keyDetails}`,
                       filename={`hr-${resolvedDocType.toLowerCase().replace(/\s+/g, "-")}-${idx + 1}`}
                       styling={styling}
                       tool="builder"
+                      onFormat={handleRouteToFormatter}
                     />
                   </CardContent>
                 </Card>
@@ -824,6 +833,7 @@ Key Details: ${keyDetails}`,
                     filename={`hr-bulk-${resolvedDocType.toLowerCase().replace(/\s+/g, "-")}`}
                     styling={styling}
                     tool="builder"
+                    onFormat={handleRouteToFormatter}
                   />
                 </CardContent>
               </Card>
@@ -869,6 +879,7 @@ Key Details: ${keyDetails}`,
                       filename={`hr-${resolvedDocType.toLowerCase().replace(/\s+/g, "-")}`}
                       styling={styling}
                       tool="builder"
+                      onFormat={handleRouteToFormatter}
                     />
 
                     {/* Refine Document — chat-style input */}

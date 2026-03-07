@@ -11,6 +11,8 @@ All notable changes to PureDraft HR will be documented in this file.
 - 🌐 **RTL support for Arabic**: Automatically sets `dir="rtl"` on the HTML element when Arabic is selected
 - 📱 **Mobile 3-dot slide-out menu**: Moved "More" from bottom tab bar to a 3-dot button next to the login button in the mobile header; opens a right-side slide drawer with theme toggle, language dropdown, nav links, and Gemini attribution
 - 📱 **Mobile language dropdown**: Language picker on mobile now uses a proper `<Select>` dropdown instead of chips
+- 🎤 **Microphone permission request**: Voice-to-text now explicitly requests device microphone permission via `getUserMedia` before starting speech recognition
+- 🔗 **Format button in all tools**: Builder, Summarizer, and Assistant export menus now include a "Format" action that routes content to the Formatter page via localStorage
 
 ### Changed
 
@@ -18,11 +20,19 @@ All notable changes to PureDraft HR will be documented in this file.
 - 🎤 **Mic error toasts**: Microphone permission errors now use sonner `toast.error()` instead of inline error banner — always visible regardless of scroll position
 - 📱 **Bottom nav simplified**: Removed "More" tab from mobile bottom bar — 3-dot menu is now in the mobile header
 - 🔄 **Centralized language state**: All pages and components now use `useTranslation()` context instead of per-component localStorage sync
+- ✨ **Powered by Gemini pinned to slider footer**: "Powered by Google Gemini" attribution is now pinned to the bottom of the mobile slide-out panel instead of flowing with content
+- 📱 **Mobile content spacing**: Increased main content bottom padding from `pb-16` to `pb-20` + safe-area-inset-bottom so page cards no longer touch the bottom navigation bar
 
 ### Fixed
 
 - 🐛 **"Microphone access denied" toast hiding**: Toast was hidden behind bottom nav bar on mobile — now shows at top-center
 - 🐛 **Language state drift**: Eliminated duplicate language state management across components
+- 🐛 **Email provider dropdown commas**: Fixed `", ,"` appearing in the email provider select dropdown — replaced `String()` with recursive `childrenToText()` to properly flatten React children (emoji + text)
+- 🐛 **Select dropdown scrollbar**: Hidden scrollbar on the portal dropdown menu on mobile (`scrollbar-none`)
+- 🐛 **Export menu cut-off**: 3-dot dropdown now opens upward (`bottom-full`) with `max-h-[70vh]` to prevent items being cut off on mobile
+- 🐛 **Assistant chat page scroll**: Replaced `scrollIntoView` with `container.scrollTo()` so only the messages area scrolls — input textarea stays pinned at the bottom during AI generation
+- 🐛 **PWA assistant layout**: Added `env(safe-area-inset-top/bottom)` to the assistant chat height calculation to prevent the chat box from shifting in standalone PWA mode
+- 🐛 **Download button label**: Filename rename step now shows the correct format label (PDF/Word/Excel) based on the selected download type instead of always showing "PDF"
 
 ---
 

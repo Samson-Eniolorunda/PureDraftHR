@@ -40,7 +40,7 @@ A full-stack web application that empowers HR teams to format, summarize, and ge
 - **Chat with a Document** — upload a PDF, DOCX, or TXT file and ask questions about its contents
 - Styled output with full document styling modal support
 - Send via button only (Enter inserts newlines); **Stop button** replaces Send while AI is generating
-- 🎤 **Voice-to-text** — mic button with language-aware speech recognition using the selected AI output language
+- 🎤 **Voice-to-text** — mic button with language-aware speech recognition using the selected AI output language; explicitly requests microphone permission from the device
 - **Smart Meeting Scheduler** — ask the AI to schedule a meeting and get a beautiful Meeting Card with "Add to Google Calendar" and "Download Outlook Invite (.ics)" buttons
 - Full export support (PDF, DOCX, Copy)
 
@@ -85,7 +85,7 @@ A full-stack web application that empowers HR teams to format, summarize, and ge
 - 🏠 "Add to Home Screen" on iOS & Android
 - 📴 Offline support with service worker
 - ⚡ Desktop sidebar + mobile bottom-tab navigation
-- 📱 **Mobile "More" tab** — language picker, theme toggle, Privacy/Terms/FAQ/Contact links, and Gemini attribution
+- 📱 **Mobile "More" tab** — 3-dot button in the mobile header opens a slide-out drawer with language dropdown, theme toggle, Privacy/Terms/FAQ/Contact links, and Gemini attribution pinned to the footer
 - ✨ **Powered by Google Gemini** — attribution displayed in sidebar and mobile More panel
 - 🎨 Beautiful light/dark theme with system/manual toggle
 
@@ -105,8 +105,10 @@ A full-stack web application that empowers HR teams to format, summarize, and ge
 
 ### 8. **Multi-Language Translation**
 
-- 🌍 Global language selector in the sidebar — applies to all 4 tools (Formatter, Summarizer, Builder, Assistant)
+- 🌍 Global language selector in the sidebar — applies to **all website UI content** and all 4 tools (Formatter, Summarizer, Builder, Assistant)
 - 8 supported languages: English, Spanish, French, German, Mandarin Chinese, Portuguese, Arabic, Hindi
+- Full i18n system with 115+ translation keys — headings, buttons, placeholders, error messages, and legal pages all translate
+- RTL layout support for Arabic
 - Language instruction injected into AI system prompt for accurate translation
 - Default: English (no extra instruction overhead)
 
@@ -257,7 +259,7 @@ PureDraftHR/
 ├── src/
 │   ├── app/
 │   │   ├── layout.tsx         # Root layout with Clerk, PWA, theme
-│   │   ├── page.tsx           # Redirect to /formatter
+│   │   ├── page.tsx           # Redirect to /assistant
 │   │   ├── globals.css        # Global styles
 │   │   ├── api/
 │   │   │   ├── chat/route.ts  # AI streaming (dynamic system prompts)
@@ -266,7 +268,7 @@ PureDraftHR/
 │   │   │   ├── documents/[id]/route.ts # Get/delete document API
 │   │   │   ├── extract/route.ts # File text extraction
 │   │   │   └── send-document/route.ts # Email document API
-│   │   ├── builder/page.tsx   # Document builder wizard (25 types + custom)
+│   │   ├── builder/page.tsx   # Document builder wizard (31 templates + custom)
 │   │   ├── formatter/page.tsx # Document formatter tool
 │   │   ├── summarizer/page.tsx# Document summarizer tool
 │   │   ├── assistant/page.tsx # HR Assistant copilot + chat with document
@@ -292,7 +294,7 @@ PureDraftHR/
 │   │   ├── meeting-card.tsx   # Smart Meeting Scheduler card + .ics generation
 │   │   ├── multi-file-drop-zone.tsx # Multi-file upload for batch mode
 │   │   ├── template-library.tsx  # Saved templates library (localStorage)
-│   │   ├── mobile-header.tsx  # Mobile header with theme toggle
+│   │   ├── mobile-header.tsx  # Mobile header with auth + 3-dot slide-out panel
 │   │   ├── sonner-toaster.tsx # Toast notifications
 │   │   ├── pwa-register.tsx   # Service worker registration
 │   │   ├── theme-provider.tsx # Light/dark/system theme provider
@@ -421,9 +423,9 @@ Handles contact form submissions with validation.
 
 ### Mobile (<768px)
 
-- **Mobile Header** (fixed, top): Logo + theme toggle
+- **Mobile Header** (fixed, top): Logo + auth button + 3-dot slide-out panel
 - **Bottom Tab Bar** (fixed, 64px): Icon + label navigation
-- **Main Content**: Full width with safe-area padding (pb-24 to avoid bottom nav overlap)
+- **Main Content**: Full width with safe-area padding to avoid bottom nav overlap
 - **Styling Modal**: Same modal popup as desktop
 
 ---
@@ -479,7 +481,7 @@ Handles contact form submissions with validation.
 
 1. Go to `/assistant`
 2. Type: "Write a sick leave email to my manager for tomorrow"
-3. Press Enter (quick send) or click Styled (for formatted output)
+4. Click the Send button (or use voice-to-text with the mic button)
 4. Export or copy the result
 
 ---
@@ -601,8 +603,8 @@ A: Yes! Modify [src/app/api/chat/route.ts](src/app/api/chat/route.ts) to use any
 **Q: Is there a cost per request?**
 A: No! Google Gemini has a generous free tier. Clerk, Supabase, and Upstash also offer free tiers suitable for production use.
 
-**Q: How many document types does the Builder support?**
-A: 25 document types including Offer Letters, Job Descriptions, Company Policies, Employment Contracts, Termination Letters, Warning Letters, and more — plus an "Other (Custom)" option for any document type not listed. Each type has context-aware placeholder examples.
+**Q: How many document templates does the Builder support?**
+A: 31 document templates including Offer Letters, Job Descriptions, Company Policies, Employment Contracts, Termination Letters, Warning Letters, and more — plus an "Other (Custom)" option for any document type not listed. Each type has context-aware placeholder examples.
 
 **Q: Can I generate documents in other languages?**
 A: Yes! All 4 tools support multi-language output. Choose from English, Spanish, French, German, Mandarin Chinese, Portuguese, Arabic, and Hindi via the global language selector in the sidebar.

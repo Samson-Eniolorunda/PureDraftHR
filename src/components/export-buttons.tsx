@@ -420,8 +420,13 @@ export function ExportButtons({
                       }}
                     >
                       <Download className="h-3 w-3" />
-                      {t("export.downloadPdf").split(" ").slice(-1)[0] ||
-                        "Download"}
+                      {t(
+                        pendingDownload === "docx"
+                          ? "export.downloadWord"
+                          : pendingDownload === "excel"
+                            ? "export.downloadExcel"
+                            : "export.downloadPdf",
+                      ).split(" ").slice(-1)[0] || "Download"}
                     </Button>
                   </div>
                 </div>

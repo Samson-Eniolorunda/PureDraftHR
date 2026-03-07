@@ -232,7 +232,35 @@ export default function PrivacyPage() {
         </p>
       </section>
 
-      {/* 7 ── Employee Data Safety */}
+      {/* 7 ── Voice Input */}
+      <section className="space-y-3">
+        <h2 className="text-lg sm:text-xl font-semibold">Voice Input</h2>
+        <ul className="space-y-2.5 text-sm sm:text-base leading-relaxed text-muted-foreground">
+          <li className="flex gap-2">
+            <span className="text-primary mt-1 shrink-0">&bull;</span>
+            <span>
+              The Assistant tool offers optional voice-to-text input. When you
+              activate it, your browser will request microphone permission.
+            </span>
+          </li>
+          <li className="flex gap-2">
+            <span className="text-primary mt-1 shrink-0">&bull;</span>
+            <span>
+              Audio is processed entirely by your browser&apos;s built-in Web
+              Speech API — no audio data is sent to PureDraft servers.
+            </span>
+          </li>
+          <li className="flex gap-2">
+            <span className="text-primary mt-1 shrink-0">&bull;</span>
+            <span>
+              You can revoke microphone access at any time through your
+              browser&apos;s site-permission settings.
+            </span>
+          </li>
+        </ul>
+      </section>
+
+      {/* 8 ── Employee Data Safety */}
       <section className="space-y-3">
         <h2 className="text-lg sm:text-xl font-semibold">
           Employee Data Safety
@@ -264,7 +292,7 @@ export default function PrivacyPage() {
         </ul>
       </section>
 
-      {/* 8 ── Browser-Level Data */}
+      {/* 9 ── Browser-Level Data */}
       <section className="space-y-3">
         <h2 className="text-lg sm:text-xl font-semibold">Browser-Level Data</h2>
         <ul className="space-y-2.5 text-sm sm:text-base leading-relaxed text-muted-foreground">
@@ -300,10 +328,18 @@ export default function PrivacyPage() {
             <span className="text-primary mt-1 shrink-0">&bull;</span>
             <span>No third-party scripts collect your browsing behavior.</span>
           </li>
+          <li className="flex gap-2">
+            <span className="text-primary mt-1 shrink-0">&bull;</span>
+            <span>
+              <strong className="text-foreground">Language preference</strong>{" "}
+              is stored in your browser&apos;s localStorage. The UI is available
+              in eight languages — all translation happens client-side.
+            </span>
+          </li>
         </ul>
       </section>
 
-      {/* 9 ── Third-Party Services */}
+      {/* 10 ── Third-Party Services */}
       <section className="space-y-3">
         <h2 className="text-lg sm:text-xl font-semibold">
           Third-Party Services
@@ -352,7 +388,7 @@ export default function PrivacyPage() {
         </div>
       </section>
 
-      {/* 10 ── Your Rights */}
+      {/* 11 ── Your Rights */}
       <section className="space-y-3">
         <h2 className="text-lg sm:text-xl font-semibold">Your Rights</h2>
         <ul className="space-y-2.5 text-sm sm:text-base leading-relaxed text-muted-foreground">
@@ -393,7 +429,7 @@ export default function PrivacyPage() {
         </ul>
       </section>
 
-      {/* 11 ── Changes */}
+      {/* 12 ── Changes */}
       <section className="space-y-3">
         <h2 className="text-lg sm:text-xl font-semibold">
           Changes to This Policy
@@ -406,7 +442,7 @@ export default function PrivacyPage() {
         </p>
       </section>
 
-      {/* 12 ── Contact */}
+      {/* 13 ── Contact */}
       <section className="rounded-xl border border-border/60 bg-card p-6 text-center space-y-2">
         <h2 className="text-lg font-semibold">Have questions?</h2>
         <p className="text-sm text-muted-foreground">
