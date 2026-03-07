@@ -270,7 +270,7 @@ export default function AssistantPage() {
   }, [isListening, language]);
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-9.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] md:h-[calc(100dvh-3rem)] max-w-3xl mx-auto overflow-hidden">
+    <div className="flex flex-col h-[calc(100dvh-10.5rem-env(safe-area-inset-bottom,0px))] md:h-[calc(100dvh-3rem)] max-w-3xl mx-auto overflow-hidden">
       {/* ── Top Bar ── */}
       <div className="flex items-center justify-between px-1 py-3 border-b border-border/50 shrink-0">
         <div className="flex items-center gap-2.5">

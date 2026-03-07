@@ -118,6 +118,11 @@
   }
 }
 
+/* Ensure Clerk popups render above everything on mobile */
+.cl-userButtonPopoverCard {
+  z-index: 200 !important;
+}
+
 /* Hide scrollbar for horizontal scroll areas */
 .scrollbar-none {
   -ms-overflow-style: none;

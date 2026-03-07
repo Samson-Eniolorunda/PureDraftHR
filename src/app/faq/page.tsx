@@ -1,6 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 
 import Link from "next/link";
+import { HelpCircle } from "lucide-react";
 
 export const metadata = {
   title: "FAQ | PureDraft HR",
@@ -104,9 +105,14 @@ export default function FAQPage() {
     <div className="max-w-3xl mx-auto space-y-10">
       {/* Hero header */}
       <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-border/50 px-6 py-8 sm:px-8 sm:py-10">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-          Frequently Asked Questions
-        </h1>
+        <div className="flex items-center gap-3 mb-1">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <HelpCircle className="h-5 w-5 text-primary" />
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            Frequently Asked Questions
+          </h1>
+        </div>
         <p className="mt-2 text-sm text-muted-foreground">
           Got a question? We&apos;ve got answers. Learn more about how PureDraft
           HR works.
