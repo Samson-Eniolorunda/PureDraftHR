@@ -1,3 +1,0 @@
-[dotenv@17.3.1] injecting env (10) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
-Datasource "db": PostgreSQL database "x", schema "public" at "localhost:5432"
-

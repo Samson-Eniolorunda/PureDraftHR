@@ -1,6 +1,0 @@
-SUCCESS
-[dotenv@17.3.1] injecting env (12) from .env.local -- tip: 🤖 agentic secret storage: https://dotenvx.com/as2
-Datasource "db": PostgreSQL database "postgres", schema "public" at "aws-1-us-east-1.pooler.supabase.com:5432"
-
-Your database is now in sync with your Prisma schema. Done in 8.61s
-
