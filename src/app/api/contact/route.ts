@@ -106,24 +106,62 @@ export async function POST(request: NextRequest) {
     const safeEmail = escapeHtml(body.email);
     const safeSubject = escapeHtml(body.subject);
     const safeMessage = escapeHtml(body.message).replace(/\n/g, "<br>");
+    const timestamp = new Date().toLocaleString("en-US", {
+      dateStyle: "long",
+      timeStyle: "short",
+      timeZone: "UTC",
+    });
 
     // Send email via Resend
     const { error: sendError } = await resend.emails.send({
       from:
         process.env.RESEND_FROM_EMAIL || "PureDraftHR <onboarding@resend.dev>",
       to: contactEmail,
-      subject: `New Contact Form Submission - HR App: ${body.subject}`,
-      html: `
-        <h2>New Contact Form Submission</h2>
-        <hr />
-        <p><strong>Name:</strong> ${safeName}</p>
-        <p><strong>Email:</strong> <a href="mailto:${safeEmail}">${safeEmail}</a></p>
-        <p><strong>Subject:</strong> ${safeSubject}</p>
-        <p><strong>Message:</strong></p>
-        <p>${safeMessage}</p>
-        <hr />
-        <p style="color: #888; font-size: 12px;">Sent from PureDraftHR Contact Form at ${new Date().toISOString()}</p>
-      `,
+      replyTo: body.email,
+      subject: `New Contact: ${body.subject}`,
+      html: `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
+<body style="margin:0;padding:0;background-color:#f4f6f9;font-family:Arial,Helvetica,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f6f9;">
+  <tr><td align="center" style="padding:32px 16px;">
+    <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+      <!-- Header -->
+      <tr><td style="background:linear-gradient(135deg,#2563eb,#1d4ed8);padding:28px 32px;text-align:center;">
+        <table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr>
+          <td style="background:rgba(255,255,255,0.2);border-radius:10px;width:40px;height:40px;text-align:center;vertical-align:middle;font-weight:bold;font-size:16px;color:#ffffff;">PD</td>
+          <td style="padding-left:12px;font-size:20px;font-weight:bold;color:#ffffff;letter-spacing:-0.5px;">PureDraft HR</td>
+        </tr></table>
+        <p style="margin:8px 0 0;font-size:13px;color:rgba(255,255,255,0.85);">New Contact Form Submission</p>
+      </td></tr>
+      <!-- Body -->
+      <tr><td style="background-color:#ffffff;padding:32px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          <tr><td style="padding-bottom:20px;">
+            <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280;">From</p>
+            <p style="margin:0;font-size:16px;font-weight:600;color:#111827;">${safeName}</p>
+            <p style="margin:2px 0 0;font-size:14px;color:#2563eb;"><a href="mailto:${safeEmail}" style="color:#2563eb;text-decoration:none;">${safeEmail}</a></p>
+          </td></tr>
+          <tr><td style="border-top:1px solid #e5e7eb;padding:20px 0;">
+            <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280;">Subject</p>
+            <p style="margin:0;font-size:15px;font-weight:600;color:#111827;">${safeSubject}</p>
+          </td></tr>
+          <tr><td style="border-top:1px solid #e5e7eb;padding:20px 0 0;">
+            <p style="margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280;">Message</p>
+            <div style="font-size:14px;line-height:1.7;color:#374151;background:#f9fafb;border-radius:8px;padding:16px;border:1px solid #e5e7eb;">${safeMessage}</div>
+          </td></tr>
+        </table>
+      </td></tr>
+      <!-- Footer -->
+      <tr><td style="background-color:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 32px;text-align:center;">
+        <p style="margin:0;font-size:12px;color:#9ca3af;">${timestamp} UTC</p>
+        <p style="margin:8px 0 0;font-size:11px;color:#9ca3af;">&copy; ${new Date().getFullYear()} PureDraft HR &middot; AI-Powered HR Documents</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`,
     });
 
     if (sendError) {

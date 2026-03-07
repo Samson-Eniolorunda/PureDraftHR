@@ -106,10 +106,10 @@ export default function ContactPage() {
                 <div>
                   <p className="font-semibold text-sm">Email</p>
                   <a
-                    href="mailto:eniolorundasamson@gmail.com"
+                    href="mailto:support@puredrafthr.btbcoder.site"
                     className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    eniolorundasamson@gmail.com
+                    support@puredrafthr.btbcoder.site
                   </a>
                 </div>
               </div>

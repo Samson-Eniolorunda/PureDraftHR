@@ -127,7 +127,7 @@ export default function RootLayout({
               contactPoint: {
                 "@type": "ContactPoint",
                 contactType: "Customer Service",
-                email: "eniolorundasamson@gmail.com",
+                email: "support@puredrafthr.btbcoder.site",
               },
             }),
           }}
