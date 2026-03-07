@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useChat } from "ai/react";
 import {
   Card,
@@ -19,15 +19,12 @@ import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
 import { DocumentFormFooter } from "@/components/document-form-footer";
 import { DocumentStylingUI } from "@/components/document-styling-ui";
-import {
-  LanguageSelector,
-  type LanguageValue,
-} from "@/components/language-selector";
+import { type LanguageValue } from "@/components/language-selector";
 import { Modal } from "@/components/ui/modal";
 import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
 import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
 import { useDocumentStyling } from "@/hooks/useDocumentStyling";
-import { Loader2, Wand2, StopCircle } from "lucide-react";
+import { Loader2, Wand2, StopCircle, Send } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /*  Template options for the formatter                                 */
@@ -75,6 +72,18 @@ export default function FormatterPage() {
   const [refineText, setRefineText] = useState("");
   const [streamError, setStreamError] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
+
+  // Sync language from sidebar via custom event + localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("puredraft_language");
+    if (saved) setLanguage(saved as LanguageValue);
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as LanguageValue;
+      if (detail) setLanguage(detail);
+    };
+    window.addEventListener("puredraft-language-change", handler);
+    return () => window.removeEventListener("puredraft-language-change", handler);
+  }, []);
 
   /** Resolved template — custom string or dropdown value */
   const resolvedTemplate =
@@ -211,12 +220,7 @@ export default function FormatterPage() {
               </div>
             )}
 
-            {/* Language selector */}
-            <LanguageSelector
-              value={language}
-              onChange={setLanguage}
-              disabled={isLoading}
-            />
+            {/* Language selector removed — controlled globally from sidebar */}
 
             {/* Dual input: upload or paste */}
             <DualInput
@@ -292,18 +296,15 @@ export default function FormatterPage() {
                       tool="formatter"
                     />
 
-                    {/* Refine Document */}
+                    {/* Refine Document — chat-style input */}
                     {!isLoading && resultContent && (
-                      <div className="mt-6 space-y-2 border-t pt-4">
-                        <Label className="text-sm font-medium">
-                          Refine Document
-                        </Label>
+                      <div className="mt-4 relative">
                         <Textarea
-                          rows={2}
+                          rows={1}
                           value={refineText}
                           onChange={(e) => setRefineText(e.target.value)}
-                          placeholder='e.g. "Make the tone friendlier" or "Add a remote work section"…'
-                          className="resize-y min-h-[60px]"
+                          placeholder="Ask to refine this document…"
+                          className="resize-none min-h-[42px] max-h-[120px] pr-11 rounded-xl text-sm"
                           onKeyDown={(e) => {
                             if (e.key === "Enter" && !e.shiftKey) {
                               e.preventDefault();
@@ -312,13 +313,13 @@ export default function FormatterPage() {
                           }}
                         />
                         <Button
-                          size="sm"
-                          onClick={handleRefine}
+                          type="button"
+                          size="icon"
                           disabled={!refineText.trim()}
-                          className="gap-2"
+                          onClick={handleRefine}
+                          className="absolute right-1.5 bottom-1.5 h-7 w-7 rounded-lg"
                         >
-                          <Wand2 className="h-4 w-4" />
-                          Refine
+                          <Send className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     )}

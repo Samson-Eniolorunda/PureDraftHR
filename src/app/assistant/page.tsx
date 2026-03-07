@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
-import { LANGUAGES, type LanguageValue } from "@/components/language-selector";
+import { type LanguageValue } from "@/components/language-selector";
 import {
   MeetingCard,
   parseMeetingFromResponse,
@@ -20,12 +20,9 @@ import {
   CheckCircle,
   X,
   StopCircle,
-  Paintbrush,
   Bot,
   User,
   Sparkles,
-  Globe,
-  ChevronDown,
   Mic,
   MicOff,
 } from "lucide-react";
@@ -64,7 +61,6 @@ export default function AssistantPage() {
   const [referenceText, setReferenceText] = useState("");
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
-  const [showLangPicker, setShowLangPicker] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -254,8 +250,22 @@ export default function AssistantPage() {
     setIsListening(true);
   }, [isListening]);
 
+  // Sync language from sidebar via custom event + localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("puredraft_language");
+    if (saved) setLanguage(saved as LanguageValue);
+
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as LanguageValue;
+      if (detail) setLanguage(detail);
+    };
+    window.addEventListener("puredraft-language-change", handler);
+    return () =>
+      window.removeEventListener("puredraft-language-change", handler);
+  }, []);
+
   return (
-    <div className="flex flex-col h-[calc(100dvh-3.5rem)] md:h-dvh max-w-3xl mx-auto">
+    <div className="flex flex-col h-[calc(100dvh-9.5rem)] md:h-[calc(100dvh-3rem)] max-w-3xl mx-auto">
       {/* ── Top Bar ── */}
       <div className="flex items-center justify-between px-1 py-3 border-b border-border/50 shrink-0">
         <div className="flex items-center gap-2.5">
@@ -363,26 +373,12 @@ export default function AssistantPage() {
                       <>
                         <MarkdownRenderer content={meetingData.remainingText} />
                         {!isLoading && (
-                          <div className="flex flex-wrap items-center gap-2 pt-2">
-                            <ExportButtons
-                              content={meetingData.remainingText}
-                              filename="hr-assistant"
-                              tool="assistant"
-                            />
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() =>
-                                handleRouteToFormatter(
-                                  meetingData.remainingText,
-                                )
-                              }
-                              className="gap-1.5"
-                            >
-                              <Paintbrush className="h-3.5 w-3.5" />
-                              Format
-                            </Button>
-                          </div>
+                          <ExportButtons
+                            content={meetingData.remainingText}
+                            filename="hr-assistant"
+                            tool="assistant"
+                            onFormat={handleRouteToFormatter}
+                          />
                         )}
                       </>
                     )}
@@ -391,22 +387,12 @@ export default function AssistantPage() {
                   <div className="space-y-2">
                     <MarkdownRenderer content={msg.content} />
                     {!isLoading && msg.id === lastAssistantMsg?.id && (
-                      <div className="flex flex-wrap items-center gap-2 pt-2">
-                        <ExportButtons
-                          content={msg.content}
-                          filename="hr-assistant"
-                          tool="assistant"
-                        />
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleRouteToFormatter(msg.content)}
-                          className="gap-1.5"
-                        >
-                          <Paintbrush className="h-3.5 w-3.5" />
-                          Format
-                        </Button>
-                      </div>
+                      <ExportButtons
+                        content={msg.content}
+                        filename="hr-assistant"
+                        tool="assistant"
+                        onFormat={handleRouteToFormatter}
+                      />
                     )}
                   </div>
                 )}
@@ -518,24 +504,7 @@ export default function AssistantPage() {
             </Button>
           </div>
 
-          {/* Mic button — voice to text */}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            title={isListening ? "Stop listening" : "Voice input"}
-            onClick={toggleListening}
-            disabled={isLoading}
-            className={`h-10 w-10 rounded-xl shrink-0 ${isListening ? "text-red-500 bg-red-500/10" : ""}`}
-          >
-            {isListening ? (
-              <MicOff className="h-4 w-4" />
-            ) : (
-              <Mic className="h-4 w-4" />
-            )}
-          </Button>
-
-          {/* Text input */}
+          {/* Text input with Send + Mic inside */}
           <div className="flex-1 relative">
             <Textarea
               ref={textareaRef}
@@ -549,58 +518,41 @@ export default function AssistantPage() {
                   : "Message PureDraft Assistant..."
               }
               disabled={isLoading}
-              className="resize-none min-h-[44px] max-h-[200px] pr-12 rounded-xl"
+              className="resize-none min-h-[44px] max-h-[200px] pr-20 rounded-xl"
             />
-            <Button
-              type="button"
-              size="icon"
-              disabled={!userPrompt.trim() || isLoading}
-              onClick={handleSend}
-              className="absolute right-1.5 bottom-1.5 h-8 w-8 rounded-lg"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
+            <div className="absolute right-1.5 bottom-1.5 flex items-center gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                title={isListening ? "Stop listening" : "Voice input"}
+                onClick={toggleListening}
+                disabled={isLoading}
+                className={`h-8 w-8 rounded-lg ${isListening ? "text-red-500 bg-red-500/10" : ""}`}
+              >
+                {isListening ? (
+                  <MicOff className="h-4 w-4" />
+                ) : (
+                  <Mic className="h-4 w-4" />
+                )}
+              </Button>
+              <Button
+                type="button"
+                size="icon"
+                disabled={!userPrompt.trim() || isLoading}
+                onClick={handleSend}
+                className="h-8 w-8 rounded-lg"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Language picker + Disclaimer */}
-        <div className="relative flex items-center mt-2 gap-2">
-          <div className="relative shrink-0">
-            <button
-              type="button"
-              onClick={() => setShowLangPicker(!showLangPicker)}
-              className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-muted-foreground transition-colors rounded-md px-1.5 py-0.5 hover:bg-accent/50"
-            >
-              <Globe className="h-3 w-3" />
-              {language}
-              <ChevronDown className="h-2.5 w-2.5" />
-            </button>
-            {showLangPicker && (
-              <div className="absolute bottom-full left-0 mb-1 bg-popover border border-border rounded-xl shadow-lg p-1 min-w-[140px] z-50">
-                {LANGUAGES.map((lang) => (
-                  <button
-                    key={lang.value}
-                    type="button"
-                    onClick={() => {
-                      setLanguage(lang.value);
-                      setShowLangPicker(false);
-                    }}
-                    className={`w-full text-left text-sm rounded-lg px-3 py-1.5 transition-colors ${
-                      language === lang.value
-                        ? "bg-primary/10 text-primary font-medium"
-                        : "text-foreground hover:bg-accent"
-                    }`}
-                  >
-                    {lang.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <p className="text-[10px] text-muted-foreground/60 text-center flex-1">
-            PureDraft can make mistakes. Verify important information.
-          </p>
-        </div>
+        {/* Disclaimer — always visible */}
+        <p className="text-[10px] text-muted-foreground/60 text-center mt-2">
+          PureDraft can make mistakes. Verify important information.
+        </p>
       </div>
     </div>
   );

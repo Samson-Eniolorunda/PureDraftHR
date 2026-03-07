@@ -188,16 +188,17 @@ export function DocumentFormFooter({
 
       {/* Consent Checkbox */}
       <div className="space-y-3 border-t pt-4">
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-2 sm:gap-3">
           <Checkbox
             id="consent"
             checked={isConsented}
             onCheckedChange={onConsentChange}
             disabled={isLoading}
+            className="mt-0.5 shrink-0"
           />
           <Label
             htmlFor="consent"
-            className="text-sm cursor-pointer font-normal leading-relaxed"
+            className="text-xs sm:text-sm cursor-pointer font-normal leading-relaxed"
           >
             I agree to the{" "}
             <a

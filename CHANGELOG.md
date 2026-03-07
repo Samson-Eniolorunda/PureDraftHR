@@ -6,10 +6,12 @@ All notable changes to PureDraft HR will be documented in this file.
 
 ### Added
 
+- � **Contact Us link in sidebar**: Footer links now include Contact alongside Privacy, Terms, and FAQ
+- 🌍 **Global language selector in sidebar**: Single language picker in the sidebar footer that applies to all tools (Builder, Formatter, Summarizer, Assistant) via localStorage + CustomEvent sync — replaces per-page language selectors
+- 🎤 **Voice-to-text mic button**: Mic icon beside the Send button on the Assistant page using the Web Speech API
 - 💬 **ChatGPT/Gemini-style Assistant UX**: Full chat bubble interface with message history, typing indicator, suggestion chips, pinned input bar, and "New Chat" button
 - 📩 **Email Provider Selection**: Users choose their own email provider (Gmail, Outlook, Yahoo, Zoho, ProtonMail, or default app) via a dropdown — opens a pre-filled compose window instead of server-side email sending
 - 📅 **Smart Meeting Scheduler** (Assistant): AI-extracted meeting details rendered as a Meeting Card with "Add to Google Calendar" and "Download Outlook Invite (.ics)" buttons
-- 🌍 **Multi-Language Translation**: Output language selector on all 4 tools supporting 8 languages — English, Spanish, French, German, Mandarin Chinese, Portuguese, Arabic, Hindi
 - 📂 **My Templates Library**: Save, load, and delete reference text snippets with localStorage; integrated into Builder, Formatter, and Summarizer
 - ✏️ **Custom Document Type ("Other (Custom)")**: Builder and Formatter include a freeform text input for unlisted document/template types
 - 📊 **Bulk CSV Generation** (Builder): Toggle bulk mode, upload a CSV, batch-generate one document per row with live progress bar
@@ -19,9 +21,20 @@ All notable changes to PureDraft HR will be documented in this file.
 - 📄 Privacy, Terms of Service, and FAQ pages with full feature coverage
 - 📖 Contact page with working form
 - 🔗 **PWA icon updated**: Icon now displays "PD" (PureDraft) instead of "HR"
+- 📊 **Excel export**: Download table data as .xlsx via the xlsx library
+- 🔊 **Text-to-Speech**: Read generated documents aloud using Web Speech API
+- 🔗 **Share**: Native Web Share API on supported devices with email fallback
 
 ### Changed
 
+- ✨ **Export menu redesigned**: Filename input and Format/Download/Email/Save actions moved into a 3-dot dropdown menu; Copy button is icon-only alongside Share and Text-to-Speech icons
+- 💬 **Refine Document as chat input**: "Refine Document" section replaced with a compact chat-style textarea with an embedded Send button (Builder, Formatter, Summarizer)
+- 📱 **Mobile chat input fixed**: Chat input bar always visible above keyboard on mobile; AI disclaimer always visible below messages
+- 🌍 **Global language from sidebar**: Removed per-page LanguageSelector components from Builder, Formatter, and Summarizer — language now controlled globally from the sidebar
+- 🎨 **Privacy page restyled**: Modern gradient hero header, themed color tokens, card-based third-party services grid, rounded contact CTA
+- 🎨 **Terms page restyled**: Same modern design with amber-tinted AI disclaimer warning card
+- 🎨 **FAQ page restyled**: Accordion items in rounded-xl cards with animated chevrons, gradient hero header, card-style "Still have questions?" footer
+- 📱 **Responsiveness overhaul**: Global `overflow-wrap: break-word`, `overflow-x-hidden` on main content, reduced table `min-w`, truncated mobile nav labels, responsive consent text sizing, tighter footer link spacing
 - 🤖 **AI branding**: Disclaimer text changed from "Gemini AI" to "PureDraft AI" across Builder, Formatter, and Summarizer notes
 - 🧭 **Dashboard filter order**: Assistant tab now appears first after "All" in the My Documents filter bar
 - 🧭 **My Documents in sidebar**: Dashboard link moved into the main nav list alongside Assistant, Builder, Formatter, and Summarizer (still auth-gated)
@@ -31,7 +44,7 @@ All notable changes to PureDraft HR will be documented in this file.
 - 🔒 **Privacy Policy updated**: Email section rewritten to clarify client-side email handling
 - 🛡️ **Sign-in flash fix**: Uses `isLoaded` from `useAuth()` to prevent layout shift on page load
 - 📜 **Assistant scroll fix**: Auto-scroll only triggers after user sends a message (prevents scroll-to-bottom on page load)
-- 📱 **Mobile text wrap**: "Supported formats" text in drop-zone now uses `whitespace-nowrap` to prevent line break on small screens
+- 📱 **Mobile text wrap**: "Supported formats" text in drop-zone now wraps naturally with centered alignment on small screens
 
 ### Fixed
 

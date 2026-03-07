@@ -90,7 +90,11 @@ A full-stack web application that empowers HR teams to format, summarize, and ge
 
 - 📥 **Download as PDF** — Uses html2pdf.js with inline font, size, and spacing styles
 - 📥 **Download as DOCX** — Uses docx library with proper font mapping and half-point line spacing
-- 📋 **Copy to Clipboard** — One-click plain-text copy with 2-second "Copied!" confirmation
+- � **Download as Excel** — Table data exported to .xlsx via the xlsx library
+- 📋 **Copy to Clipboard** — Rich-text HTML copy (pastes into Word, Docs) with plain-text fallback
+- 🔊 **Text-to-Speech** — Read generated documents aloud using the Web Speech API
+- 🔗 **Share** — Native Web Share API on supported devices, email fallback
+- 📧 **Email Document** — Choose from Gmail, Outlook, Yahoo, Zoho, ProtonMail, or default app; opens a pre-filled compose window
 - 🏷️ **Dynamic Filenames** — Exports auto-named from the document's H1 heading (fallback: timestamped)
 - ✅ All export happens in the browser (no server processing)
 - ✅ Exports preserve document styling selections (font, sizes, spacing, bullets)
@@ -98,7 +102,7 @@ A full-stack web application that empowers HR teams to format, summarize, and ge
 
 ### 8. **Multi-Language Translation**
 
-- 🌍 Output language selector on all 4 tools (Formatter, Summarizer, Builder, Assistant)
+- 🌍 Global language selector in the sidebar — applies to all 4 tools (Formatter, Summarizer, Builder, Assistant)
 - 8 supported languages: English, Spanish, French, German, Mandarin Chinese, Portuguese, Arabic, Hindi
 - Language instruction injected into AI system prompt for accurate translation
 - Default: English (no extra instruction overhead)
@@ -148,7 +152,7 @@ A full-stack web application that empowers HR teams to format, summarize, and ge
 | **Auth**            | Clerk (email/password + Google OAuth)               |
 | **Database**        | Supabase PostgreSQL + Prisma 7 ORM                  |
 | **Rate Limiting**   | Upstash Redis                                       |
-| **Email**           | Resend (document sharing + contact form)            |
+| **Email**           | Client-side provider URLs (Gmail, Outlook, etc.) + Resend (contact form) |
 | **Runtime**         | Node.js Runtime (API routes)                        |
 | **Export**          | html2pdf.js, docx, file-saver                       |
 | **File Parsing**    | mammoth (DOCX), pdf-parse (PDF), xlsx               |
@@ -277,7 +281,7 @@ PureDraftHR/
 │   │   ├── document-styling-ui.tsx  # Styling modal controls
 │   │   ├── drop-zone.tsx      # Drag-and-drop upload
 │   │   ├── dual-input.tsx     # Upload/Paste tabs
-│   │   ├── email-document-modal.tsx # Email document modal (Resend)
+│   │   ├── email-document-modal.tsx # Email document modal (client-side provider URLs)
 │   │   ├── export-buttons.tsx # Style-aware PDF & DOCX download
 │   │   ├── footer.tsx         # App footer with Gemini attribution
 │   │   ├── language-selector.tsx # Multi-language output selector
@@ -592,13 +596,13 @@ A: Unsaved in-progress work is lost. Save documents to your account via the Dash
 A: Yes! Modify [src/app/api/chat/route.ts](src/app/api/chat/route.ts) to use any Vercel AI SDK provider (`@ai-sdk/google`, `@ai-sdk/openai`, `@ai-sdk/anthropic`, etc.).
 
 **Q: Is there a cost per request?**
-A: No! Google Gemini has a generous free tier. Clerk, Supabase, Upstash, and Resend also offer free tiers suitable for production use.
+A: No! Google Gemini has a generous free tier. Clerk, Supabase, and Upstash also offer free tiers suitable for production use.
 
 **Q: How many document types does the Builder support?**
 A: 25 document types including Offer Letters, Job Descriptions, Company Policies, Employment Contracts, Termination Letters, Warning Letters, and more — plus an "Other (Custom)" option for any document type not listed. Each type has context-aware placeholder examples.
 
 **Q: Can I generate documents in other languages?**
-A: Yes! All 4 tools support multi-language output. Choose from English, Spanish, French, German, Mandarin Chinese, Portuguese, Arabic, and Hindi via the language selector.
+A: Yes! All 4 tools support multi-language output. Choose from English, Spanish, French, German, Mandarin Chinese, Portuguese, Arabic, and Hindi via the global language selector in the sidebar.
 
 **Q: What is the Assistant page?**
 A: The Assistant is a freeform HR Copilot. You can ask HR questions, draft workplace emails, or upload a document and ask questions about its contents ("Chat with a Document").

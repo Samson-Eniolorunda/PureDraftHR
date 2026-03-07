@@ -55,7 +55,7 @@ export const MarkdownRenderer = React.memo(function MarkdownRenderer({
           table: ({ children, ...props }) => (
             <div className="overflow-x-auto -mx-1 sm:mx-0">
               <table
-                className="w-full border-collapse border border-border my-4 min-w-[400px]"
+                className="w-full border-collapse border border-border my-4 min-w-[280px]"
                 {...props}
               >
                 {children}

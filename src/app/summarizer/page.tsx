@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useChat } from "ai/react";
 import { useRouter } from "next/navigation";
 import {
@@ -19,10 +19,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { ExportButtons } from "@/components/export-buttons";
 import { DocumentFormFooter } from "@/components/document-form-footer";
-import {
-  LanguageSelector,
-  type LanguageValue,
-} from "@/components/language-selector";
+import { type LanguageValue } from "@/components/language-selector";
 import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
 import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
 import {
@@ -32,6 +29,7 @@ import {
   Paintbrush,
   FileStack,
   FileText,
+  Send,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -52,6 +50,19 @@ export default function SummarizerPage() {
     { name: string; text: string }[]
   >([]);
   const resultRef = useRef<HTMLDivElement>(null);
+
+  // Sync language from sidebar via custom event + localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("puredraft_language");
+    if (saved) setLanguage(saved as LanguageValue);
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as LanguageValue;
+      if (detail) setLanguage(detail);
+    };
+    window.addEventListener("puredraft-language-change", handler);
+    return () =>
+      window.removeEventListener("puredraft-language-change", handler);
+  }, []);
 
   const { messages, isLoading, append, setMessages, stop } = useChat({
     api: "/api/chat",
@@ -203,12 +214,7 @@ export default function SummarizerPage() {
               </TabsContent>
             </Tabs>
 
-            {/* Language selector */}
-            <LanguageSelector
-              value={language}
-              onChange={setLanguage}
-              disabled={isLoading}
-            />
+            {/* Language selector removed — controlled globally from sidebar */}
 
             {/* Consent & Reference Template Footer */}
             <DocumentFormFooter
@@ -289,18 +295,15 @@ export default function SummarizerPage() {
                       </div>
                     )}
 
-                    {/* Refine Summary */}
+                    {/* Refine Summary — chat-style input */}
                     {!isLoading && resultContent && (
-                      <div className="mt-6 space-y-2 border-t pt-4">
-                        <Label className="text-sm font-medium">
-                          Refine Summary
-                        </Label>
+                      <div className="mt-4 relative">
                         <Textarea
-                          rows={2}
+                          rows={1}
                           value={refineText}
                           onChange={(e) => setRefineText(e.target.value)}
-                          placeholder='e.g. "Focus more on the action items" or "Add key metrics"…'
-                          className="resize-y min-h-[60px]"
+                          placeholder="Ask to refine this summary…"
+                          className="resize-none min-h-[42px] max-h-[120px] pr-11 rounded-xl text-sm"
                           onKeyDown={(e) => {
                             if (e.key === "Enter" && !e.shiftKey) {
                               e.preventDefault();
@@ -309,13 +312,13 @@ export default function SummarizerPage() {
                           }}
                         />
                         <Button
-                          size="sm"
-                          onClick={handleRefine}
+                          type="button"
+                          size="icon"
                           disabled={!refineText.trim()}
-                          className="gap-2"
+                          onClick={handleRefine}
+                          className="absolute right-1.5 bottom-1.5 h-7 w-7 rounded-lg"
                         >
-                          <Wand2 className="h-4 w-4" />
-                          Refine
+                          <Send className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     )}

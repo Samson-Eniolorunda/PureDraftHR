@@ -174,7 +174,9 @@ export function DropZone({ onTextExtracted, disabled }: DropZoneProps) {
         <>
           {getFileIcon(fileName)}
           <div className="flex flex-col items-center gap-0.5">
-            <p className="text-sm font-medium">{fileName}</p>
+            <p className="text-sm font-medium truncate max-w-[200px] sm:max-w-xs">
+              {fileName}
+            </p>
             {fileSize !== null && (
               <p className="text-xs text-muted-foreground">
                 {formatFileSize(fileSize)}
@@ -212,13 +214,15 @@ export function DropZone({ onTextExtracted, disabled }: DropZoneProps) {
           <p className="text-sm font-medium">
             Drop a file here or click to upload
           </p>
-          <p className="text-xs text-muted-foreground whitespace-nowrap">
+          <p className="text-xs text-muted-foreground text-center">
             Supported: .txt, .pdf, .docx, .xlsx, .csv (max 25 MB)
           </p>
         </>
       )}
 
-      {error && <p className="text-xs text-destructive mt-1">{error}</p>}
+      {error && (
+        <p className="text-xs text-destructive mt-1 break-words">{error}</p>
+      )}
     </div>
   );
 }

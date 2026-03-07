@@ -59,6 +59,8 @@
   body {
     @apply bg-background text-foreground;
     -webkit-tap-highlight-color: transparent;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
   }
 }
 

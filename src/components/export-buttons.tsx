@@ -17,6 +17,7 @@ import {
   Share2,
   Volume2,
   VolumeX,
+  Paintbrush,
 } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import type { DocumentStyling } from "@/hooks/useDocumentStyling";
@@ -60,6 +61,8 @@ interface ExportButtonsProps {
   tool?: string;
   /** Document type (for save) */
   docType?: string;
+  /** Optional callback to route content to the Formatter */
+  onFormat?: (content: string) => void;
 }
 
 export function ExportButtons({
@@ -68,6 +71,7 @@ export function ExportButtons({
   styling,
   tool,
   docType,
+  onFormat,
 }: ExportButtonsProps) {
   const { isSignedIn } = useAuth();
   const [copied, setCopied] = useState(false);
@@ -311,44 +315,20 @@ export function ExportButtons({
   if (!content) return null;
 
   return (
-    <div className="space-y-3 mt-4">
-      {/* Editable filename input */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2">
-        <Label
-          htmlFor="export-filename"
-          className="text-xs text-muted-foreground whitespace-nowrap flex items-center gap-1"
-        >
-          <Pencil className="h-3 w-3" />
-          File Name
-        </Label>
-        <Input
-          id="export-filename"
-          type="text"
-          value={exportFileName}
-          onChange={(e) => setExportFileName(e.target.value)}
-          placeholder={dynamicFilename}
-          className="h-8 text-sm flex-1 max-w-full sm:max-w-xs"
-        />
-      </div>
-
-      {/* Action row: Copy + Share + TTS + 3-dot menu */}
-      <div className="flex items-center gap-2">
+    <div className="mt-2">
+      {/* Action row: Copy icon + Share + TTS + 3-dot menu */}
+      <div className="flex items-center gap-1">
         <Button
-          variant="outline"
-          size="sm"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          title={copied ? "Copied!" : "Copy"}
           onClick={handleCopy}
-          className="gap-2"
         >
           {copied ? (
-            <>
-              <Check className="h-4 w-4 text-green-600" />
-              Copied!
-            </>
+            <Check className="h-4 w-4 text-green-600" />
           ) : (
-            <>
-              <Copy className="h-4 w-4" />
-              Copy
-            </>
+            <Copy className="h-4 w-4" />
           )}
         </Button>
         <Button
@@ -386,7 +366,21 @@ export function ExportButtons({
             <MoreVertical className="h-4 w-4" />
           </Button>
           {menuOpen && (
-            <div className="absolute right-0 top-full mt-1 bg-popover border border-border rounded-xl shadow-lg py-1 min-w-[160px] z-50">
+            <div className="absolute right-0 top-full mt-1 bg-popover border border-border rounded-xl shadow-lg py-1 min-w-[200px] z-50">
+              {/* File name */}
+              <div className="px-3 py-2 border-b border-border/50">
+                <label className="text-[10px] text-muted-foreground flex items-center gap-1 mb-1">
+                  <Pencil className="h-3 w-3" />
+                  File Name
+                </label>
+                <Input
+                  type="text"
+                  value={exportFileName}
+                  onChange={(e) => setExportFileName(e.target.value)}
+                  placeholder={dynamicFilename}
+                  className="h-7 text-xs"
+                />
+              </div>
               <button
                 type="button"
                 className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
@@ -426,6 +420,19 @@ export function ExportButtons({
                 Download Excel
               </button>
               <div className="my-1 border-t border-border/50" />
+              {onFormat && (
+                <button
+                  type="button"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
+                  onClick={() => {
+                    onFormat(content);
+                    setMenuOpen(false);
+                  }}
+                >
+                  <Paintbrush className="h-4 w-4" />
+                  Format
+                </button>
+              )}
               <button
                 type="button"
                 className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"

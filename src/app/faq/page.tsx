@@ -48,7 +48,7 @@ export default function FAQPage() {
     },
     {
       q: "Can I generate documents in other languages?",
-      a: "Yes. All four tools support multi-language output. Choose from English, Spanish, French, German, Mandarin Chinese, Portuguese, Arabic, or Hindi via the language selector.",
+      a: "Yes. All four tools support multi-language output. Choose from English, Spanish, French, German, Mandarin Chinese, Portuguese, Arabic, or Hindi via the language selector in the sidebar.",
     },
     {
       q: "What is the My Templates Library?",
@@ -101,38 +101,52 @@ export default function FAQPage() {
   ];
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8 text-gray-900 dark:text-gray-100">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight mb-2">
+    <div className="max-w-3xl mx-auto space-y-10">
+      {/* Hero header */}
+      <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-border/50 px-6 py-8 sm:px-8 sm:py-10">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
           Frequently Asked Questions
         </h1>
-        <p className="text-gray-500 dark:text-gray-400">
+        <p className="mt-2 text-sm text-muted-foreground">
           Got a question? We&apos;ve got answers. Learn more about how PureDraft
           HR works.
         </p>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {faqs.map((faq, index) => (
           <details
             key={index}
-            className="group border rounded-lg p-4 hover:bg-accent/50 transition-colors"
+            className="group rounded-xl border border-border/60 bg-card overflow-hidden transition-all hover:border-primary/30"
           >
-            <summary className="cursor-pointer font-semibold text-gray-900 dark:text-gray-100 group-open:text-primary">
-              {faq.q}
+            <summary className="cursor-pointer flex items-center justify-between gap-3 px-5 py-4 text-sm sm:text-base font-medium select-none group-open:text-primary transition-colors">
+              <span>{faq.q}</span>
+              <svg
+                className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
             </summary>
-            <p className="mt-4 text-sm text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line">
-              {faq.a}
-            </p>
+            <div className="px-5 pb-4">
+              <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
+                {faq.a}
+              </p>
+            </div>
           </details>
         ))}
       </div>
 
-      <div className="border-t pt-8">
-        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
-          Still have questions?
-        </h2>
-        <p className="text-gray-700 dark:text-gray-300">
+      <section className="rounded-xl border border-border/60 bg-card p-6 text-center space-y-2">
+        <h2 className="text-lg font-semibold">Still have questions?</h2>
+        <p className="text-sm text-muted-foreground">
           If you have any other questions or need support, please{" "}
           <Link
             href="/contact"
@@ -142,7 +156,7 @@ export default function FAQPage() {
           </Link>
           .
         </p>
-      </div>
+      </section>
     </div>
   );
 }

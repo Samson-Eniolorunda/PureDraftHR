@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -13,8 +14,11 @@ import {
   LayoutDashboard,
   LogIn,
   Loader2,
+  Globe,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LANGUAGES, type LanguageValue } from "@/components/language-selector";
 
 const ThemeToggleButton = dynamic(
   () => import("./theme-toggle-button").then((mod) => mod.ThemeToggleButton),
@@ -34,6 +38,21 @@ const NAV_ITEMS = [
 export function AppNav() {
   const pathname = usePathname();
   const { isSignedIn, isLoaded } = useAuth();
+  const [showLangPicker, setShowLangPicker] = useState(false);
+  const [language, setLanguage] = useState<LanguageValue>("English");
+
+  // Persist language choice to localStorage and broadcast via custom event
+  useEffect(() => {
+    const saved = localStorage.getItem("puredraft_language");
+    if (saved) setLanguage(saved as LanguageValue);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("puredraft_language", language);
+    window.dispatchEvent(
+      new CustomEvent("puredraft-language-change", { detail: language }),
+    );
+  }, [language]);
 
   return (
     <>
@@ -114,7 +133,40 @@ export function AppNav() {
             )}
             <ThemeToggleButton />
           </div>
-          <div className="flex items-center justify-center gap-3 mt-2 text-[11px] text-muted-foreground">
+          {/* Language selector */}
+          <div className="relative mt-2">
+            <button
+              type="button"
+              onClick={() => setShowLangPicker(!showLangPicker)}
+              className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors rounded-md px-1.5 py-1 hover:bg-accent/50 w-full justify-center"
+            >
+              <Globe className="h-3 w-3" />
+              {language}
+              <ChevronDown className="h-2.5 w-2.5" />
+            </button>
+            {showLangPicker && (
+              <div className="absolute bottom-full left-0 mb-1 bg-popover border border-border rounded-xl shadow-lg p-1 min-w-[160px] z-50">
+                {LANGUAGES.map((lang) => (
+                  <button
+                    key={lang.value}
+                    type="button"
+                    onClick={() => {
+                      setLanguage(lang.value);
+                      setShowLangPicker(false);
+                    }}
+                    className={`w-full text-left text-sm rounded-lg px-3 py-1.5 transition-colors ${
+                      language === lang.value
+                        ? "bg-primary/10 text-primary font-medium"
+                        : "text-foreground hover:bg-accent"
+                    }`}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="flex items-center justify-center gap-2 mt-2 text-[10px] text-muted-foreground flex-wrap">
             <Link
               href="/privacy"
               className="hover:text-foreground transition-colors"
@@ -132,6 +184,12 @@ export function AppNav() {
               className="hover:text-foreground transition-colors"
             >
               FAQ
+            </Link>
+            <Link
+              href="/contact"
+              className="hover:text-foreground transition-colors"
+            >
+              Contact
             </Link>
           </div>
         </div>
@@ -162,7 +220,9 @@ export function AppNav() {
                     active && "stroke-[2.5] scale-110",
                   )}
                 />
-                <span className={cn(active && "font-semibold")}>{label}</span>
+                <span className={cn("truncate", active && "font-semibold")}>
+                  {label}
+                </span>
               </Link>
             );
           })}

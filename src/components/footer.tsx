@@ -65,7 +65,7 @@ export function Footer() {
         {/* Mobile: Centered stack (Links | Contact | Copyright) */}
         <div className="md:hidden flex flex-col items-center gap-4">
           {/* Links */}
-          <div className="flex items-center gap-6 justify-center flex-wrap">
+          <div className="flex items-center gap-4 justify-center flex-wrap">
             <Link
               href="/privacy"
               className="hover:text-foreground transition-colors"
