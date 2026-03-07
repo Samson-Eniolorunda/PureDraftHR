@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { DropZone } from "@/components/drop-zone";
@@ -15,15 +15,28 @@ interface DualInputProps {
   onTextReady: (text: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  /** Optional pre-filled text (e.g. from another page) */
+  initialText?: string;
 }
 
 export function DualInput({
   onTextReady,
   disabled,
   placeholder = "Paste your text here…",
+  initialText,
 }: DualInputProps) {
-  const [pastedText, setPastedText] = useState("");
+  const [pastedText, setPastedText] = useState(initialText ?? "");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const initialApplied = useRef(false);
+
+  // Auto-switch to paste tab and prefill when initialText is provided
+  useEffect(() => {
+    if (initialText && !initialApplied.current) {
+      initialApplied.current = true;
+      setPastedText(initialText);
+      onTextReady(initialText);
+    }
+  }, [initialText, onTextReady]);
 
   const handlePasteChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -51,7 +64,7 @@ export function DualInput({
   };
 
   return (
-    <Tabs defaultValue="upload" className="w-full">
+    <Tabs defaultValue={initialText ? "paste" : "upload"} className="w-full">
       <TabsList>
         <TabsTrigger value="upload" className="gap-2">
           <Upload className="h-4 w-4" />

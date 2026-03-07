@@ -6,7 +6,11 @@ All notable changes to PureDraft HR will be documented in this file.
 
 ### Added
 
-- � **Contact Us link in sidebar**: Footer links now include Contact alongside Privacy, Terms, and FAQ
+- ✨ **Powered by Google Gemini**: Attribution badge in desktop sidebar footer and mobile More panel
+- 📱 **Mobile "More" tab**: New bottom-nav tab with language picker, theme toggle, Privacy/Terms/FAQ/Contact links, and Gemini attribution
+- 🏷️ **AI Output Language label**: Sidebar and mobile More panel now show "AI Output Language" above the language chip picker
+- 🎤 **Language-aware voice input**: Speech recognition now uses the selected AI output language locale (via LANG_TO_LOCALE map) with improved error handling
+- 📄 **Builder document templates expanded**: Added Interview Notes, Meeting Minutes, Policy Draft, Daily Report, Training Summary, and Disciplinary Notice to the Builder — each with contextual placeholder examples- � **Contact Us link in sidebar**: Footer links now include Contact alongside Privacy, Terms, and FAQ
 - 🌍 **Global language selector in sidebar**: Single language picker in the sidebar footer that applies to all tools (Builder, Formatter, Summarizer, Assistant) via localStorage + CustomEvent sync — replaces per-page language selectors
 - 🎤 **Voice-to-text mic button**: Mic icon beside the Send button on the Assistant page using the Web Speech API
 - 💬 **ChatGPT/Gemini-style Assistant UX**: Full chat bubble interface with message history, typing indicator, suggestion chips, pinned input bar, and "New Chat" button
@@ -27,6 +31,14 @@ All notable changes to PureDraft HR will be documented in this file.
 
 ### Changed
 
+- ⏹️ **Stop replaces Send button**: Send button swaps to a red StopCircle icon while the AI is generating — replaces the old "Stop generating" text button
+- 📥 **Filename input on download click**: PDF/Word/Excel filename input now appears only after clicking a download type — with Back and Download buttons instead of an always-visible filename field
+- 📧 **Email provider dropdown redesigned**: Raw `<select>` replaced with the custom `Select` component matching the document design; "Default Email App" moved to first position
+- 🏗️ **Builder: "Document Type" → "Document Template"**: Renamed the selector label and expanded the dropdown from 25 to 31 types
+- 📝 **Formatter: templates removed**: Removed the template selector entirely — Formatter now focuses solely on AI-powered restructuring of uploaded/pasted text
+- 🔗 **Format routes to Formatter**: "Format" action in the export menu sends the document to the Formatter via localStorage + `initialText` prop on DualInput
+- 💬 **Assistant: Enter for newlines only**: Removed Enter-to-send — messages are sent via the Send button; Enter now inserts newlines in the chat input
+- 💬 **Assistant: shorter placeholder**: Textarea placeholder changed to "Message PureDraft..."
 - ✨ **Export menu redesigned**: Filename input and Format/Download/Email/Save actions moved into a 3-dot dropdown menu; Copy button is icon-only alongside Share and Text-to-Speech icons
 - 💬 **Refine Document as chat input**: "Refine Document" section replaced with a compact chat-style textarea with an embedded Send button (Builder, Formatter, Summarizer)
 - 📱 **Mobile chat input fixed**: Chat input bar always visible above keyboard on mobile; AI disclaimer always visible below messages
@@ -48,7 +60,11 @@ All notable changes to PureDraft HR will be documented in this file.
 
 ### Fixed
 
-- 🔧 Service Worker message listener to prevent "message channel closed" errors
+- � **File types text no-wrap**: "Supported: .txt, .pdf, .docx, .xlsx, .csv (max 25 MB)" no longer wraps awkwardly on mobile (whitespace-nowrap)
+- 📱 **Builder key details placeholder**: Placeholder text now uses smaller font on mobile for readability (text-xs sm:text-sm)
+- 📱 **Assistant page scroll**: Added overflow-hidden on container and overscroll-contain on messages area to prevent body scroll bleed on mobile
+- 💬 **Assistant textarea scrollbar**: Hidden scrollbar on the chat input textarea (scrollbar-none)
+- �🔧 Service Worker message listener to prevent "message channel closed" errors
 - 📱 Mobile textarea keyboard coverage with focus-scroll delay
 - 🔍 Favicon caching on Vercel with cache-bust query params
 - 🧩 Font Family dropdown group parsing bug

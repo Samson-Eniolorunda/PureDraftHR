@@ -43,11 +43,23 @@ function createSpeechRecognition() {
     continuous: boolean;
     onresult: ((e: { results: SpeechRecognitionResultList }) => void) | null;
     onend: (() => void) | null;
-    onerror: (() => void) | null;
+    onerror: ((e: { error: string }) => void) | null;
     start: () => void;
     stop: () => void;
   })();
 }
+
+/* ── Language → BCP-47 locale map (for speech recognition) ── */
+const LANG_TO_LOCALE: Record<string, string> = {
+  English: "en-US",
+  Spanish: "es-ES",
+  French: "fr-FR",
+  German: "de-DE",
+  Mandarin: "zh-CN",
+  Portuguese: "pt-BR",
+  Arabic: "ar-SA",
+  Hindi: "hi-IN",
+};
 
 /* ------------------------------------------------------------------ */
 /* /assistant — ChatGPT / Gemini-style Chat UX                       */
@@ -195,16 +207,6 @@ export default function AssistantPage() {
     }
   }, [userPrompt, isLoading, append]);
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        handleSend();
-      }
-    },
-    [handleSend],
-  );
-
   const handleNewChat = useCallback(() => {
     setMessages([]);
     setStreamError(null);
@@ -231,7 +233,7 @@ export default function AssistantPage() {
       setStreamError("Speech recognition is not supported in this browser.");
       return;
     }
-    recognition.lang = "en-US";
+    recognition.lang = LANG_TO_LOCALE[language] || "en-US";
     recognition.interimResults = false;
     recognition.continuous = false;
     recognition.onresult = (event: {
@@ -244,11 +246,20 @@ export default function AssistantPage() {
       }
     };
     recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => setIsListening(false);
+    recognition.onerror = (event: { error: string }) => {
+      setIsListening(false);
+      if (event.error === "not-allowed") {
+        setStreamError(
+          "Microphone access denied. Please allow microphone permission.",
+        );
+      } else if (event.error !== "no-speech" && event.error !== "aborted") {
+        setStreamError("Voice input error: " + event.error);
+      }
+    };
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
-  }, [isListening]);
+  }, [isListening, language]);
 
   // Sync language from sidebar via custom event + localStorage
   useEffect(() => {
@@ -265,7 +276,7 @@ export default function AssistantPage() {
   }, []);
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-9.5rem)] md:h-[calc(100dvh-3rem)] max-w-3xl mx-auto">
+    <div className="flex flex-col h-[calc(100dvh-9.5rem)] md:h-[calc(100dvh-3rem)] max-w-3xl mx-auto overflow-hidden">
       {/* ── Top Bar ── */}
       <div className="flex items-center justify-between px-1 py-3 border-b border-border/50 shrink-0">
         <div className="flex items-center gap-2.5">
@@ -297,7 +308,7 @@ export default function AssistantPage() {
       </div>
 
       {/* ── Chat Messages Area ── */}
-      <div className="flex-1 overflow-y-auto px-1 py-4 space-y-1 scrollbar-none md:scrollbar-thin">
+      <div className="flex-1 overflow-y-auto overscroll-contain px-1 py-4 space-y-1 scrollbar-none md:scrollbar-thin">
         {/* Empty state */}
         {!hasMessages && !isLoading && (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
@@ -422,21 +433,6 @@ export default function AssistantPage() {
           </div>
         )}
 
-        {/* Stop generating button */}
-        {isLoading && latestResponse && (
-          <div className="flex justify-center py-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 rounded-full"
-              onClick={() => stop()}
-            >
-              <StopCircle className="h-3.5 w-3.5" />
-              Stop generating
-            </Button>
-          </div>
-        )}
-
         {/* Error */}
         {streamError && (
           <div className="mx-auto max-w-md rounded-xl border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3 flex items-center justify-between">
@@ -511,14 +507,13 @@ export default function AssistantPage() {
               rows={1}
               value={userPrompt}
               onChange={handleTextareaChange}
-              onKeyDown={handleKeyDown}
               placeholder={
                 uploadedFileName
                   ? `Ask about "${uploadedFileName}"...`
-                  : "Message PureDraft Assistant..."
+                  : "Message PureDraft..."
               }
               disabled={isLoading}
-              className="resize-none min-h-[44px] max-h-[200px] pr-20 rounded-xl"
+              className="resize-none min-h-[44px] max-h-[200px] overflow-y-auto scrollbar-none pr-20 rounded-xl"
             />
             <div className="absolute right-1.5 bottom-1.5 flex items-center gap-1">
               <Button
@@ -536,15 +531,27 @@ export default function AssistantPage() {
                   <Mic className="h-4 w-4" />
                 )}
               </Button>
-              <Button
-                type="button"
-                size="icon"
-                disabled={!userPrompt.trim() || isLoading}
-                onClick={handleSend}
-                className="h-8 w-8 rounded-lg"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+              {isLoading ? (
+                <Button
+                  type="button"
+                  size="icon"
+                  onClick={() => stop()}
+                  className="h-8 w-8 rounded-lg bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                  title="Stop generating"
+                >
+                  <StopCircle className="h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  size="icon"
+                  disabled={!userPrompt.trim()}
+                  onClick={handleSend}
+                  className="h-8 w-8 rounded-lg"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
         </div>

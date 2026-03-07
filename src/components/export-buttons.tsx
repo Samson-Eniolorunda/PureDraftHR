@@ -259,6 +259,9 @@ export function ExportButtons({
   const [speaking, setSpeaking] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [pendingDownload, setPendingDownload] = useState<
+    "pdf" | "docx" | "excel" | null
+  >(null);
 
   // Close menu on outside click
   useEffect(() => {
@@ -266,6 +269,7 @@ export function ExportButtons({
     const handler = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
+        setPendingDownload(null);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -367,118 +371,152 @@ export function ExportButtons({
           </Button>
           {menuOpen && (
             <div className="absolute right-0 top-full mt-1 bg-popover border border-border rounded-xl shadow-lg py-1 min-w-[200px] z-50">
-              {/* File name */}
-              <div className="px-3 py-2 border-b border-border/50">
-                <label className="text-[10px] text-muted-foreground flex items-center gap-1 mb-1">
-                  <Pencil className="h-3 w-3" />
-                  File Name
-                </label>
-                <Input
-                  type="text"
-                  value={exportFileName}
-                  onChange={(e) => setExportFileName(e.target.value)}
-                  placeholder={dynamicFilename}
-                  className="h-7 text-xs"
-                />
-              </div>
-              <button
-                type="button"
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
-                onClick={() => {
-                  handlePdfExport();
-                  setMenuOpen(false);
-                }}
-              >
-                <Download className="h-4 w-4" />
-                Download PDF
-              </button>
-              <button
-                type="button"
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
-                onClick={() => {
-                  handleDocxExport();
-                  setMenuOpen(false);
-                }}
-              >
-                <Download className="h-4 w-4" />
-                Download Word
-              </button>
-              <button
-                type="button"
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
-                onClick={() => {
-                  handleExcelExport();
-                  setMenuOpen(false);
-                }}
-                title={
-                  hasTable
-                    ? "Export table data to Excel"
-                    : "Export text to Excel"
-                }
-              >
-                <FileSpreadsheet className="h-4 w-4" />
-                Download Excel
-              </button>
-              <div className="my-1 border-t border-border/50" />
-              {onFormat && (
-                <button
-                  type="button"
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
-                  onClick={() => {
-                    onFormat(content);
-                    setMenuOpen(false);
-                  }}
-                >
-                  <Paintbrush className="h-4 w-4" />
-                  Format
-                </button>
-              )}
-              <button
-                type="button"
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
-                onClick={() => {
-                  setEmailModalOpen(true);
-                  setMenuOpen(false);
-                }}
-              >
-                <Mail className="h-4 w-4" />
-                Email
-              </button>
-              {isSignedIn && tool && (
-                <button
-                  type="button"
-                  disabled={saving}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors disabled:opacity-50"
-                  onClick={async () => {
-                    setSaving(true);
-                    try {
-                      const res = await fetch("/api/documents", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          title: resolvedFilename,
-                          content,
-                          tool,
-                          docType,
-                        }),
-                      });
-                      if (!res.ok) {
-                        const data = await res.json();
-                        toast.error(data.error || "Failed to save document.");
-                        return;
+              {/* Filename rename step — shown only after picking a download type */}
+              {pendingDownload ? (
+                <div className="px-3 py-2.5 space-y-2">
+                  <label className="text-[10px] text-muted-foreground flex items-center gap-1">
+                    <Pencil className="h-3 w-3" />
+                    File Name
+                  </label>
+                  <Input
+                    type="text"
+                    value={exportFileName}
+                    onChange={(e) => setExportFileName(e.target.value)}
+                    placeholder={dynamicFilename}
+                    className="h-7 text-xs"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        if (pendingDownload === "pdf") handlePdfExport();
+                        else if (pendingDownload === "docx") handleDocxExport();
+                        else if (pendingDownload === "excel")
+                          handleExcelExport();
+                        setPendingDownload(null);
+                        setMenuOpen(false);
                       }
-                      toast.success("Document saved!");
-                    } catch {
-                      toast.error("Failed to save document.");
-                    } finally {
-                      setSaving(false);
-                      setMenuOpen(false);
+                    }}
+                  />
+                  <div className="flex gap-1.5">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex-1 h-7 text-xs"
+                      onClick={() => setPendingDownload(null)}
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="flex-1 h-7 text-xs gap-1"
+                      onClick={() => {
+                        if (pendingDownload === "pdf") handlePdfExport();
+                        else if (pendingDownload === "docx") handleDocxExport();
+                        else if (pendingDownload === "excel")
+                          handleExcelExport();
+                        setPendingDownload(null);
+                        setMenuOpen(false);
+                      }}
+                    >
+                      <Download className="h-3 w-3" />
+                      Download
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
+                    onClick={() => setPendingDownload("pdf")}
+                  >
+                    <Download className="h-4 w-4" />
+                    Download PDF
+                  </button>
+                  <button
+                    type="button"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
+                    onClick={() => setPendingDownload("docx")}
+                  >
+                    <Download className="h-4 w-4" />
+                    Download Word
+                  </button>
+                  <button
+                    type="button"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
+                    onClick={() => setPendingDownload("excel")}
+                    title={
+                      hasTable
+                        ? "Export table data to Excel"
+                        : "Export text to Excel"
                     }
-                  }}
-                >
-                  <Save className="h-4 w-4" />
-                  {saving ? "Saving…" : "Save"}
-                </button>
+                  >
+                    <FileSpreadsheet className="h-4 w-4" />
+                    Download Excel
+                  </button>
+                  <div className="my-1 border-t border-border/50" />
+                  {onFormat && (
+                    <button
+                      type="button"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
+                      onClick={() => {
+                        onFormat(content);
+                        setMenuOpen(false);
+                      }}
+                    >
+                      <Paintbrush className="h-4 w-4" />
+                      Format
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
+                    onClick={() => {
+                      setEmailModalOpen(true);
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <Mail className="h-4 w-4" />
+                    Email
+                  </button>
+                  {isSignedIn && tool && (
+                    <button
+                      type="button"
+                      disabled={saving}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors disabled:opacity-50"
+                      onClick={async () => {
+                        setSaving(true);
+                        try {
+                          const res = await fetch("/api/documents", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              title: resolvedFilename,
+                              content,
+                              tool,
+                              docType,
+                            }),
+                          });
+                          if (!res.ok) {
+                            const data = await res.json();
+                            toast.error(
+                              data.error || "Failed to save document.",
+                            );
+                            return;
+                          }
+                          toast.success("Document saved!");
+                        } catch {
+                          toast.error("Failed to save document.");
+                        } finally {
+                          setSaving(false);
+                          setMenuOpen(false);
+                        }
+                      }}
+                    >
+                      <Save className="h-4 w-4" />
+                      {saving ? "Saving…" : "Save"}
+                    </button>
+                  )}
+                </>
               )}
             </div>
           )}

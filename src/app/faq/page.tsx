@@ -40,7 +40,7 @@ export default function FAQPage() {
     },
     {
       q: "What tools are available?",
-      a: "There are four main tools:\n\u2022 Assistant \u2014 Ask HR questions, draft emails, chat with uploaded documents, and schedule meetings with Google Calendar / .ics export.\n\u2022 Builder \u2014 Generate complete HR documents from scratch across 25+ types, with optional Bulk CSV mode.\n\u2022 Formatter \u2014 Restructure messy text into professional documents using AI-powered reference template cloning.\n\u2022 Summarizer \u2014 Condense lengthy HR documents into concise summaries.",
+      a: "There are four main tools:\n\u2022 Assistant \u2014 Ask HR questions, draft emails, chat with uploaded documents, use voice-to-text input, and schedule meetings with Google Calendar / .ics export.\n\u2022 Builder \u2014 Generate complete HR documents from scratch across 31 document templates, with optional Bulk CSV mode.\n\u2022 Formatter \u2014 Upload or paste unstructured text and let AI restructure it into a clean, professional document.\n\u2022 Summarizer \u2014 Condense lengthy HR documents into concise summaries.",
     },
     {
       q: "What is the Smart Meeting Scheduler?",
@@ -59,8 +59,8 @@ export default function FAQPage() {
       a: "Yes. The Builder supports Bulk CSV Generation. Upload a CSV file where each row contains document-specific details, and the Builder will generate one document per row with a live progress bar.",
     },
     {
-      q: "What is the \u201cOther (Custom)\u201d document type?",
-      a: "Both the Builder and Formatter include an \u201cOther (Custom)\u201d option. If the document type or template you need isn\u2019t listed, select this option and type a custom name \u2014 the AI will generate content accordingly.",
+      q: "What is the \u201cOther (Custom)\u201d document template?",
+      a: "The Builder includes an \u201cOther (Custom)\u201d option. If the document template you need isn\u2019t listed, select this option and type a custom name \u2014 the AI will generate content accordingly.",
     },
     {
       q: "Can I customize document styling?",

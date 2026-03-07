@@ -13,9 +13,9 @@ A full-stack web application that empowers HR teams to format, summarize, and ge
 #### 📋 **Formatter**
 
 - Convert messy, unstructured HR text into perfectly formatted markdown documents
-- Choose from 5 professional templates + **"Other (Custom)"** option for freeform template names
 - AI-powered restructuring with semantic understanding
-- Reference template cloning for exact layout mirroring
+- Upload or paste unstructured text — the AI formats it into a clean, professional document
+- Accepts pre-filled text from the Builder/Summarizer "Format" action for cross-tool workflows
 
 #### 📝 **Summarizer**
 
@@ -27,9 +27,9 @@ A full-stack web application that empowers HR teams to format, summarize, and ge
 #### 🏗️ **Builder**
 
 - Create professional HR documents from scratch using a 3-step wizard
-- Select document type, add key details, choose tone
-- **25 document types** supported (Offer Letters, Job Descriptions, Policies, Contracts, and more) + **"Other (Custom)"** option
-- **Dynamic placeholder examples** — context-aware suggestions for each document type
+- Select a **Document Template**, add key details, choose tone
+- **31 document templates** supported (Offer Letters, Job Descriptions, Policies, Contracts, Interview Notes, Meeting Minutes, Policy Draft, Daily Report, Training Summary, Disciplinary Notice, and more) + **"Other (Custom)"** option
+- **Dynamic placeholder examples** — context-aware suggestions for each document template
 - **Bulk CSV Generation** — upload a CSV file to batch-generate multiple documents at once with progress tracking
 - Streaming generation with real-time preview
 - Minimum skeleton loading duration (1.5s) for smooth UX
@@ -39,7 +39,8 @@ A full-stack web application that empowers HR teams to format, summarize, and ge
 - Freeform **HR Copilot** — ask HR questions, draft workplace emails, get policy advice
 - **Chat with a Document** — upload a PDF, DOCX, or TXT file and ask questions about its contents
 - Styled output with full document styling modal support
-- Quick-send (Enter) or styled-send (Wand icon) modes
+- Send via button only (Enter inserts newlines); **Stop button** replaces Send while AI is generating
+- 🎤 **Voice-to-text** — mic button with language-aware speech recognition using the selected AI output language
 - **Smart Meeting Scheduler** — ask the AI to schedule a meeting and get a beautiful Meeting Card with "Add to Google Calendar" and "Download Outlook Invite (.ics)" buttons
 - Full export support (PDF, DOCX, Copy)
 
@@ -84,6 +85,8 @@ A full-stack web application that empowers HR teams to format, summarize, and ge
 - 🏠 "Add to Home Screen" on iOS & Android
 - 📴 Offline support with service worker
 - ⚡ Desktop sidebar + mobile bottom-tab navigation
+- 📱 **Mobile "More" tab** — language picker, theme toggle, Privacy/Terms/FAQ/Contact links, and Gemini attribution
+- ✨ **Powered by Google Gemini** — attribution displayed in sidebar and mobile More panel
 - 🎨 Beautiful light/dark theme with system/manual toggle
 
 ### 7. **Client-Side Export**
@@ -118,7 +121,7 @@ A full-stack web application that empowers HR teams to format, summarize, and ge
 ### 10. **File Import Support**
 
 - 📤 Drag-and-drop upload interface with success state (green checkmark + filename)
-- 📄 Supported formats: `.txt`, `.pdf`, `.docx`
+- 📄 Supported formats: `.txt`, `.pdf`, `.docx`, `.xlsx`, `.csv` (max 25 MB)
 - 🔍 Automatic text extraction via a lightweight extraction API
 - 📝 **Plain text reference input** — Textarea alternative to file upload for pasting reference templates
 - ❌ One-click file removal button to clear uploaded files
@@ -143,24 +146,24 @@ A full-stack web application that empowers HR teams to format, summarize, and ge
 
 ## 🏗️ Tech Stack
 
-| Layer               | Technology                                          |
-| ------------------- | --------------------------------------------------- |
-| **Framework**       | Next.js 15 (App Router)                             |
-| **Styling**         | Tailwind CSS + shadcn/ui                            |
-| **Theming**         | next-themes (light/dark/system toggle)              |
-| **AI/LLM**          | Vercel AI SDK + Google Gemini 2.5 Flash (100% Free) |
-| **Auth**            | Clerk (email/password + Google OAuth)               |
-| **Database**        | Supabase PostgreSQL + Prisma 7 ORM                  |
-| **Rate Limiting**   | Upstash Redis                                       |
+| Layer               | Technology                                                               |
+| ------------------- | ------------------------------------------------------------------------ |
+| **Framework**       | Next.js 15 (App Router)                                                  |
+| **Styling**         | Tailwind CSS + shadcn/ui                                                 |
+| **Theming**         | next-themes (light/dark/system toggle)                                   |
+| **AI/LLM**          | Vercel AI SDK + Google Gemini 2.5 Flash (100% Free)                      |
+| **Auth**            | Clerk (email/password + Google OAuth)                                    |
+| **Database**        | Supabase PostgreSQL + Prisma 7 ORM                                       |
+| **Rate Limiting**   | Upstash Redis                                                            |
 | **Email**           | Client-side provider URLs (Gmail, Outlook, etc.) + Resend (contact form) |
-| **Runtime**         | Node.js Runtime (API routes)                        |
-| **Export**          | html2pdf.js, docx, file-saver                       |
-| **File Parsing**    | mammoth (DOCX), pdf-parse (PDF), xlsx               |
-| **Icons**           | lucide-react                                        |
-| **Markdown**        | react-markdown                                      |
-| **Package Manager** | npm                                                 |
-| **Language**        | TypeScript (strict mode)                            |
-| **Deployment**      | Vercel (recommended)                                |
+| **Runtime**         | Node.js Runtime (API routes)                                             |
+| **Export**          | html2pdf.js, docx, file-saver                                            |
+| **File Parsing**    | mammoth (DOCX), pdf-parse (PDF), xlsx                                    |
+| **Icons**           | lucide-react                                                             |
+| **Markdown**        | react-markdown                                                           |
+| **Package Manager** | npm                                                                      |
+| **Language**        | TypeScript (strict mode)                                                 |
+| **Deployment**      | Vercel (recommended)                                                     |
 
 ---
 

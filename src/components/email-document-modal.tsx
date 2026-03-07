@@ -5,6 +5,7 @@ import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Mail, ExternalLink } from "lucide-react";
 
 interface EmailDocumentModalProps {
@@ -22,6 +23,14 @@ interface EmailProvider {
 }
 
 const EMAIL_PROVIDERS: EmailProvider[] = [
+  {
+    name: "Default Email App",
+    icon: "💻",
+    color:
+      "bg-gray-50 hover:bg-gray-100 border-gray-200 dark:bg-gray-800/50 dark:hover:bg-gray-800/70 dark:border-gray-700",
+    buildUrl: (to, subject, body) =>
+      `mailto:${to}?subject=${e(subject)}&body=${e(body)}`,
+  },
   {
     name: "Gmail",
     icon: "📧",
@@ -61,14 +70,6 @@ const EMAIL_PROVIDERS: EmailProvider[] = [
       "bg-violet-50 hover:bg-violet-100 border-violet-200 dark:bg-violet-950/30 dark:hover:bg-violet-950/50 dark:border-violet-800",
     buildUrl: (to, subject, body) =>
       `https://mail.proton.me/u/0/compose?to=${e(to)}&subject=${e(subject)}&body=${e(body)}`,
-  },
-  {
-    name: "Default Email App",
-    icon: "💻",
-    color:
-      "bg-gray-50 hover:bg-gray-100 border-gray-200 dark:bg-gray-800/50 dark:hover:bg-gray-800/70 dark:border-gray-700",
-    buildUrl: (to, subject, body) =>
-      `mailto:${to}?subject=${e(subject)}&body=${e(body)}`,
   },
 ];
 
@@ -162,18 +163,17 @@ export function EmailDocumentModal({
               <Mail className="h-4 w-4" />
               Email Provider
             </Label>
-            <select
+            <Select
               id="email-provider"
               value={selectedProvider}
               onChange={(ev) => setSelectedProvider(ev.target.value)}
-              className="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {EMAIL_PROVIDERS.map((p) => (
                 <option key={p.name} value={p.name}>
                   {p.icon} {p.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <Button onClick={handleSendEmail} className="w-full gap-2">
             <ExternalLink className="h-4 w-4" />

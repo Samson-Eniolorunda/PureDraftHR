@@ -49,10 +49,16 @@ const DOC_TYPES = [
   "Promotion Announcement",
   "Performance Review",
   "Incident Report",
+  "Interview Notes",
+  "Meeting Minutes",
+  "Policy Draft",
+  "Daily Report",
   "Training Plan",
+  "Training Summary",
   "Resignation Letter",
   "Attendance Policy",
   "Confidentiality Agreement",
+  "Disciplinary Notice",
   "FMLA Notice",
   "Exit Interview Form",
   "Salary Review Memo",
@@ -102,6 +108,18 @@ const DOC_TYPE_PLACEHOLDERS: Record<string, string> = {
     "- Employee: Sarah Williams\n- Period: Jan - Dec 2025\n- Rating: Exceeds Expectations\n- Key strengths and areas for development\n- Goals for next year",
   "Incident Report":
     "- Date of incident: February 20, 2026\n- Type: Workplace safety / harassment / property damage\n- Involved parties and witnesses\n- Description and impact\n- Recommended actions",
+  "Interview Notes":
+    "- Candidate: Maria Lopez\n- Position: Product Designer\n- Date: March 3, 2026\n- Interviewer(s): HR + Hiring Manager\n- Q&A highlights, impression, recommendation",
+  "Meeting Minutes":
+    "- Meeting title: Q1 Strategy Review\n- Date/Time: March 5, 2026, 10:00 AM\n- Attendees: Leadership team\n- Agenda items, decisions, action items with owners",
+  "Policy Draft":
+    "- Policy name: Remote Work Policy\n- Effective date: April 1, 2026\n- Purpose and scope\n- Key procedures and compliance requirements",
+  "Daily Report":
+    "- Date: March 7, 2026\n- Department: Operations\n- Tasks completed, in progress, blockers\n- Upcoming tasks for tomorrow",
+  "Training Summary":
+    "- Program: Leadership Development Workshop\n- Date: February 28, 2026\n- Participants: 15 managers\n- Topics covered, key learnings, follow-up actions",
+  "Disciplinary Notice":
+    "- Employee name: Kevin Park\n- Offense: Repeated policy violation\n- Policy violated: Attendance Policy\n- Consequence and appeal process",
   "Training Plan":
     "- Employee: Michael Torres\n- Skill gap: Advanced Excel\n- Training provider: LinkedIn Learning\n- Duration: 8 weeks\n- Success metrics and expectation",
   "Resignation Letter":
@@ -211,7 +229,8 @@ export default function BuilderPage() {
       if (detail) setLanguage(detail);
     };
     window.addEventListener("puredraft-language-change", handler);
-    return () => window.removeEventListener("puredraft-language-change", handler);
+    return () =>
+      window.removeEventListener("puredraft-language-change", handler);
   }, []);
 
   // Bulk CSV state
@@ -462,7 +481,7 @@ Key Details: ${keyDetails}`,
             <CardTitle className="text-lg">
               Step {step} of 3 —{" "}
               {step === 1
-                ? "Document Type"
+                ? "Document Template"
                 : step === 2
                   ? "Key Details"
                   : "Tone & Generate"}
@@ -493,7 +512,7 @@ Key Details: ${keyDetails}`,
             {step === 1 && (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="doc-type">Document Type</Label>
+                  <Label htmlFor="doc-type">Document Template</Label>
                   <Select
                     id="doc-type"
                     value={docType}
@@ -642,7 +661,7 @@ Key Details: ${keyDetails}`,
                     DOC_TYPE_PLACEHOLDERS[resolvedDocType] ||
                     "- Provide relevant details for the document\u2026"
                   }`}
-                  className="resize-y min-h-[150px]"
+                  className="resize-y min-h-[150px] text-xs sm:text-sm placeholder:text-xs sm:placeholder:text-sm placeholder:leading-relaxed"
                 />
               </div>
             )}

@@ -10,9 +10,6 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DualInput } from "@/components/dual-input";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
@@ -27,26 +24,9 @@ import { useDocumentStyling } from "@/hooks/useDocumentStyling";
 import { Loader2, Wand2, StopCircle, Send } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
-/*  Template options for the formatter                                 */
-/* ------------------------------------------------------------------ */
-const TEMPLATES = [
-  { value: "incident-report", label: "Incident Report" },
-  { value: "interview-notes", label: "Interview Notes" },
-  { value: "meeting-minutes", label: "Meeting Minutes" },
-  { value: "performance-review", label: "Performance Review" },
-  { value: "policy-draft", label: "Policy Draft" },
-  { value: "daily-report", label: "Daily Report" },
-  { value: "employee-handbook", label: "Employee Handbook" },
-  { value: "termination-letter", label: "Termination Letter" },
-  { value: "training-summary", label: "Training Summary" },
-  { value: "disciplinary-notice", label: "Disciplinary Notice" },
-  { value: "other-custom", label: "Other (Custom)" },
-] as const;
-
-/* ------------------------------------------------------------------ */
 /*  /formatter — AI-powered HR document formatter                      */
 /*                                                                     */
-/*  User picks a template, provides messy text → gets structured doc   */
+/*  User provides messy text → gets structured doc                     */
 /* ------------------------------------------------------------------ */
 export default function FormatterPage() {
   const [inputText, setInputText] = useState("");
@@ -65,13 +45,21 @@ export default function FormatterPage() {
   } = useDocumentStyling();
   const [referenceText, setReferenceText] = useState("");
   const [isConsented, setIsConsented] = useState(false);
-  const [template, setTemplate] = useState<string>(TEMPLATES[0].value);
-  const [customTemplate, setCustomTemplate] = useState("");
   const [language, setLanguage] = useState<LanguageValue>("English");
   const [showStylingModal, setShowStylingModal] = useState(false);
   const [refineText, setRefineText] = useState("");
   const [streamError, setStreamError] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
+
+  // Pick up content routed from other pages (e.g. Format button)
+  const [prefillText, setPrefillText] = useState<string | undefined>();
+  useEffect(() => {
+    const payload = localStorage.getItem("puredraft_formatter_payload");
+    if (payload) {
+      setPrefillText(payload);
+      localStorage.removeItem("puredraft_formatter_payload");
+    }
+  }, []);
 
   // Sync language from sidebar via custom event + localStorage
   useEffect(() => {
@@ -82,20 +70,14 @@ export default function FormatterPage() {
       if (detail) setLanguage(detail);
     };
     window.addEventListener("puredraft-language-change", handler);
-    return () => window.removeEventListener("puredraft-language-change", handler);
+    return () =>
+      window.removeEventListener("puredraft-language-change", handler);
   }, []);
-
-  /** Resolved template — custom string or dropdown value */
-  const resolvedTemplate =
-    template === "other-custom" && customTemplate.trim()
-      ? customTemplate.trim()
-      : template;
 
   const { messages, isLoading, append, setMessages, stop } = useChat({
     api: "/api/chat",
     body: {
       tool: "formatter",
-      template: resolvedTemplate,
       referenceText: referenceText || undefined,
       language: language !== "English" ? language : undefined,
     },
@@ -135,13 +117,13 @@ export default function FormatterPage() {
     setMessages([]);
     append({
       role: "user",
-      content: `Template: ${resolvedTemplate}\n\nRaw text to format:\n\n${inputText}`,
+      content: `Raw text to format:\n\n${inputText}`,
     });
 
     setTimeout(() => {
       resultRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 300);
-  }, [inputText, append, setMessages, resolvedTemplate]);
+  }, [inputText, append, setMessages]);
 
   /** Send a refinement follow-up */
   const handleRefine = useCallback(() => {
@@ -169,8 +151,8 @@ export default function FormatterPage() {
           </h1>
         </div>
         <p className="mt-2 text-muted-foreground max-w-lg mx-auto sm:mx-0">
-          Turn messy notes into perfectly structured HR documents. Pick a
-          template, provide your text, and let AI do the formatting.
+          Turn messy notes into perfectly structured HR documents. Provide your
+          text and let AI do the formatting.
         </p>
       </div>
 
@@ -181,52 +163,16 @@ export default function FormatterPage() {
           <CardHeader>
             <CardTitle className="text-lg">Input</CardTitle>
             <CardDescription>
-              Select a template and upload or paste your unstructured text.
+              Upload or paste your unstructured text to format.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Template selector */}
-            <div className="space-y-2">
-              <Label htmlFor="template-select">Document Template</Label>
-              <Select
-                id="template-select"
-                value={template}
-                onChange={(e) => {
-                  setTemplate(e.target.value);
-                  if (e.target.value !== "other-custom") setCustomTemplate("");
-                }}
-                disabled={isLoading}
-              >
-                {TEMPLATES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </Select>
-            </div>
-
-            {/* Custom template input */}
-            {template === "other-custom" && (
-              <div className="space-y-2">
-                <Label htmlFor="custom-template">Custom Template Title</Label>
-                <Input
-                  id="custom-template"
-                  type="text"
-                  value={customTemplate}
-                  onChange={(e) => setCustomTemplate(e.target.value)}
-                  placeholder="Enter custom document template name (e.g., Weekly Status Report)..."
-                  className="text-sm"
-                />
-              </div>
-            )}
-
-            {/* Language selector removed — controlled globally from sidebar */}
-
             {/* Dual input: upload or paste */}
             <DualInput
               onTextReady={setInputText}
               disabled={isLoading}
               placeholder="Paste the messy/unstructured text you want formatted…"
+              initialText={prefillText}
             />
 
             {/* Consent & Reference Template Footer */}

@@ -214,7 +214,7 @@ export function DropZone({ onTextExtracted, disabled }: DropZoneProps) {
           <p className="text-sm font-medium">
             Drop a file here or click to upload
           </p>
-          <p className="text-xs text-muted-foreground text-center">
+          <p className="text-xs text-muted-foreground text-center whitespace-nowrap">
             Supported: .txt, .pdf, .docx, .xlsx, .csv (max 25 MB)
           </p>
         </>
