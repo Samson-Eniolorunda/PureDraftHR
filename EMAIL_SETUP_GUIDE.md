@@ -1,43 +1,21 @@
 # PureDraft HR — Email Setup Guide
 
-All steps needed to get `support@puredrafthr.btbcoder.site` working for sending, receiving, and replying.
+All steps needed to get `support@puredrafthr.btbcoder.site` working for receiving emails and replying professionally.
+
+> **Note on Resend free plan**: Resend's free tier only allows 1 verified domain, which is already in use by another project. Contact form notifications will arrive from `onboarding@resend.dev` (only you see this). Users on the website see `support@puredrafthr.btbcoder.site` and your replies go out as `support@` — your personal email is never exposed. If you upgrade Resend in the future, verify `puredrafthr.btbcoder.site` to send from `support@` directly.
 
 ---
 
 ## Prerequisites
 
 - **DNS Provider**: Namecheap (default nameservers) for `btbcoder.site`
-- **Transactional Email**: Resend (already set up, API key in `.env.local`)
+- **Transactional Email**: Resend (free plan — 1 domain limit, API key in `.env.local`)
 - **Auth**: Clerk (free plan — custom email templates not available)
 - **Hosting**: Vercel
 
 ---
 
-## Step 1: Verify Domain in Resend
-
-This lets Resend send emails **from** `support@puredrafthr.btbcoder.site`.
-
-1. Go to [Resend Dashboard → Domains](https://resend.com/domains)
-2. Click **Add Domain**
-3. Enter: `puredrafthr.btbcoder.site`
-4. Resend will show you **3 DNS records** to add (SPF, DKIM, DMARC)
-5. Go to [Namecheap → Domain List → btbcoder.site → Advanced DNS](https://ap.www.namecheap.com/)
-6. Add each record Resend gave you. Typical records look like:
-
-| Type  | Host                                        | Value                                         |
-|-------|---------------------------------------------|-----------------------------------------------|
-| TXT   | `puredrafthr`                               | `v=spf1 include:send.resend.com ~all`         |
-| CNAME | `resend._domainkey.puredrafthr`             | *(copy from Resend dashboard)*                |
-| TXT   | `_dmarc.puredrafthr`                        | `v=DMARC1; p=none;`                           |
-
-> **Note**: The exact records and host values will be shown in the Resend dashboard. Copy them exactly.
-
-7. Back in Resend, click **Verify** — it may take a few minutes for DNS to propagate
-8. Status should change to **Verified** ✅
-
----
-
-## Step 2: Add Vercel Environment Variable
+## Step 1: Add Vercel Environment Variable
 
 The app uses `RESEND_FROM_EMAIL` to set the sender address. You already added it to `.env.local` for local dev — now add it to Vercel for production.
 
@@ -54,7 +32,7 @@ The app uses `RESEND_FROM_EMAIL` to set the sender address. You already added it
 
 ---
 
-## Step 3: Set Up Inbound Email Forwarding (ImprovMX)
+## Step 2: Set Up Inbound Email Forwarding (ImprovMX)
 
 This forwards emails sent **to** `support@puredrafthr.btbcoder.site` into your Gmail inbox.
 
@@ -79,7 +57,7 @@ This forwards emails sent **to** `support@puredrafthr.btbcoder.site` into your G
 
 ---
 
-## Step 4: Gmail "Send As" (Reply as support@)
+## Step 3: Gmail "Send As" (Reply as support@)
 
 This lets you **reply** to emails from Gmail using `support@puredrafthr.btbcoder.site` so your personal Gmail stays hidden.
 
@@ -103,13 +81,13 @@ This lets you **reply** to emails from Gmail using `support@puredrafthr.btbcoder
 
 7. Click **Add Account**
 8. Gmail will send a confirmation code to `support@puredrafthr.btbcoder.site`
-   - This will be forwarded to your Gmail via ImprovMX (Step 3 must be done first!)
+   - This will be forwarded to your Gmail via ImprovMX (Step 2 must be done first!)
    - Enter the confirmation code
 9. Back in Settings → "Send mail as", click **make default** next to the support@ address (optional — makes it the default sender)
 
 ---
 
-## Step 5: Clerk Email Templates (Paid Plan Only)
+## Step 4: Clerk Email Templates (Paid Plan Only)
 
 Custom Clerk email templates require a **paid Clerk plan**. On the free plan, Clerk uses its default templates.
 
@@ -132,9 +110,8 @@ If you upgrade to a paid plan in the future:
 
 After completing all steps, test each one:
 
-- [ ] **Resend domain verified** — Resend Dashboard shows green "Verified"
 - [ ] **Vercel env var added** — `RESEND_FROM_EMAIL` shows in Vercel project settings
-- [ ] **Contact form email works** — Submit the contact form on the live site, check your Gmail for the branded email
+- [ ] **Contact form email works** — Submit the contact form on the live site, check your Gmail for the branded email (From will show `onboarding@resend.dev`)
 - [ ] **Inbound forwarding works** — Send an email to `support@puredrafthr.btbcoder.site`, it arrives in Gmail
 - [ ] **Reply as support@ works** — Reply to an email from Gmail, recipient sees `support@puredrafthr.btbcoder.site`
 
@@ -144,12 +121,9 @@ After completing all steps, test each one:
 
 All DNS records to add for `btbcoder.site` in Namecheap Advanced DNS:
 
-| Type  | Host                                        | Value                                         | Priority |
-|-------|---------------------------------------------|-----------------------------------------------|----------|
-| TXT   | `puredrafthr`                               | `v=spf1 include:send.resend.com ~all`         | —        |
-| CNAME | `resend._domainkey.puredrafthr`             | *(from Resend dashboard)*                     | —        |
-| TXT   | `_dmarc.puredrafthr`                        | `v=DMARC1; p=none;`                           | —        |
-| MX    | `puredrafthr`                               | `mx1.improvmx.com`                            | 10       |
-| MX    | `puredrafthr`                               | `mx2.improvmx.com`                            | 20       |
+| Type | Host           | Value                 | Priority |
+|------|----------------|-----------------------|----------|
+| MX   | `puredrafthr`  | `mx1.improvmx.com`   | 10       |
+| MX   | `puredrafthr`  | `mx2.improvmx.com`   | 20       |
 
-> **Note**: The DKIM CNAME value is unique to your account — copy it exactly from the Resend dashboard.
+> **Note**: If you upgrade Resend to a paid plan in the future, you'll also need to add SPF, DKIM, and DMARC records for `puredrafthr.btbcoder.site` (shown in the Resend dashboard when you verify the domain).
