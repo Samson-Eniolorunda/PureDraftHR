@@ -144,7 +144,7 @@ export function DropZone({ onTextExtracted, disabled }: DropZoneProps) {
       onDrop={onDrop}
       onClick={() => inputRef.current?.click()}
       className={cn(
-        "relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-8 cursor-pointer transition-all duration-200 min-h-[180px]",
+        "relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-6 sm:p-8 cursor-pointer transition-all duration-200 min-h-[160px] sm:min-h-[180px]",
         dragging
           ? "border-primary bg-primary/5 scale-[1.01] shadow-md"
           : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50",

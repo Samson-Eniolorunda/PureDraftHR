@@ -264,9 +264,16 @@ export default function AssistantPage() {
                     <Upload className="h-4 w-4" />
                     {isProcessingFile ? "Processing..." : "Upload Document"}
                   </Button>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    PDF, DOCX, TXT, XLSX, CSV
-                  </p>
+                  <div className="flex flex-wrap gap-1 mt-1 justify-center">
+                    {["PDF", "DOCX", "TXT", "XLSX", "CSV"].map((ext) => (
+                      <span
+                        key={ext}
+                        className="inline-block rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+                      >
+                        {ext}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

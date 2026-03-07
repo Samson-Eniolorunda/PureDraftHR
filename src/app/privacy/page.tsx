@@ -4,8 +4,7 @@ import Link from "next/link";
 
 export const metadata = {
   title: "Privacy Policy | PureDraft HR",
-  description:
-    "PureDraft HR Privacy Policy - No data storage, stateless processing",
+  description: "PureDraft HR Privacy Policy - How we handle your data",
   alternates: { canonical: "/privacy" },
 };
 
@@ -15,49 +14,83 @@ export default function PrivacyPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Privacy Policy</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Last updated: February 26, 2026
+          Last updated: March 7, 2026
         </p>
       </div>
 
-      {/* 1 ── Stateless Architecture */}
+      {/* 1 ── Overview */}
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
-          Stateless Architecture &amp; Data Privacy
+          Overview
         </h2>
         <p className="leading-relaxed">
-          <strong>PureDraft HR is a 100% stateless application.</strong> We do
-          not operate any database, file storage, or persistent backend. All
-          document processing happens in-memory during your browser session and
-          is permanently discarded when the session ends.
+          PureDraft HR is an AI-powered HR document platform. We collect only
+          the minimum data necessary to provide our services: authentication,
+          document storage, and AI-powered generation.
         </p>
       </section>
 
-      {/* 2 ── No Data Storage */}
+      {/* 2 ── Account & Authentication */}
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
-          No Data Storage
+          Account &amp; Authentication
         </h2>
         <ul className="list-disc list-inside space-y-2 leading-relaxed">
           <li>
-            Uploaded files (PDF, DOCX, TXT) are <strong>never</strong> saved to
-            any server or database.
+            User authentication is managed by <strong>Clerk</strong>. When you
+            create an account, Clerk stores your email address, name, and
+            authentication credentials.
           </li>
           <li>
-            Generated documents from any tool — Assistant, Builder, Formatter,
-            or Summarizer — are never stored on our infrastructure.
+            You may sign in with email/password or Google OAuth. Clerk handles
+            all credential storage and verification.
           </li>
           <li>
-            All processing is ephemeral; data exists only in-memory for the
-            duration of a single request.
+            See{" "}
+            <a
+              href="https://clerk.com/legal/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              Clerk&apos;s Privacy Policy
+            </a>{" "}
+            for how they manage your authentication data.
           </li>
           <li>
-            We do not maintain logs, backups, or historical records of your
-            content.
+            You can delete your account at any time through your profile
+            settings.
           </li>
         </ul>
       </section>
 
-      {/* 3 ── How Data Is Processed */}
+      {/* 3 ── Document Storage */}
+      <section className="space-y-3">
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+          Document Storage
+        </h2>
+        <ul className="list-disc list-inside space-y-2 leading-relaxed">
+          <li>
+            When you save a document from any tool, it is stored in a{" "}
+            <strong>Supabase PostgreSQL database</strong> linked to your user
+            account.
+          </li>
+          <li>
+            Documents are user-scoped — only you can view, access, or delete
+            your saved documents.
+          </li>
+          <li>
+            You can delete any saved document at any time from your Dashboard.
+          </li>
+          <li>
+            Uploaded files (PDF, DOCX, TXT, XLSX, CSV) used for text extraction
+            are processed in-memory and <strong>never stored</strong> on our
+            servers.
+          </li>
+        </ul>
+      </section>
+
+      {/* 4 ── How Data Is Processed */}
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
           How Your Data Is Processed
@@ -108,7 +141,38 @@ export default function PrivacyPage() {
         </ul>
       </section>
 
-      {/* 4 ── Employee Data Safety */}
+      {/* 5 ── Email Services */}
+      <section className="space-y-3">
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+          Email Services
+        </h2>
+        <ul className="list-disc list-inside space-y-2 leading-relaxed">
+          <li>
+            Document sharing via email and contact form submissions are handled
+            by <strong>Resend</strong>. Your email address and message content
+            are transmitted to deliver the email.
+          </li>
+          <li>Authentication emails (verification codes) are sent by Clerk.</li>
+          <li>
+            We do not use your email for marketing or share it with third
+            parties.
+          </li>
+        </ul>
+      </section>
+
+      {/* 6 ── Rate Limiting */}
+      <section className="space-y-3">
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+          Rate Limiting
+        </h2>
+        <p className="leading-relaxed">
+          We use <strong>Upstash Redis</strong> to enforce rate limits on AI
+          endpoints. This stores only anonymous request counts tied to IP
+          addresses — no personal data or document content is stored in Redis.
+        </p>
+      </section>
+
+      {/* 7 ── Employee Data Safety */}
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
           Employee Data Safety
@@ -116,21 +180,22 @@ export default function PrivacyPage() {
         <ul className="list-disc list-inside space-y-2 leading-relaxed">
           <li>
             If you include employee names, IDs, salary figures, or other
-            personal data, this information is only temporarily processed
-            in-memory and never retained.
+            personal data, this information is processed in-memory and sent to
+            the Gemini API for generation. Saved documents may contain this data
+            in your database.
           </li>
           <li>
             We recommend redacting highly sensitive identifiers (e.g., social
             security numbers) before uploading, as a precaution.
           </li>
           <li>
-            Once your browser tab is closed or the session ends, all data is
-            gone.
+            You can delete any saved documents containing sensitive data at any
+            time from your Dashboard.
           </li>
         </ul>
       </section>
 
-      {/* 5 ── Browser-Level Data */}
+      {/* 8 ── Browser-Level Data */}
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
           Browser-Level Data
@@ -145,12 +210,16 @@ export default function PrivacyPage() {
             in your browser&apos;s localStorage. No template data is ever sent
             to our servers.
           </li>
+          <li>
+            <strong>Authentication cookies</strong> are managed by Clerk for
+            session management.
+          </li>
           <li>No tracking cookies or analytics are deployed.</li>
           <li>No third-party scripts collect your browsing behavior.</li>
         </ul>
       </section>
 
-      {/* 6 ── Third-Party Services */}
+      {/* 9 ── Third-Party Services */}
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
           Third-Party Services
@@ -170,6 +239,54 @@ export default function PrivacyPage() {
             .
           </li>
           <li>
+            <strong>Clerk:</strong> Authentication and user management. See{" "}
+            <a
+              href="https://clerk.com/legal/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              Clerk&apos;s Privacy Policy
+            </a>
+            .
+          </li>
+          <li>
+            <strong>Supabase:</strong> Database hosting for saved documents. See{" "}
+            <a
+              href="https://supabase.com/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              Supabase&apos;s Privacy Policy
+            </a>
+            .
+          </li>
+          <li>
+            <strong>Upstash:</strong> Rate limiting. See{" "}
+            <a
+              href="https://upstash.com/trust/privacy.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              Upstash&apos;s Privacy Policy
+            </a>
+            .
+          </li>
+          <li>
+            <strong>Resend:</strong> Email delivery. See{" "}
+            <a
+              href="https://resend.com/legal/privacy-policy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              Resend&apos;s Privacy Policy
+            </a>
+            .
+          </li>
+          <li>
             <strong>Vercel:</strong> Secure hosting and API routing. See{" "}
             <a
               href="https://vercel.com/legal/privacy-policy"
@@ -184,20 +301,33 @@ export default function PrivacyPage() {
         </ul>
       </section>
 
-      {/* 7 ── Your Rights */}
+      {/* 10 ── Your Rights */}
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
           Your Rights
         </h2>
         <ul className="list-disc list-inside space-y-2 leading-relaxed">
           <li>
-            Since we do not store personal data, there is nothing to request,
-            access, or delete.
+            You can view, export, and delete your saved documents at any time
+            from the Dashboard.
           </li>
-          <li>You have full control over what data you upload or generate.</li>
+          <li>
+            You can delete your account through Clerk&apos;s user profile
+            settings, which will remove your authentication data.
+          </li>
           <li>
             Saved Templates in localStorage can be deleted at any time from
             within the app or by clearing your browser data.
+          </li>
+          <li>
+            To request complete deletion of all your data, please{" "}
+            <Link
+              href="/contact"
+              className="text-primary hover:underline font-medium"
+            >
+              Contact Us
+            </Link>
+            .
           </li>
         </ul>
       </section>

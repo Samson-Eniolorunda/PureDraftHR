@@ -128,7 +128,7 @@ export function AppNav() {
                 key={href}
                 href={href}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-0.5 min-w-[3rem] min-h-[2.75rem] px-2 py-1 text-xs font-medium transition-colors rounded-md",
+                  "flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 min-h-[2.75rem] px-1 py-1 text-[11px] font-medium transition-colors rounded-md",
                   active
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground",
@@ -139,6 +139,25 @@ export function AppNav() {
               </Link>
             );
           })}
+          {isSignedIn && (
+            <Link
+              href="/dashboard"
+              className={cn(
+                "flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 min-h-[2.75rem] px-1 py-1 text-[11px] font-medium transition-colors rounded-md",
+                pathname === "/dashboard"
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <LayoutDashboard
+                className={cn(
+                  "h-5 w-5",
+                  pathname === "/dashboard" && "stroke-[2.5]",
+                )}
+              />
+              Docs
+            </Link>
+          )}
         </div>
       </nav>
     </>

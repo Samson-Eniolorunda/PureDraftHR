@@ -63,14 +63,14 @@ export function Modal({
         aria-modal="true"
         aria-label={title}
         className={cn(
-          "relative z-50 w-full max-w-lg max-h-[85vh] overflow-visible rounded-xl border bg-card shadow-2xl mx-4",
+          "relative z-50 w-full max-w-lg max-h-[90vh] overflow-visible rounded-xl border bg-card shadow-2xl mx-3 sm:mx-4",
           className,
         )}
       >
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between border-b px-6 py-4">
-            <h2 className="text-lg font-semibold">{title}</h2>
+          <div className="flex items-center justify-between border-b px-4 sm:px-6 py-4">
+            <h2 className="text-base sm:text-lg font-semibold">{title}</h2>
             <Button
               variant="ghost"
               size="sm"
@@ -83,11 +83,13 @@ export function Modal({
         )}
 
         {/* Body */}
-        <div className="px-6 py-4 max-h-[60vh] overflow-y-auto">{children}</div>
+        <div className="px-4 sm:px-6 py-4 max-h-[60vh] overflow-y-auto">
+          {children}
+        </div>
 
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 border-t px-6 py-4">
+          <div className="flex items-center justify-end gap-3 border-t px-4 sm:px-6 py-4">
             {footer}
           </div>
         )}

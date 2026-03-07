@@ -12,15 +12,23 @@ export default function FAQPage() {
   const faqs = [
     {
       q: "What is PureDraft HR?",
-      a: "PureDraft HR is a free, AI-powered web application for generating, formatting, summarizing, and managing HR documents. It includes four core tools: Assistant (HR Copilot), Builder (document generation), Formatter (reference cloning & restructuring), and Summarizer (document condensation). All processing is powered by the Google Gemini API.",
+      a: "PureDraft HR is a free, AI-powered web application for generating, formatting, summarizing, and managing HR documents. It includes four core tools: Assistant (HR Copilot), Builder (document generation), Formatter (reference cloning & restructuring), and Summarizer (document condensation). All AI processing is powered by the Google Gemini API.",
     },
     {
-      q: "Is PureDraft HR really 100% stateless?",
-      a: "Yes. We do not store any data on our servers. All processing happens in-memory during your session, and everything is erased when you close the browser or end your session. The only data stored locally is your theme preference and any Saved Templates (in your browser\u2019s localStorage).",
+      q: "Do I need an account to use PureDraft HR?",
+      a: "No \u2014 you can use all four tools (Formatter, Builder, Summarizer, Assistant) without signing in. However, creating a free account lets you save documents to your Dashboard and access them later.",
     },
     {
-      q: "What happens to my uploaded documents?",
-      a: "Your uploaded documents (PDF, DOCX, TXT) are never saved to any database or server. Text is extracted in your browser, sent to the Google Gemini API for processing, and then permanently discarded. Only the session duration matters.",
+      q: "How does authentication work?",
+      a: "PureDraft HR uses Clerk for authentication. You can sign up with your email address (with verification code) or sign in with Google. Your account lets you save and manage documents from the Dashboard.",
+    },
+    {
+      q: "What happens to my saved documents?",
+      a: "Saved documents are stored in a secure database (Supabase PostgreSQL) linked to your account. Only you can view or delete your documents. You can manage them from the Dashboard page.",
+    },
+    {
+      q: "What happens to my uploaded files?",
+      a: "Uploaded files (PDF, DOCX, TXT, XLSX, CSV) are processed in-memory for text extraction and are never stored on our servers. The extracted text is sent to the Google Gemini API for processing.",
     },
     {
       q: "What AI model does PureDraft HR use?",
@@ -28,7 +36,7 @@ export default function FAQPage() {
     },
     {
       q: "Is there a cost to use PureDraft HR?",
-      a: "No, PureDraft HR is completely free. It uses Google\u2019s free tier of the Gemini API, which has generous usage limits.",
+      a: "No, PureDraft HR is completely free. It uses free tiers of Google Gemini, Clerk, Supabase, Upstash, and Resend.",
     },
     {
       q: "What tools are available?",
@@ -60,15 +68,19 @@ export default function FAQPage() {
     },
     {
       q: "What file formats are supported for upload?",
-      a: "PDF, DOCX (Word), and TXT files. Text is extracted automatically and processed by the AI.",
+      a: "PDF, DOCX (Word), TXT, XLSX and CSV files. Text is extracted automatically and processed by the AI.",
     },
     {
       q: "What export formats are available?",
-      a: "You can export generated documents as PDF, DOCX (Word), or copy plain text to your clipboard. All exports happen entirely in your browser \u2014 no server processing.",
+      a: "You can export generated documents as PDF, DOCX (Word), or copy plain text to your clipboard. You can also email documents directly from the app and save them to your Dashboard. All exports happen entirely in your browser \u2014 no server processing.",
+    },
+    {
+      q: "Can I email a document to someone?",
+      a: "Yes. Each tool has an \u201cEmail Document\u201d option that lets you send the generated content to any email address via Resend. No email client setup is required.",
     },
     {
       q: "Can I use PureDraft HR offline?",
-      a: "The UI works offline thanks to our Progressive Web App (PWA) architecture. However, AI generation requires an active internet connection to reach the Google Gemini API.",
+      a: "The UI works offline thanks to our Progressive Web App (PWA) architecture. However, AI generation, document saving, and authentication require an active internet connection.",
     },
     {
       q: "Is the Google Gemini API processing secure?",
@@ -76,7 +88,11 @@ export default function FAQPage() {
     },
     {
       q: "Can I trust this tool with sensitive HR documents?",
-      a: "PureDraft HR is stateless and does not store data. However, content is temporarily transmitted to Google\u2019s Gemini API. If you have highly sensitive information (e.g., social security numbers), we recommend redacting those values before uploading.",
+      a: "Uploaded files are never stored on our servers. Saved documents are stored securely in a user-scoped database. However, content is transmitted to Google\u2019s Gemini API for processing. If you have highly sensitive information (e.g., social security numbers), we recommend redacting those values before uploading.",
+    },
+    {
+      q: "Can I delete my account and data?",
+      a: "Yes. You can delete saved documents from your Dashboard at any time. You can also delete your account through your profile settings. For complete data removal, contact us via the Contact page.",
     },
     {
       q: "Do you track my activity or use analytics?",

@@ -183,9 +183,9 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="space-y-1 min-w-0">
-                <CardTitle className="text-xl break-words">
+                <CardTitle className="text-lg sm:text-xl break-words">
                   {selectedDoc.title}
                 </CardTitle>
                 <CardDescription className="flex items-center gap-2">
@@ -296,8 +296,8 @@ export default function DashboardPage() {
       </div>
 
       {/* Search + Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-3">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search documents…"
@@ -309,7 +309,7 @@ export default function DashboardPage() {
             className="pl-9"
           />
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
           <Button
             variant={toolFilter === null ? "default" : "outline"}
             size="sm"
@@ -317,6 +317,7 @@ export default function DashboardPage() {
               setToolFilter(null);
               setPage(1);
             }}
+            className="shrink-0"
           >
             All
           </Button>
@@ -329,7 +330,7 @@ export default function DashboardPage() {
                 setToolFilter(key);
                 setPage(1);
               }}
-              className="gap-1.5"
+              className="gap-1.5 shrink-0"
             >
               {TOOL_ICONS[key]}
               {label}

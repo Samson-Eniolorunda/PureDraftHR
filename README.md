@@ -2,7 +2,7 @@
 
 **Enterprise-grade Next.js 15 PWA for Human Resources**
 
-An innovative, **100% stateless** web application that empowers HR teams to format, summarize, and generate professional HR documents with AI. Built with Next.js 15, Tailwind CSS, Vercel AI SDK, Google Gemini AI, and shadcn/ui.
+A full-stack web application that empowers HR teams to format, summarize, and generate professional HR documents with AI. Built with Next.js 15, Tailwind CSS, Vercel AI SDK, Google Gemini AI, shadcn/ui, Clerk authentication, Prisma ORM + Supabase PostgreSQL, and Upstash Redis rate limiting.
 
 ---
 
@@ -57,14 +57,28 @@ An innovative, **100% stateless** web application that empowers HR teams to form
 - 📤 **Style-aware Export** — PDF, DOCX, and clipboard exports preserve all user styling selections
 - 🔄 **Reset to Defaults** — One-click reset button
 
-### 3. **100% Stateless Architecture**
+### 3. **Authentication & User Accounts**
 
-- ✅ No database, no server-side storage
-- ✅ All file parsing & AI generation happens in-memory
-- ✅ Streamed directly to client (Vercel AI SDK `streamText`)
-- ✅ Perfect for compliance and privacy requirements
+- 🔐 Clerk authentication (email/password + Google OAuth)
+- 👤 User profile management with `<UserButton />`
+- 🛡️ Protected routes via Next.js middleware
+- 📝 Sign-in / Sign-up pages with Clerk components
 
-### 4. **Progressive Web App (PWA)**
+### 4. **My Documents Dashboard**
+
+- 📂 Save generated documents to your account (Supabase PostgreSQL via Prisma)
+- 🗂️ View, search, and manage saved documents
+- 🗑️ Delete documents with confirmation
+- 📄 Re-open saved documents for viewing and export
+- 🔒 User-scoped — each user sees only their own documents
+
+### 5. **Rate Limiting & Security**
+
+- ⏱️ Upstash Redis-powered rate limiting on AI endpoints
+- 🔒 CSRF-safe API routes with proper validation
+- 🛡️ Security headers (X-Frame-Options, X-Content-Type-Options, Referrer-Policy)
+
+### 6. **Progressive Web App (PWA)**
 
 - 📱 Mobile-first responsive design
 - 🏠 "Add to Home Screen" on iOS & Android
@@ -72,7 +86,7 @@ An innovative, **100% stateless** web application that empowers HR teams to form
 - ⚡ Desktop sidebar + mobile bottom-tab navigation
 - 🎨 Beautiful light/dark theme with system/manual toggle
 
-### 5. **Client-Side Export**
+### 7. **Client-Side Export**
 
 - 📥 **Download as PDF** — Uses html2pdf.js with inline font, size, and spacing styles
 - 📥 **Download as DOCX** — Uses docx library with proper font mapping and half-point line spacing
@@ -82,14 +96,14 @@ An innovative, **100% stateless** web application that empowers HR teams to form
 - ✅ Exports preserve document styling selections (font, sizes, spacing, bullets)
 - ✅ Bullet symbols rendered inline in both PDF and DOCX (not CSS pseudo-elements)
 
-### 6. **Multi-Language Translation**
+### 8. **Multi-Language Translation**
 
 - 🌍 Output language selector on all 4 tools (Formatter, Summarizer, Builder, Assistant)
 - 8 supported languages: English, Spanish, French, German, Mandarin Chinese, Portuguese, Arabic, Hindi
 - Language instruction injected into AI system prompt for accurate translation
 - Default: English (no extra instruction overhead)
 
-### 7. **My Templates Library**
+### 9. **My Templates Library**
 
 - 📂 Save reference text snippets as reusable templates
 - Templates stored in `localStorage` (persistent across sessions, no server needed)
@@ -97,7 +111,7 @@ An innovative, **100% stateless** web application that empowers HR teams to form
 - Delete unwanted templates with confirmation
 - Integrated into the `DocumentFormFooter` component (available on Formatter, Builder, Summarizer)
 
-### 8. **File Import Support**
+### 10. **File Import Support**
 
 - 📤 Drag-and-drop upload interface with success state (green checkmark + filename)
 - 📄 Supported formats: `.txt`, `.pdf`, `.docx`
@@ -105,14 +119,14 @@ An innovative, **100% stateless** web application that empowers HR teams to form
 - 📝 **Plain text reference input** — Textarea alternative to file upload for pasting reference templates
 - ❌ One-click file removal button to clear uploaded files
 
-### 9. **AI Transparency & Disclaimers**
+### 11. **AI Transparency & Disclaimers**
 
 - ⚠️ AI disclaimer under generate buttons: "Gemini AI can make mistakes"
 - 📄 Dedicated Terms of Service page with Gemini AI disclosure (Section 4)
 - 🔒 Privacy Policy page with Gemini AI processing information
 - 🔗 "Powered by Google Gemini" attribution in footer with Sparkles icon
 
-### 10. **Smart Meeting Scheduler**
+### 12. **Smart Meeting Scheduler**
 
 - 📅 Ask the Assistant to schedule a meeting, interview, or appointment
 - AI outputs structured JSON that is automatically intercepted and parsed
@@ -131,9 +145,13 @@ An innovative, **100% stateless** web application that empowers HR teams to form
 | **Styling**         | Tailwind CSS + shadcn/ui                            |
 | **Theming**         | next-themes (light/dark/system toggle)              |
 | **AI/LLM**          | Vercel AI SDK + Google Gemini 2.5 Flash (100% Free) |
-| **Runtime**         | Edge Runtime (API route)                            |
+| **Auth**            | Clerk (email/password + Google OAuth)               |
+| **Database**        | Supabase PostgreSQL + Prisma 7 ORM                  |
+| **Rate Limiting**   | Upstash Redis                                       |
+| **Email**           | Resend (document sharing + contact form)            |
+| **Runtime**         | Node.js Runtime (API routes)                        |
 | **Export**          | html2pdf.js, docx, file-saver                       |
-| **File Parsing**    | mammoth (DOCX), pdf-parse (PDF)                     |
+| **File Parsing**    | mammoth (DOCX), pdf-parse (PDF), xlsx               |
 | **Icons**           | lucide-react                                        |
 | **Markdown**        | react-markdown                                      |
 | **Package Manager** | npm                                                 |
@@ -147,7 +165,13 @@ An innovative, **100% stateless** web application that empowers HR teams to form
 ### Prerequisites
 
 - Node.js 18+ & npm
-- Google Gemini API key (100% free, no credit card required)
+- Google Gemini API key (free)
+- Clerk account (free)
+- Supabase project (free)
+- Upstash Redis database (free)
+- Resend account (free)
+
+See [SETUP.md](SETUP.md) for detailed setup instructions for each service.
 
 ### 1. Clone the Repository
 
@@ -167,17 +191,35 @@ npm install
 Create a `.env.local` file in the project root:
 
 ```env
-GOOGLE_GENERATIVE_AI_KEY=your-google-gemini-api-key-here
+# AI
+GOOGLE_GENERATIVE_AI_API_KEY=your-gemini-key
+
+# Resend Email
+RESEND_API_KEY=your-resend-key
+CONTACT_EMAIL=your-email@example.com
+
+# Upstash Redis (Rate Limiting)
+UPSTASH_REDIS_REST_URL=your-upstash-url
+UPSTASH_REDIS_REST_TOKEN=your-upstash-token
+
+# Clerk Authentication
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your-clerk-pk
+CLERK_SECRET_KEY=your-clerk-sk
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+
+# Supabase PostgreSQL (Prisma)
+DATABASE_URL=your-supabase-pooler-url
+DIRECT_URL=your-supabase-direct-url
 ```
 
-**Getting a free Gemini API key:**
+### 4. Push Database Schema
 
-1. Visit https://ai.google.dev
-2. Click "Get API key" or go to https://makersuite.google.com/app/apikey
-3. Create a new API key (100% free, no credit card required)
-4. Copy the key and paste into `.env.local`
+```bash
+npx prisma db push
+```
 
-### 4. Development Server
+### 5. Development Server
 
 ```bash
 npm run dev
@@ -185,7 +227,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### 5. Production Build
+### 6. Production Build
 
 ```bash
 npm run build
@@ -207,17 +249,23 @@ PureDraftHR/
 │
 ├── src/
 │   ├── app/
-│   │   ├── layout.tsx         # Root layout with PWA registration & theme
+│   │   ├── layout.tsx         # Root layout with Clerk, PWA, theme
 │   │   ├── page.tsx           # Redirect to /formatter
 │   │   ├── globals.css        # Global styles
 │   │   ├── api/
 │   │   │   ├── chat/route.ts  # AI streaming (dynamic system prompts)
 │   │   │   ├── contact/route.ts # Contact form API
-│   │   │   └── extract/route.ts # File text extraction
+│   │   │   ├── documents/route.ts # Save/list documents API
+│   │   │   ├── documents/[id]/route.ts # Get/delete document API
+│   │   │   ├── extract/route.ts # File text extraction
+│   │   │   └── send-document/route.ts # Email document API
 │   │   ├── builder/page.tsx   # Document builder wizard (25 types + custom)
 │   │   ├── formatter/page.tsx # Document formatter tool
 │   │   ├── summarizer/page.tsx# Document summarizer tool
 │   │   ├── assistant/page.tsx # HR Assistant copilot + chat with document
+│   │   ├── dashboard/page.tsx # My Documents dashboard (auth required)
+│   │   ├── sign-in/           # Clerk sign-in page
+│   │   ├── sign-up/           # Clerk sign-up page
 │   │   ├── contact/page.tsx   # Contact page with form
 │   │   ├── faq/page.tsx       # FAQ page
 │   │   ├── terms/page.tsx     # Terms of Service (Gemini AI disclosure)
@@ -229,13 +277,16 @@ PureDraftHR/
 │   │   ├── document-styling-ui.tsx  # Styling modal controls
 │   │   ├── drop-zone.tsx      # Drag-and-drop upload
 │   │   ├── dual-input.tsx     # Upload/Paste tabs
+│   │   ├── email-document-modal.tsx # Email document modal (Resend)
 │   │   ├── export-buttons.tsx # Style-aware PDF & DOCX download
 │   │   ├── footer.tsx         # App footer with Gemini attribution
 │   │   ├── language-selector.tsx # Multi-language output selector
 │   │   ├── markdown-renderer.tsx # Renders AI output with styling
 │   │   ├── meeting-card.tsx   # Smart Meeting Scheduler card + .ics generation
+│   │   ├── multi-file-drop-zone.tsx # Multi-file upload for batch mode
 │   │   ├── template-library.tsx  # Saved templates library (localStorage)
 │   │   ├── mobile-header.tsx  # Mobile header with theme toggle
+│   │   ├── sonner-toaster.tsx # Toast notifications
 │   │   ├── pwa-register.tsx   # Service worker registration
 │   │   ├── theme-provider.tsx # Light/dark/system theme provider
 │   │   ├── theme-toggle-button.tsx # Theme toggle button
@@ -258,17 +309,24 @@ PureDraftHR/
 │   │   └── useTemplateLibrary.ts     # Saved templates hook (localStorage)
 │   │
 │   ├── lib/
+│   │   ├── db.ts              # Prisma client singleton (Supabase adapter)
 │   │   ├── document-styling.ts # CSS generation & injection utilities
+│   │   ├── markdown-to-html.ts # Markdown to HTML conversion
+│   │   ├── rate-limit.ts     # Upstash Redis rate limiter
 │   │   └── utils.ts           # cn() utility for class merging
 │   │
 │   └── types/
 │       └── modules.d.ts       # Type declarations for pdf-parse, html2pdf
 │
+├── prisma/
+│   └── schema.prisma          # Database schema (Document model)
+├── prisma.config.ts           # Prisma 7 config (datasource, dotenv)
 ├── tailwind.config.js
 ├── postcss.config.js
 ├── tsconfig.json
 ├── package.json
 ├── next.config.js
+├── SETUP.md                   # Service setup guide
 ├── CHANGELOG.md
 └── .gitignore
 ```
@@ -421,12 +479,15 @@ Handles contact form submissions with validation.
 
 ## 🔐 Privacy & Security
 
-- ✅ **No data persistence**: All processing happens in real-time, nothing is stored
-- ✅ **No tracking**: Fully private by default
-- ✅ **HTTPS recommended**: Use on secure connections
-- ✅ **API key management**: Keep `GOOGLE_GENERATIVE_AI_KEY` secure in `.env.local`
+- ✅ **Authenticated access**: Clerk-managed user accounts with email verification
+- ✅ **User-scoped data**: Documents are stored per-user in Supabase PostgreSQL
+- ✅ **Rate limiting**: Upstash Redis protects AI endpoints from abuse
+- ✅ **No tracking**: No analytics or third-party trackers
+- ✅ **HTTPS enforced**: Secure connections in production
+- ✅ **API key management**: All secrets in `.env.local` (never committed)
 - ✅ **Client-side exports**: PDF/Word generation happens locally
 - ✅ **AI transparency**: Clear disclaimers about Gemini AI usage and limitations
+- ✅ **Security headers**: X-Frame-Options, X-Content-Type-Options, Referrer-Policy
 - ✅ **Legal pages**: Dedicated Terms of Service and Privacy Policy with Gemini AI disclosures
 
 ---
@@ -441,11 +502,7 @@ vercel
 
 ### Deploy to Other Platforms
 
-Ensure these environment variables are set:
-
-- `GOOGLE_GENERATIVE_AI_KEY`: Your Google Generative AI API key (free, no credit card required)
-
-The app is optimized for serverless (Vercel, AWS Lambda, etc) thanks to the Edge Runtime on the chat API route.
+Ensure all environment variables from `.env.local` are set. See [SETUP.md](SETUP.md) for details on each service.
 
 ---
 
@@ -517,7 +574,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## ❓ FAQ
 
 **Q: Does this app store my documents?**
-A: No — all processing is stateless. Documents are processed in real-time and never stored.
+A: Yes — if you're signed in, you can save generated documents to your account (stored in Supabase PostgreSQL). Documents are user-scoped and only visible to you. You can delete them at any time from the Dashboard.
 
 **Q: What AI model does PureDraft HR use?**
 A: Google Gemini 2.5 Flash via the Vercel AI SDK. Gemini AI can make mistakes — always review generated content before using.
@@ -529,13 +586,13 @@ A: Yes! When you click Generate/Format/Summarize, a Styling Modal opens where yo
 A: The UI will work offline, but AI generation requires an internet connection and a Google Generative AI API key.
 
 **Q: What happens if I close the browser?**
-A: All in-progress work is lost (by design, for privacy). This is intentional to maintain stateless architecture.
+A: Unsaved in-progress work is lost. Save documents to your account via the Dashboard to keep them.
 
 **Q: Can I use a different AI model?**
 A: Yes! Modify [src/app/api/chat/route.ts](src/app/api/chat/route.ts) to use any Vercel AI SDK provider (`@ai-sdk/google`, `@ai-sdk/openai`, `@ai-sdk/anthropic`, etc.).
 
 **Q: Is there a cost per request?**
-A: No! Google Gemini is 100% free for development. No credit card required. Generous free tier limits suitable for production use.
+A: No! Google Gemini has a generous free tier. Clerk, Supabase, Upstash, and Resend also offer free tiers suitable for production use.
 
 **Q: How many document types does the Builder support?**
 A: 25 document types including Offer Letters, Job Descriptions, Company Policies, Employment Contracts, Termination Letters, Warning Letters, and more — plus an "Other (Custom)" option for any document type not listed. Each type has context-aware placeholder examples.

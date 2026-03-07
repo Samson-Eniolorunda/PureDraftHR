@@ -121,33 +121,35 @@ export function TemplateLibrary({
         )}
 
         {showSaveInput && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <Input
               placeholder="Template name (e.g., Standard Offer Letter)"
               value={newTemplateName}
               onChange={(e) => setNewTemplateName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSave()}
-              className="text-sm"
+              className="text-sm flex-1"
             />
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleSave}
-              disabled={!newTemplateName.trim()}
-            >
-              Save
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setShowSaveInput(false);
-                setNewTemplateName("");
-              }}
-            >
-              Cancel
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleSave}
+                disabled={!newTemplateName.trim()}
+              >
+                Save
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowSaveInput(false);
+                  setNewTemplateName("");
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
           </div>
         )}
 

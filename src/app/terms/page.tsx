@@ -14,7 +14,7 @@ export default function TermsPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Terms of Service</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Last updated: February 26, 2026
+          Last updated: March 7, 2026
         </p>
       </div>
 
@@ -36,9 +36,9 @@ export default function TermsPage() {
           2. Description of Service
         </h2>
         <p className="leading-relaxed">
-          PureDraft HR is a stateless, AI-powered web application for
-          generating, formatting, summarizing, and managing HR documents. The
-          platform includes the following core tools:
+          PureDraft HR is an AI-powered web application for generating,
+          formatting, summarizing, and managing HR documents. The platform
+          includes the following core tools:
         </p>
         <ul className="list-disc list-inside space-y-2 leading-relaxed">
           <li>
@@ -61,35 +61,36 @@ export default function TermsPage() {
           </li>
         </ul>
         <p className="leading-relaxed">
-          Additional features include multi-language translation (8 languages),
-          a My Templates Library (localStorage-based), customizable document
-          styling, and client-side export to PDF, DOCX, and clipboard.
+          Additional features include user accounts with authentication, a My
+          Documents dashboard for saving and managing generated documents,
+          multi-language translation (8 languages), a My Templates Library
+          (localStorage-based), customizable document styling, email document
+          sharing, and client-side export to PDF, DOCX, and clipboard.
         </p>
       </section>
 
       {/* 3 */}
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
-          3. Stateless Processing &amp; No Storage
+          3. User Accounts &amp; Authentication
         </h2>
-        <p className="leading-relaxed">
-          <strong>PureDraft HR is architecturally stateless.</strong>
-        </p>
         <ul className="list-disc list-inside space-y-2 leading-relaxed">
           <li>
-            No employee data, uploaded files, or generated text is ever stored
-            on any server or database.
+            Certain features (saving documents, accessing the Dashboard) require
+            creating an account via Clerk.
           </li>
           <li>
-            All data processing occurs temporarily, in-memory, during your
-            active session only.
+            You are responsible for keeping your login credentials secure.
+          </li>
+          <li>You may sign in with email/password or Google OAuth.</li>
+          <li>
+            You can delete your account at any time through your profile
+            settings.
           </li>
           <li>
-            When your browser session ends, all data is permanently erased.
-          </li>
-          <li>
-            You are solely responsible for saving copies of any generated
-            documents via the export buttons (PDF, DOCX, Copy).
+            Core tools (Formatter, Builder, Summarizer, Assistant) are
+            accessible without an account — only document saving requires
+            authentication.
           </li>
         </ul>
       </section>
@@ -97,7 +98,32 @@ export default function TermsPage() {
       {/* 4 */}
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
-          4. Google Gemini AI Processing &amp; Accuracy Disclaimer
+          4. Data Storage &amp; Document Handling
+        </h2>
+        <ul className="list-disc list-inside space-y-2 leading-relaxed">
+          <li>
+            When you save a document, it is stored in our database (Supabase
+            PostgreSQL) linked to your user account.
+          </li>
+          <li>
+            Saved documents are user-scoped — only you can view or delete them.
+          </li>
+          <li>
+            Uploaded files (PDF, DOCX, TXT, XLSX, CSV) used for text extraction
+            are processed in-memory and never stored on our servers.
+          </li>
+          <li>
+            You are responsible for saving copies of any generated documents you
+            wish to keep, via the export buttons (PDF, DOCX, Copy) or the Save
+            to Dashboard feature.
+          </li>
+        </ul>
+      </section>
+
+      {/* 5 */}
+      <section className="space-y-3">
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+          5. Google Gemini AI Processing &amp; Accuracy Disclaimer
         </h2>
         <p className="leading-relaxed">
           <strong>
@@ -135,10 +161,10 @@ export default function TermsPage() {
         </ul>
       </section>
 
-      {/* 5 */}
+      {/* 6 */}
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
-          5. Use License
+          6. Use License
         </h2>
         <p className="leading-relaxed">
           Permission is granted to use PureDraft HR for personal and
@@ -157,10 +183,10 @@ export default function TermsPage() {
         </ul>
       </section>
 
-      {/* 6 */}
+      {/* 7 */}
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
-          6. Disclaimer of Warranties
+          7. Disclaimer of Warranties
         </h2>
         <p className="leading-relaxed">
           PureDraft HR is provided on an &quot;as is&quot; and &quot;as
@@ -170,10 +196,10 @@ export default function TermsPage() {
         </p>
       </section>
 
-      {/* 7 */}
+      {/* 8 */}
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
-          7. Limitations of Liability
+          8. Limitations of Liability
         </h2>
         <p className="leading-relaxed">
           In no event shall PureDraft HR or its contributors be liable for any
@@ -183,10 +209,10 @@ export default function TermsPage() {
         </p>
       </section>
 
-      {/* 8 */}
+      {/* 9 */}
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
-          8. Content Ownership
+          9. Content Ownership
         </h2>
         <ul className="list-disc list-inside space-y-2 leading-relaxed">
           <li>
@@ -200,10 +226,10 @@ export default function TermsPage() {
         </ul>
       </section>
 
-      {/* 9 */}
+      {/* 10 */}
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
-          9. Limitations on Use
+          10. Limitations on Use
         </h2>
         <p className="leading-relaxed">You agree not to:</p>
         <ul className="list-disc list-inside space-y-2 leading-relaxed">
@@ -219,10 +245,10 @@ export default function TermsPage() {
         </ul>
       </section>
 
-      {/* 10 */}
+      {/* 11 */}
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
-          10. Governing Law
+          11. Governing Law
         </h2>
         <p className="leading-relaxed">
           These Terms are governed by and construed in accordance with the laws
@@ -231,10 +257,10 @@ export default function TermsPage() {
         </p>
       </section>
 
-      {/* 11 */}
+      {/* 12 */}
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
-          11. Changes to Terms
+          12. Changes to Terms
         </h2>
         <p className="leading-relaxed">
           PureDraft HR reserves the right to update these Terms at any time.
@@ -243,10 +269,10 @@ export default function TermsPage() {
         </p>
       </section>
 
-      {/* 12 ── Contact */}
+      {/* 13 */}
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
-          12. Contact
+          13. Contact
         </h2>
         <p className="leading-relaxed">
           If you have any questions about these Terms, please{" "}

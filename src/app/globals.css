@@ -67,7 +67,39 @@
 /* ------------------------------------------------------------------ */
 @layer utilities {
   /* Safe area padding for devices with notches / home indicators */
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Mobile optimisations                                                */
+/* ------------------------------------------------------------------ */
+
+/* Prevent iOS zoom on input focus (font-size < 16px triggers zoom) */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Smoother scrolling on touch devices */
+@supports (-webkit-overflow-scrolling: touch) {
+  html {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Hide scrollbar for horizontal scroll areas */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }

@@ -83,6 +83,7 @@ export const viewport: Viewport = {
   themeColor: "#2563eb",
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -148,9 +149,9 @@ export default function RootLayout({
             {/* Main content area — offset for sidebar on desktop, header+bottom-bar on mobile */}
             <main
               id="main-content"
-              className="md:ml-64 pt-14 md:pt-0 pb-36 md:pb-20"
+              className="md:ml-64 pt-16 md:pt-0 pb-36 md:pb-20"
             >
-              <div className="mx-auto max-w-4xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8 min-h-screen">
+              <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-6 lg:px-8 min-h-screen">
                 {children}
               </div>
             </main>

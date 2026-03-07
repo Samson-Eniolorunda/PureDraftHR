@@ -180,7 +180,7 @@ export function MultiFileDropZone({
         onDrop={onDrop}
         onClick={() => inputRef.current?.click()}
         className={cn(
-          "relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-6 cursor-pointer transition-all min-h-[140px]",
+          "relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-4 sm:p-6 cursor-pointer transition-all min-h-[120px] sm:min-h-[140px]",
           dragging
             ? "border-primary bg-primary/5 scale-[1.01]"
             : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50",

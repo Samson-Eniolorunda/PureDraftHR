@@ -83,10 +83,10 @@ export default function ContactPage() {
     <div className="space-y-8">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
           Contact Us
         </h1>
-        <p className="mt-2 text-lg text-muted-foreground">
+        <p className="mt-1 text-muted-foreground">
           Have questions or feedback? We&apos;d love to hear from you. Get in
           touch with our team.
         </p>
