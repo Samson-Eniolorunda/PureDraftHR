@@ -410,7 +410,7 @@ export default function AssistantPage() {
   }, [isListening, language]);
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-10.5rem-env(safe-area-inset-bottom,0px))] md:h-[calc(100dvh-3rem)] max-w-3xl mx-auto overflow-hidden overscroll-none">
+    <div className="flex flex-col max-w-3xl mx-auto overflow-hidden overscroll-none -mb-24 -mt-4 md:mt-0 md:mb-0 h-[calc(100dvh-3.5rem)] md:h-[calc(100dvh-3rem)]">
       {/* ── Top Bar ── */}
       <div className="flex items-center justify-between px-1 py-3 border-b border-border/50 shrink-0">
         <div className="flex items-center gap-2.5">
@@ -427,55 +427,6 @@ export default function AssistantPage() {
           </div>
         </div>
         <div className="flex items-center gap-1.5">
-          {/* Response mode selector */}
-          <div className="relative" ref={modeMenuRef}>
-            <button
-              type="button"
-              onClick={() => setShowModeMenu((p) => !p)}
-              className="flex items-center gap-1 h-8 px-2.5 rounded-lg text-xs font-medium border border-border/60 bg-card hover:bg-accent transition-colors cursor-pointer"
-            >
-              <span className={`h-1.5 w-1.5 rounded-full ${
-                responseMode === "fast" ? "bg-green-500" :
-                responseMode === "thinking" ? "bg-blue-500" :
-                responseMode === "research" ? "bg-purple-500" : "bg-amber-500"
-              }`} />
-              {responseMode === "fast" ? "Fast" :
-               responseMode === "thinking" ? "Thinking" :
-               responseMode === "research" ? "Research" : "Pro"}
-              <ChevronDown className="h-3 w-3 text-muted-foreground" />
-            </button>
-            {showModeMenu && (
-              <div className="absolute top-10 right-0 z-50 min-w-[180px] rounded-xl border border-border bg-popover shadow-lg py-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
-                {([
-                  { key: "fast" as const, label: "Fast", desc: "Quick responses", color: "bg-green-500" },
-                  { key: "thinking" as const, label: "Thinking", desc: "Step-by-step reasoning", color: "bg-blue-500" },
-                  { key: "research" as const, label: "Deep Research", desc: "Thorough analysis", color: "bg-purple-500" },
-                  { key: "pro" as const, label: "Pro", desc: "Maximum quality", color: "bg-amber-500" },
-                ]).map((mode) => (
-                  <button
-                    key={mode.key}
-                    type="button"
-                    onClick={() => {
-                      setResponseMode(mode.key);
-                      setShowModeMenu(false);
-                    }}
-                    className={`flex items-center gap-2.5 w-full px-3 py-2 text-sm hover:bg-accent transition-colors cursor-pointer ${
-                      responseMode === mode.key ? "bg-accent/50" : ""
-                    }`}
-                  >
-                    <span className={`h-2 w-2 rounded-full ${mode.color}`} />
-                    <div className="text-left">
-                      <div className="font-medium text-xs">{mode.label}</div>
-                      <div className="text-[10px] text-muted-foreground">{mode.desc}</div>
-                    </div>
-                    {responseMode === mode.key && (
-                      <span className="ml-auto text-primary text-xs">✓</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
           {hasMessages && (
             <Button
               variant="ghost"
@@ -710,22 +661,22 @@ export default function AssistantPage() {
               disabled={isProcessingFile || isLoading || uploadedFiles.length >= 10}
             />
 
-            {/* Desktop: direct "Upload files" button */}
+            {/* Desktop: plus icon, tooltip on hover */}
             <div className="hidden md:block">
               <Button
                 type="button"
                 variant="ghost"
+                size="icon"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isProcessingFile || isLoading || uploadedFiles.length >= 10}
-                className="h-10 rounded-xl cursor-pointer gap-1.5 px-3 text-xs"
-                aria-label="Upload files"
+                className="h-10 w-10 rounded-xl cursor-pointer"
+                title="Add files"
               >
                 {isProcessingFile ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Plus className="h-4 w-4" />
                 )}
-                Upload files
               </Button>
             </div>
 
@@ -787,7 +738,7 @@ export default function AssistantPage() {
             </div>
           </div>
 
-          {/* Text input with Send + Mic inside */}
+          {/* Text input with mode selector + Send/Mic inside */}
           <div className="flex-1 relative">
             <Textarea
               ref={textareaRef}
@@ -800,8 +751,58 @@ export default function AssistantPage() {
                   : t("assistant.placeholder")
               }
               disabled={isLoading}
-              className="resize-none min-h-[44px] max-h-[200px] overflow-y-auto scrollbar-none pr-12 rounded-xl text-base"
+              className="resize-none min-h-[44px] max-h-[200px] overflow-y-auto scrollbar-none pl-[4.5rem] pr-12 rounded-xl text-base"
             />
+            {/* Response mode selector — inside textarea, bottom-left */}
+            <div className="absolute left-1.5 bottom-1.5" ref={modeMenuRef}>
+              <button
+                type="button"
+                onClick={() => setShowModeMenu((p) => !p)}
+                className="flex items-center gap-1 h-8 px-2 rounded-lg text-[11px] font-medium hover:bg-accent/60 transition-colors cursor-pointer"
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${
+                  responseMode === "fast" ? "bg-green-500" :
+                  responseMode === "thinking" ? "bg-blue-500" :
+                  responseMode === "research" ? "bg-purple-500" : "bg-amber-500"
+                }`} />
+                {responseMode === "fast" ? "Fast" :
+                 responseMode === "thinking" ? "Think" :
+                 responseMode === "research" ? "Deep" : "Pro"}
+                <ChevronDown className="h-2.5 w-2.5 text-muted-foreground" />
+              </button>
+              {showModeMenu && (
+                <div className="absolute bottom-10 left-0 z-50 min-w-[170px] rounded-xl border border-border bg-popover shadow-lg py-1.5 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                  {([
+                    { key: "fast" as const, label: "Fast", desc: "Quick responses", color: "bg-green-500" },
+                    { key: "thinking" as const, label: "Thinking", desc: "Step-by-step reasoning", color: "bg-blue-500" },
+                    { key: "research" as const, label: "Deep Research", desc: "Thorough analysis", color: "bg-purple-500" },
+                    { key: "pro" as const, label: "Pro", desc: "Maximum quality", color: "bg-amber-500" },
+                  ]).map((mode) => (
+                    <button
+                      key={mode.key}
+                      type="button"
+                      onClick={() => {
+                        setResponseMode(mode.key);
+                        setShowModeMenu(false);
+                      }}
+                      className={`flex items-center gap-2.5 w-full px-3 py-2 text-sm hover:bg-accent transition-colors cursor-pointer ${
+                        responseMode === mode.key ? "bg-accent/50" : ""
+                      }`}
+                    >
+                      <span className={`h-2 w-2 rounded-full ${mode.color}`} />
+                      <div className="text-left">
+                        <div className="font-medium text-xs">{mode.label}</div>
+                        <div className="text-[10px] text-muted-foreground">{mode.desc}</div>
+                      </div>
+                      {responseMode === mode.key && (
+                        <span className="ml-auto text-primary text-xs">✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {/* Send / Stop / Mic — bottom-right */}
             <div className="absolute right-1.5 bottom-1.5 flex items-center gap-1">
               {isLoading ? (
                 <Button
