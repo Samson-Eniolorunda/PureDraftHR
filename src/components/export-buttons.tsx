@@ -265,9 +265,26 @@ export function ExportButtons({
   const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(
     null,
   );
-  const [pendingDownload, setPendingDownload] = useState<
+  const [pendingDownload, setPendingDownloadState] = useState<
     "pdf" | "docx" | "excel" | null
   >(null);
+  const pendingDownloadRef = useRef(pendingDownload);
+  pendingDownloadRef.current = pendingDownload;
+  // Grace period ref: ignore scroll events briefly after switching to rename mode
+  const scrollGraceRef = useRef(false);
+
+  /** Update pendingDownload state AND ref synchronously to prevent race conditions */
+  const setPendingDownload = useCallback(
+    (val: "pdf" | "docx" | "excel" | null) => {
+      pendingDownloadRef.current = val;
+      if (val) {
+        scrollGraceRef.current = true;
+        setTimeout(() => { scrollGraceRef.current = false; }, 600);
+      }
+      setPendingDownloadState(val);
+    },
+    [],
+  );
 
   // Compute fixed position when menu opens
   useEffect(() => {
@@ -295,6 +312,8 @@ export function ExportButtons({
     const scrollHandler = (e: Event) => {
       // Don't close if scrolling inside the menu itself
       if (menuRef.current?.contains(e.target as Node)) return;
+      // Don't close when user is in the rename step — keyboard opening causes scroll
+      if (pendingDownloadRef.current || scrollGraceRef.current) return;
       setMenuOpen(false);
       setPendingDownload(null);
     };
@@ -402,11 +421,15 @@ export function ExportButtons({
           </Button>
           {menuOpen && menuPos && (
             <div
-              className="fixed bg-popover border border-border rounded-xl shadow-lg py-1 min-w-[200px] z-[100] max-h-[70vh] overflow-y-auto scrollbar-none"
-              style={{
-                bottom: `${window.innerHeight - menuPos.top + 4}px`,
-                right: `${window.innerWidth - menuPos.left}px`,
-              }}
+              className="fixed bg-popover border border-border rounded-xl shadow-lg py-1 z-[100] max-h-[70vh] overflow-y-auto scrollbar-none min-w-[200px] sm:min-w-[200px] max-sm:left-1/2 max-sm:top-1/2 max-sm:-translate-x-1/2 max-sm:-translate-y-1/2 max-sm:w-[calc(100vw-2rem)] max-sm:max-w-[320px]"
+              style={
+                window.innerWidth >= 640
+                  ? {
+                      bottom: `${window.innerHeight - menuPos.top + 4}px`,
+                      right: `${window.innerWidth - menuPos.left}px`,
+                    }
+                  : undefined
+              }
             >
               {/* Filename rename step — shown only after picking a download type */}
               {pendingDownload ? (
@@ -461,7 +484,9 @@ export function ExportButtons({
                           : pendingDownload === "excel"
                             ? "export.downloadExcel"
                             : "export.downloadPdf",
-                      ).split(" ").slice(-1)[0] || "Download"}
+                      )
+                        .split(" ")
+                        .slice(-1)[0] || "Download"}
                     </Button>
                   </div>
                 </div>

@@ -18,7 +18,6 @@ import {
   MessageCircle,
   Send,
   Upload,
-  CheckCircle,
   X,
   StopCircle,
   Bot,
@@ -26,6 +25,9 @@ import {
   Sparkles,
   Mic,
   MicOff,
+  FileText,
+  FileSpreadsheet,
+  File,
 } from "lucide-react";
 
 /* ── Speech Recognition helper ── */
@@ -62,6 +64,28 @@ const LANG_TO_LOCALE: Record<string, string> = {
   Hindi: "hi-IN",
 };
 
+/* ── File type icon helper ── */
+function fileIcon(ext: string) {
+  const cls = "h-5 w-5";
+  switch (ext) {
+    case "pdf":
+      return <FileText className={`${cls} text-red-500`} />;
+    case "docx":
+    case "doc":
+    case "txt":
+      return <FileText className={`${cls} text-blue-500`} />;
+    case "csv":
+    case "xlsx":
+    case "xls":
+      return <FileSpreadsheet className={`${cls} text-green-600`} />;
+    case "html":
+    case "htm":
+      return <FileText className={`${cls} text-orange-500`} />;
+    default:
+      return <File className={`${cls} text-muted-foreground`} />;
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /* /assistant — ChatGPT / Gemini-style Chat UX                       */
 /* ------------------------------------------------------------------ */
@@ -71,9 +95,15 @@ export default function AssistantPage() {
   const [userPrompt, setUserPrompt] = useState("");
   const { language, t } = useTranslation();
   const [streamError, setStreamError] = useState<string | null>(null);
-  const [referenceText, setReferenceText] = useState("");
-  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<
+    { name: string; ext: string; text: string }[]
+  >([]);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
+
+  /** Combined reference text from all uploaded files */
+  const referenceText = uploadedFiles
+    .map((f, i) => `--- File ${i + 1}: ${f.name} ---\n${f.text}`)
+    .join("\n\n");
   const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -135,58 +165,66 @@ export default function AssistantPage() {
 
   const handleDocumentUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
 
       setIsProcessingFile(true);
       try {
-        let text: string;
-        const name = file.name.toLowerCase();
-        const isSpreadsheet =
-          name.endsWith(".csv") ||
-          name.endsWith(".xlsx") ||
-          name.endsWith(".xls") ||
-          file.type === "text/csv" ||
-          file.type ===
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-          file.type === "application/vnd.ms-excel";
+        const fileArray = Array.from(files).slice(0, 10 - uploadedFiles.length);
+        const results: { name: string; ext: string; text: string }[] = [];
 
-        if (isSpreadsheet) {
-          const XLSX = await import("xlsx");
-          const buffer = await file.arrayBuffer();
-          const workbook = XLSX.read(buffer, { type: "array" });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          if (!firstSheet) throw new Error("Spreadsheet has no sheets");
-          text = XLSX.utils.sheet_to_csv(firstSheet);
-        } else {
-          const formData = new FormData();
-          formData.append("file", file);
+        for (const file of fileArray) {
+          const name = file.name.toLowerCase();
+          const ext = name.split(".").pop() || "file";
+          const isSpreadsheet =
+            name.endsWith(".csv") ||
+            name.endsWith(".xlsx") ||
+            name.endsWith(".xls") ||
+            file.type === "text/csv" ||
+            file.type ===
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+            file.type === "application/vnd.ms-excel";
 
-          const response = await fetch("/api/extract", {
-            method: "POST",
-            body: formData,
-          });
-
-          if (!response.ok) throw new Error("Failed to extract text");
-          const data = await response.json();
-          text = data.text ?? "";
+          let text: string;
+          if (isSpreadsheet) {
+            const XLSX = await import("xlsx");
+            const buffer = await file.arrayBuffer();
+            const workbook = XLSX.read(buffer, { type: "array" });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            if (!firstSheet) throw new Error("Spreadsheet has no sheets");
+            text = XLSX.utils.sheet_to_csv(firstSheet);
+          } else {
+            const formData = new FormData();
+            formData.append("file", file);
+            const response = await fetch("/api/extract", {
+              method: "POST",
+              body: formData,
+            });
+            if (!response.ok) throw new Error("Failed to extract text");
+            const data = await response.json();
+            text = data.text ?? "";
+          }
+          results.push({ name: file.name, ext, text });
         }
 
-        setUploadedFileName(file.name);
-        setReferenceText(text);
+        setUploadedFiles((prev) => [...prev, ...results].slice(0, 10));
       } catch (error) {
         console.error("Document upload error:", error);
         setStreamError(t("error.uploadFailed"));
       } finally {
         setIsProcessingFile(false);
+        if (fileInputRef.current) fileInputRef.current.value = "";
       }
     },
-    [],
+    [uploadedFiles.length],
   );
 
-  const handleRemoveDocument = useCallback(() => {
-    setUploadedFileName(null);
-    setReferenceText("");
+  const handleRemoveDocument = useCallback((index: number) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const handleRemoveAllDocuments = useCallback(() => {
+    setUploadedFiles([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }, []);
 
@@ -210,8 +248,10 @@ export default function AssistantPage() {
     setMessages([]);
     setStreamError(null);
     setUserPrompt("");
+    setUploadedFiles([]);
     hasSentRef.current = false;
     if (textareaRef.current) textareaRef.current.style.height = "auto";
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }, [setMessages]);
 
   // Push to Formatter Action
@@ -230,16 +270,6 @@ export default function AssistantPage() {
     const recognition = createSpeechRecognition();
     if (!recognition) {
       toast.error(t("assistant.micNotSupported"));
-      return;
-    }
-
-    // Explicitly request microphone permission from the device
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      // Stop the tracks immediately — we only needed to trigger the prompt
-      stream.getTracks().forEach((track) => track.stop());
-    } catch {
-      toast.error(t("assistant.micDenied"));
       return;
     }
 
@@ -265,8 +295,22 @@ export default function AssistantPage() {
       }
     };
     recognitionRef.current = recognition;
-    recognition.start();
-    setIsListening(true);
+    try {
+      recognition.start();
+      setIsListening(true);
+    } catch {
+      // Fallback: request permission via getUserMedia then retry
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+        stream.getTracks().forEach((track) => track.stop());
+        recognition.start();
+        setIsListening(true);
+      } catch {
+        toast.error(t("assistant.micDenied"));
+      }
+    }
   }, [isListening, language]);
 
   return (
@@ -450,21 +494,41 @@ export default function AssistantPage() {
 
       {/* ── Input Area (pinned to bottom) ── */}
       <div className="shrink-0 border-t border-border/50 bg-background pt-3 pb-2 px-1">
-        {/* Attached document pill */}
-        {uploadedFileName && (
-          <div className="flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-1.5 mb-2 max-w-sm">
-            <CheckCircle className="h-3.5 w-3.5 text-green-600 shrink-0" />
-            <span className="text-xs font-medium text-green-700 dark:text-green-400 truncate flex-1">
-              {uploadedFileName}
-            </span>
-            <button
-              type="button"
-              onClick={handleRemoveDocument}
-              className="text-muted-foreground hover:text-destructive"
-              aria-label={t("assistant.removeDocument")}
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
+        {/* Attached file cards */}
+        {uploadedFiles.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {uploadedFiles.map((file, idx) => (
+              <div
+                key={`${file.name}-${idx}`}
+                className="group relative flex flex-col items-center justify-center w-[72px] h-[72px] rounded-xl border border-border/60 bg-muted/50 hover:bg-muted transition-colors"
+                title={file.name}
+              >
+                <button
+                  type="button"
+                  onClick={() => handleRemoveDocument(idx)}
+                  className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  aria-label={t("assistant.removeDocument")}
+                >
+                  <X className="h-2.5 w-2.5" />
+                </button>
+                {fileIcon(file.ext)}
+                <span className="mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-primary/10 text-primary">
+                  {file.ext}
+                </span>
+                <span className="mt-0.5 text-[8px] text-muted-foreground truncate max-w-[64px] leading-tight">
+                  {file.name.replace(/\.[^.]+$/, "")}
+                </span>
+              </div>
+            ))}
+            {uploadedFiles.length > 1 && (
+              <button
+                type="button"
+                onClick={handleRemoveAllDocuments}
+                className="flex items-center justify-center w-[72px] h-[72px] rounded-xl border border-dashed border-destructive/40 text-destructive/60 hover:text-destructive hover:border-destructive transition-colors text-[10px] font-medium"
+              >
+                Clear all
+              </button>
+            )}
           </div>
         )}
 
@@ -475,10 +539,13 @@ export default function AssistantPage() {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".pdf,.docx,.txt,.csv,.xlsx,.xls"
-              aria-label="Upload a document"
+              multiple
+              accept=".pdf,.docx,.txt,.csv,.xlsx,.xls,.html,.htm"
+              aria-label="Upload documents"
               onChange={handleDocumentUpload}
-              disabled={isProcessingFile || isLoading}
+              disabled={
+                isProcessingFile || isLoading || uploadedFiles.length >= 10
+              }
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
             />
             <Button
@@ -504,8 +571,8 @@ export default function AssistantPage() {
               value={userPrompt}
               onChange={handleTextareaChange}
               placeholder={
-                uploadedFileName
-                  ? `${t("assistant.placeholder")} "${uploadedFileName}"...`
+                uploadedFiles.length > 0
+                  ? `${t("assistant.placeholder")} (${uploadedFiles.length} file${uploadedFiles.length > 1 ? "s" : ""})...`
                   : t("assistant.placeholder")
               }
               disabled={isLoading}
