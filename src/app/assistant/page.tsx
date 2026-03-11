@@ -17,7 +17,7 @@ import {
   Loader2,
   MessageCircle,
   Send,
-  Upload,
+  Plus,
   X,
   StopCircle,
   Bot,
@@ -28,6 +28,9 @@ import {
   FileText,
   FileSpreadsheet,
   File,
+  Camera,
+  Image as ImageIcon,
+  FolderOpen,
 } from "lucide-react";
 
 /* ── Speech Recognition helper ── */
@@ -81,6 +84,13 @@ function fileIcon(ext: string) {
     case "html":
     case "htm":
       return <FileText className={`${cls} text-orange-500`} />;
+    case "jpg":
+    case "jpeg":
+    case "png":
+    case "gif":
+    case "webp":
+    case "heic":
+      return <ImageIcon className={`${cls} text-purple-500`} />;
     default:
       return <File className={`${cls} text-muted-foreground`} />;
   }
@@ -99,6 +109,7 @@ export default function AssistantPage() {
     { name: string; ext: string; text: string }[]
   >([]);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
+  const [showUploadMenu, setShowUploadMenu] = useState(false);
 
   /** Combined reference text from all uploaded files */
   const referenceText = uploadedFiles
@@ -109,6 +120,9 @@ export default function AssistantPage() {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const uploadMenuRef = useRef<HTMLDivElement>(null);
   const hasSentRef = useRef(false);
   const recognitionRef = useRef<ReturnType<
     typeof createSpeechRecognition
@@ -151,6 +165,21 @@ export default function AssistantPage() {
       }
     }
   }, [messages, isLoading]);
+
+  // Close upload menu on outside click
+  useEffect(() => {
+    if (!showUploadMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (
+        uploadMenuRef.current &&
+        !uploadMenuRef.current.contains(e.target as Node)
+      ) {
+        setShowUploadMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showUploadMenu]);
 
   // Auto-resize textarea
   const handleTextareaChange = useCallback(
@@ -214,6 +243,30 @@ export default function AssistantPage() {
       } finally {
         setIsProcessingFile(false);
         if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    },
+    [uploadedFiles.length],
+  );
+
+  const handleImageUpload = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      setIsProcessingFile(true);
+      try {
+        const fileArray = Array.from(files).slice(0, 10 - uploadedFiles.length);
+        const results: { name: string; ext: string; text: string }[] = [];
+        for (const file of fileArray) {
+          const ext = file.name.split(".").pop()?.toLowerCase() || "img";
+          results.push({
+            name: file.name,
+            ext,
+            text: `[Image: ${file.name}]`,
+          });
+        }
+        setUploadedFiles((prev) => [...prev, ...results].slice(0, 10));
+      } finally {
+        setIsProcessingFile(false);
       }
     },
     [uploadedFiles.length],
@@ -534,33 +587,91 @@ export default function AssistantPage() {
 
         {/* Input row */}
         <div className="flex items-end gap-2">
-          {/* Upload button */}
-          <div className="relative shrink-0">
+          {/* Upload button with menu */}
+          <div className="relative shrink-0" ref={uploadMenuRef}>
+            {/* Hidden file inputs */}
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleImageUpload}
+              disabled={isProcessingFile || isLoading || uploadedFiles.length >= 10}
+            />
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handleImageUpload}
+              disabled={isProcessingFile || isLoading || uploadedFiles.length >= 10}
+            />
             <input
               ref={fileInputRef}
               type="file"
               multiple
               accept=".pdf,.docx,.txt,.csv,.xlsx,.xls,.html,.htm"
-              aria-label="Upload documents"
+              className="hidden"
               onChange={handleDocumentUpload}
-              disabled={
-                isProcessingFile || isLoading || uploadedFiles.length >= 10
-              }
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
+              disabled={isProcessingFile || isLoading || uploadedFiles.length >= 10}
             />
+
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              disabled={isProcessingFile || isLoading}
-              className="h-10 w-10 rounded-xl"
+              onClick={() => setShowUploadMenu((p) => !p)}
+              disabled={isProcessingFile || isLoading || uploadedFiles.length >= 10}
+              className="h-10 w-10 rounded-xl cursor-pointer"
+              aria-label="Add files"
             >
               {isProcessingFile ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Upload className="h-4 w-4" />
+                <Plus className="h-4 w-4" />
               )}
             </Button>
+
+            {/* Dropdown menu */}
+            {showUploadMenu && (
+              <div className="absolute bottom-12 left-0 z-50 min-w-[160px] rounded-xl border border-border bg-popover shadow-lg py-1.5 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <button
+                  type="button"
+                  onClick={() => {
+                    cameraInputRef.current?.click();
+                    setShowUploadMenu(false);
+                  }}
+                  className="flex items-center gap-3 w-full px-3 py-2.5 text-sm hover:bg-accent transition-colors cursor-pointer"
+                >
+                  <Camera className="h-4 w-4 text-muted-foreground" />
+                  Camera
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    galleryInputRef.current?.click();
+                    setShowUploadMenu(false);
+                  }}
+                  className="flex items-center gap-3 w-full px-3 py-2.5 text-sm hover:bg-accent transition-colors cursor-pointer"
+                >
+                  <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                  Gallery
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    fileInputRef.current?.click();
+                    setShowUploadMenu(false);
+                  }}
+                  className="flex items-center gap-3 w-full px-3 py-2.5 text-sm hover:bg-accent transition-colors cursor-pointer"
+                >
+                  <FolderOpen className="h-4 w-4 text-muted-foreground" />
+                  Files
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Text input with Send + Mic inside */}
