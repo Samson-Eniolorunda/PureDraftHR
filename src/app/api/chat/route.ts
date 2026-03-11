@@ -281,21 +281,24 @@ export async function POST(req: Request) {
       );
     }
 
-    const { messages, tool, template, referenceText, language } = body as {
-      messages: {
-        role: "user" | "assistant" | "system" | "tool";
-        content: string;
-      }[];
-      tool: string;
-      template?: string;
-      referenceText?: string;
-      language?: string;
-    };
+    const { messages, tool, template, referenceText, language, responseMode } =
+      body as {
+        messages: {
+          role: "user" | "assistant" | "system" | "tool";
+          content: string;
+        }[];
+        tool: string;
+        template?: string;
+        referenceText?: string;
+        language?: string;
+        responseMode?: string;
+      };
 
     console.log("[API/chat] POST received", {
       tool,
       template,
       language,
+      responseMode,
       hasReference: !!referenceText,
       referenceLength: referenceText?.length ?? 0,
       messagesCount: Array.isArray(messages) ? messages.length : 0,
@@ -349,6 +352,21 @@ Your output must faithfully reflect this reference.`;
     // Multi-language support: if a non-English language is selected, append instruction
     if (language && language !== "English") {
       systemPrompt += `\n\nMANDATORY LANGUAGE INSTRUCTION: You MUST generate the final output entirely in ${sanitizeString(language)}, maintaining a highly professional, native-level business tone. All headings, body text, labels, and formatting should be in ${sanitizeString(language)}. Do not mix languages.`;
+    }
+
+    // Response mode instructions (assistant tool only)
+    if (tool === "assistant" && responseMode) {
+      const modeInstructions: Record<string, string> = {
+        fast: "\n\nRESPONSE MODE: Fast — Be concise and direct. Give short, actionable answers. Skip lengthy explanations unless asked. Prioritize speed and clarity.",
+        thinking:
+          "\n\nRESPONSE MODE: Thinking — Think step-by-step. Break down your reasoning. Show your thought process before giving the final answer. Be thorough but structured.",
+        research:
+          "\n\nRESPONSE MODE: Deep Research — Provide comprehensive, in-depth analysis. Cover multiple angles, cite specifics, consider edge cases, and give detailed explanations with examples. Be exhaustive.",
+        pro: "\n\nRESPONSE MODE: Pro — Deliver maximum quality output. Combine thorough analysis with polished, professional writing. Structure your response with clear headings, detailed sections, and actionable conclusions. This should be publication-ready quality.",
+      };
+      if (modeInstructions[responseMode]) {
+        systemPrompt += modeInstructions[responseMode];
+      }
     }
 
     // Truncate user messages to prevent payload overflow

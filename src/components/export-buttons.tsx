@@ -279,7 +279,9 @@ export function ExportButtons({
       pendingDownloadRef.current = val;
       if (val) {
         scrollGraceRef.current = true;
-        setTimeout(() => { scrollGraceRef.current = false; }, 600);
+        setTimeout(() => {
+          scrollGraceRef.current = false;
+        }, 600);
       }
       setPendingDownloadState(val);
     },
@@ -421,7 +423,7 @@ export function ExportButtons({
           </Button>
           {menuOpen && menuPos && (
             <div
-              className="fixed bg-popover border border-border rounded-xl shadow-lg py-1 z-[100] max-h-[70vh] overflow-y-auto scrollbar-none min-w-[200px] sm:min-w-[200px] max-sm:left-1/2 max-sm:top-1/2 max-sm:-translate-x-1/2 max-sm:-translate-y-1/2 max-sm:w-[calc(100vw-2rem)] max-sm:max-w-[320px]"
+              className="fixed bg-popover border border-border rounded-xl shadow-lg py-1 z-[100] max-h-[70vh] overflow-y-auto scrollbar-none min-w-[200px] sm:min-w-[200px] max-sm:right-2 max-sm:bottom-16 max-sm:w-[220px]"
               style={
                 window.innerWidth >= 640
                   ? {
