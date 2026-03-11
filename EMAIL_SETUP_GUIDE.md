@@ -23,9 +23,9 @@ The app uses `RESEND_FROM_EMAIL` to set the sender address. You already added it
 2. **Settings** → **Environment Variables**
 3. Add:
 
-| Key                | Value                                                  | Environments       |
-|--------------------|--------------------------------------------------------|---------------------|
-| `RESEND_FROM_EMAIL`| `PureDraft HR <support@puredrafthr.btbcoder.site>`     | Production, Preview |
+| Key                 | Value                                              | Environments        |
+| ------------------- | -------------------------------------------------- | ------------------- |
+| `RESEND_FROM_EMAIL` | `PureDraft HR <support@puredrafthr.btbcoder.site>` | Production, Preview |
 
 4. Click **Save**
 5. **Redeploy** the project (Settings → Deployments → redeploy latest, or push a new commit)
@@ -41,23 +41,49 @@ This forwards emails sent **to** `support@puredrafthr.btbcoder.site` into your G
 3. Add a forwarding rule:
    - **Alias**: `support`
    - **Forward to**: `eniolorundasamson@gmail.com`
-4. ImprovMX will show you **MX records** to add
+4. ImprovMX will show you **MX records** and an **SPF record** to add
 5. Go to **Namecheap → Advanced DNS** for `btbcoder.site`
-6. Add these MX records:
+6. Add these records:
 
-| Type | Host           | Value                 | Priority |
-|------|----------------|-----------------------|----------|
-| MX   | `puredrafthr`  | `mx1.improvmx.com`   | 10       |
-| MX   | `puredrafthr`  | `mx2.improvmx.com`   | 20       |
+| Type | Host          | Value                                                        | Priority |
+| ---- | ------------- | ------------------------------------------------------------ | -------- |
+| MX   | `puredrafthr` | `mx1.improvmx.com.`                                          | 10       |
+| MX   | `puredrafthr` | `mx2.improvmx.com.`                                          | 20       |
+| TXT  | `puredrafthr` | `v=spf1 include:spf.improvmx.com include:spf.brevo.com ~all` | —        |
 
-> **Important**: The Host is `puredrafthr` (not the full domain — Namecheap appends `.btbcoder.site` automatically).
+> **Important**: ImprovMX shows Host as `@` because it sees `puredrafthr.btbcoder.site` as the domain. In Namecheap, use `puredrafthr` as the Host — Namecheap appends `.btbcoder.site` automatically.
+>
+> **SPF**: The TXT record includes both ImprovMX (receiving) and Brevo (sending). Only one SPF record per host is allowed — merge them into one.
 
 7. Wait for DNS propagation (usually 5–30 minutes)
 8. Test by sending an email to `support@puredrafthr.btbcoder.site` from another account — it should arrive in your Gmail
 
 ---
 
-## Step 3: Gmail "Send As" (Reply as support@)
+## Step 3: Set Up Brevo SMTP (for Gmail "Send As")
+
+Resend SMTP requires domain verification (blocked by the free plan 1-domain limit). Use **Brevo** (free, 300 emails/day) as the SMTP provider instead.
+
+1. Go to [Brevo](https://www.brevo.com/) and sign up (free plan)
+2. Go to **Settings** → **Senders, Domains & Dedicated IPs** → **Domains**
+3. Click **Add a domain** → enter `puredrafthr.btbcoder.site`
+4. Brevo will show you DNS records to verify the domain (DKIM + Brevo code). Add them in **Namecheap → Advanced DNS**:
+
+| Type  | Host                          | Value                                |
+| ----- | ----------------------------- | ------------------------------------ |
+| TXT   | `puredrafthr`                 | _(Brevo code — copy from dashboard)_ |
+| CNAME | `mail._domainkey.puredrafthr` | _(DKIM value — copy from dashboard)_ |
+
+5. Back in Brevo, click **Verify** — wait for DNS propagation
+6. Once verified, go to **Settings** → **SMTP & API** to get your SMTP credentials:
+   - **SMTP Server**: `smtp-relay.brevo.com`
+   - **Port**: `587`
+   - **Login**: _(your Brevo login email)_
+   - **Password**: _(your Brevo SMTP key — shown on the page)_
+
+---
+
+## Step 4: Gmail "Send As" (Reply as support@)
 
 This lets you **reply** to emails from Gmail using `support@puredrafthr.btbcoder.site` so your personal Gmail stays hidden.
 
@@ -69,15 +95,15 @@ This lets you **reply** to emails from Gmail using `support@puredrafthr.btbcoder
    - **Email**: `support@puredrafthr.btbcoder.site`
    - Uncheck **"Treat as an alias"**
 5. Click **Next Step**
-6. Enter SMTP settings:
+6. Enter SMTP settings (from Brevo, Step 3):
 
-| Setting       | Value                  |
-|---------------|------------------------|
-| SMTP Server   | `smtp.resend.com`      |
-| Port          | `465`                  |
-| Username      | `resend`               |
-| Password      | *(your Resend API key)*|
-| Security      | **SSL**                |
+| Setting     | Value                      |
+| ----------- | -------------------------- |
+| SMTP Server | `smtp-relay.brevo.com`     |
+| Port        | `587`                      |
+| Username    | _(your Brevo login email)_ |
+| Password    | _(your Brevo SMTP key)_    |
+| Security    | **TLS**                    |
 
 7. Click **Add Account**
 8. Gmail will send a confirmation code to `support@puredrafthr.btbcoder.site`
@@ -87,7 +113,7 @@ This lets you **reply** to emails from Gmail using `support@puredrafthr.btbcoder
 
 ---
 
-## Step 4: Clerk Email Templates (Paid Plan Only)
+## Step 5: Clerk Email Templates (Paid Plan Only)
 
 Custom Clerk email templates require a **paid Clerk plan**. On the free plan, Clerk uses its default templates.
 
@@ -113,6 +139,7 @@ After completing all steps, test each one:
 - [ ] **Vercel env var added** — `RESEND_FROM_EMAIL` shows in Vercel project settings
 - [ ] **Contact form email works** — Submit the contact form on the live site, check your Gmail for the branded email (From will show `onboarding@resend.dev`)
 - [ ] **Inbound forwarding works** — Send an email to `support@puredrafthr.btbcoder.site`, it arrives in Gmail
+- [ ] **Brevo domain verified** — Brevo Dashboard shows domain as verified
 - [ ] **Reply as support@ works** — Reply to an email from Gmail, recipient sees `support@puredrafthr.btbcoder.site`
 
 ---
@@ -121,9 +148,12 @@ After completing all steps, test each one:
 
 All DNS records to add for `btbcoder.site` in Namecheap Advanced DNS:
 
-| Type | Host           | Value                 | Priority |
-|------|----------------|-----------------------|----------|
-| MX   | `puredrafthr`  | `mx1.improvmx.com`   | 10       |
-| MX   | `puredrafthr`  | `mx2.improvmx.com`   | 20       |
+| Type  | Host                          | Value                                                        | Priority |
+| ----- | ----------------------------- | ------------------------------------------------------------ | -------- |
+| MX    | `puredrafthr`                 | `mx1.improvmx.com.`                                          | 10       |
+| MX    | `puredrafthr`                 | `mx2.improvmx.com.`                                          | 20       |
+| TXT   | `puredrafthr`                 | `v=spf1 include:spf.improvmx.com include:spf.brevo.com ~all` | —        |
+| TXT   | `puredrafthr`                 | _(Brevo verification code — from dashboard)_                 | —        |
+| CNAME | `mail._domainkey.puredrafthr` | _(Brevo DKIM value — from dashboard)_                        | —        |
 
-> **Note**: If you upgrade Resend to a paid plan in the future, you'll also need to add SPF, DKIM, and DMARC records for `puredrafthr.btbcoder.site` (shown in the Resend dashboard when you verify the domain).
+> **Note**: Only one SPF TXT record per host is allowed. The record above merges both ImprovMX (receiving) and Brevo (sending). If you upgrade Resend in the future, add `include:send.resend.com` to the same SPF record.
