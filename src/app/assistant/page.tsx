@@ -192,6 +192,9 @@ export default function AssistantPage() {
     [],
   );
 
+  const ALLOWED_DOC_EXTS = new Set(["pdf", "docx", "txt", "csv", "xlsx", "xls", "html", "htm"]);
+  const ALLOWED_IMG_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp", "heic", "heif", "bmp", "svg"]);
+
   const handleDocumentUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
@@ -199,7 +202,16 @@ export default function AssistantPage() {
 
       setIsProcessingFile(true);
       try {
-        const fileArray = Array.from(files).slice(0, 10 - uploadedFiles.length);
+        const fileArray = Array.from(files)
+          .filter((f) => {
+            const ext = f.name.split(".").pop()?.toLowerCase() || "";
+            return ALLOWED_DOC_EXTS.has(ext);
+          })
+          .slice(0, 10 - uploadedFiles.length);
+        if (fileArray.length === 0) {
+          toast.error("Unsupported file type");
+          return;
+        }
         const results: { name: string; ext: string; text: string }[] = [];
 
         for (const file of fileArray) {
@@ -254,7 +266,16 @@ export default function AssistantPage() {
       if (!files || files.length === 0) return;
       setIsProcessingFile(true);
       try {
-        const fileArray = Array.from(files).slice(0, 10 - uploadedFiles.length);
+        const fileArray = Array.from(files)
+          .filter((f) => {
+            const ext = f.name.split(".").pop()?.toLowerCase() || "";
+            return ALLOWED_IMG_EXTS.has(ext);
+          })
+          .slice(0, 10 - uploadedFiles.length);
+        if (fileArray.length === 0) {
+          toast.error("Unsupported image type");
+          return;
+        }
         const results: { name: string; ext: string; text: string }[] = [];
         for (const file of fileArray) {
           const ext = file.name.split(".").pop()?.toLowerCase() || "img";
@@ -690,25 +711,6 @@ export default function AssistantPage() {
               className="resize-none min-h-[44px] max-h-[200px] overflow-y-auto scrollbar-none pr-20 rounded-xl"
             />
             <div className="absolute right-1.5 bottom-1.5 flex items-center gap-1">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                title={
-                  isListening
-                    ? t("assistant.stopListening")
-                    : t("assistant.voiceInput")
-                }
-                onClick={toggleListening}
-                disabled={isLoading}
-                className={`h-8 w-8 rounded-lg ${isListening ? "text-red-500 bg-red-500/10" : ""}`}
-              >
-                {isListening ? (
-                  <MicOff className="h-4 w-4" />
-                ) : (
-                  <Mic className="h-4 w-4" />
-                )}
-              </Button>
               {isLoading ? (
                 <Button
                   type="button"
@@ -719,15 +721,33 @@ export default function AssistantPage() {
                 >
                   <StopCircle className="h-4 w-4" />
                 </Button>
-              ) : (
+              ) : userPrompt.trim() ? (
                 <Button
                   type="button"
                   size="icon"
-                  disabled={!userPrompt.trim()}
                   onClick={handleSend}
                   className="h-8 w-8 rounded-lg"
                 >
                   <Send className="h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  title={
+                    isListening
+                      ? t("assistant.stopListening")
+                      : t("assistant.voiceInput")
+                  }
+                  onClick={toggleListening}
+                  className={`h-8 w-8 rounded-lg ${isListening ? "text-red-500 bg-red-500/10" : ""}`}
+                >
+                  {isListening ? (
+                    <MicOff className="h-4 w-4" />
+                  ) : (
+                    <Mic className="h-4 w-4" />
+                  )}
                 </Button>
               )}
             </div>
