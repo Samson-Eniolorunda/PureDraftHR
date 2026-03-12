@@ -26,7 +26,7 @@ import {
   Loader2,
   Wand2,
   StopCircle,
-  FileStack,
+  ClipboardList,
   FileText,
   Send,
 } from "lucide-react";
@@ -134,7 +134,7 @@ export default function SummarizerPage() {
       <div className="text-center sm:text-left">
         <div className="flex items-center gap-2.5 justify-center sm:justify-start">
           <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <FileStack className="h-5 w-5 text-primary" />
+            <ClipboardList className="h-5 w-5 text-primary" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
             {t("summarizer.title")}

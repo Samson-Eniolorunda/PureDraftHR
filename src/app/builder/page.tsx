@@ -26,7 +26,7 @@ import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
 import { useDocumentStyling } from "@/hooks/useDocumentStyling";
 import {
   Loader2,
-  Wand2,
+  PenTool,
   Upload,
   FileSpreadsheet,
   StopCircle,
@@ -453,7 +453,7 @@ Key Details: ${keyDetails}`,
       <div className="text-center sm:text-left">
         <div className="flex items-center gap-2.5 justify-center sm:justify-start">
           <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Wand2 className="h-5 w-5 text-primary" />
+            <PenTool className="h-5 w-5 text-primary" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
             {t("builder.title")}

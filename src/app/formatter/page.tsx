@@ -21,7 +21,7 @@ import { Modal } from "@/components/ui/modal";
 import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
 import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
 import { useDocumentStyling } from "@/hooks/useDocumentStyling";
-import { Loader2, Wand2, StopCircle, Send } from "lucide-react";
+import { Loader2, FileText, StopCircle, Send } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /*  /formatter — AI-powered HR document formatter                      */
@@ -127,7 +127,7 @@ export default function FormatterPage() {
       <div className="text-center sm:text-left">
         <div className="flex items-center gap-2.5 justify-center sm:justify-start">
           <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Wand2 className="h-5 w-5 text-primary" />
+            <FileText className="h-5 w-5 text-primary" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
             {t("formatter.title")}

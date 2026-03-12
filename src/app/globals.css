@@ -96,6 +96,15 @@
   .safe-main-bottom {
     padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px)) !important;
   }
+  /* Override layout paddings when the assistant chat is active — prevents scroll overflow */
+  main:has(.assistant-chat-root) {
+    padding-bottom: 0 !important;
+  }
+  main:has(.assistant-chat-root) > div {
+    min-height: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
 }
 
 /* ------------------------------------------------------------------ */
