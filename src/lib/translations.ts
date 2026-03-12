@@ -385,12 +385,6 @@ const T: [string, ...string[]][] = [
     "كيف يمكنني المساعدة في\nالموارد البشرية اليوم؟",
     "आज HR में\nकैसे मदद कर सकता हूँ?",
   ],
-    "Wie kann ich Ihnen helfen?",
-    "有什么需要帮助的？",
-    "Como posso ajudá-lo?",
-    "كيف يمكنني مساعدتك؟",
-    "मैं आपकी कैसे मदद कर सकता हूँ?",
-  ],
   [
     "assistant.emptyDesc",
     "Ask HR questions, draft emails and documents, analyze uploads, or get help with any professional task.",
