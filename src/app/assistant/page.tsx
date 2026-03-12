@@ -544,7 +544,7 @@ export default function AssistantPage() {
   }, [isListening, language]);
 
   return (
-    <div className="assistant-chat-root relative flex flex-col max-w-3xl mx-auto overflow-hidden overscroll-none h-[calc(100dvh-7.5rem)] md:h-[calc(100dvh-3rem)]">
+    <div className="assistant-chat-root relative flex flex-col max-w-3xl mx-auto overflow-hidden overscroll-none h-[calc(100dvh-8.5rem)] md:h-[calc(100dvh-3rem)]">
       {/* ── Sidebar Overlay Backdrop ── */}
       {showChatsPanel && (
         <div
@@ -909,7 +909,7 @@ export default function AssistantPage() {
         )}
 
         {/* Input card container */}
-        <div className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-border/60 bg-card shadow-sm">
           {/* Textarea */}
           <div className="relative">
             <Textarea
@@ -926,7 +926,7 @@ export default function AssistantPage() {
                   : t("assistant.placeholder")
               }
               disabled={isLoading}
-              className="resize-none min-h-[44px] max-h-[200px] overflow-y-auto scrollbar-none border-none bg-transparent shadow-none focus-visible:ring-0 rounded-none px-4 py-3 text-base"
+              className="resize-none min-h-[44px] max-h-[200px] overflow-y-auto overflow-x-hidden scrollbar-none border-none bg-transparent shadow-none focus-visible:ring-0 rounded-none px-4 py-3 text-base"
             />
           </div>
 
@@ -1143,7 +1143,7 @@ export default function AssistantPage() {
         </div>
 
         {/* Disclaimer — always visible */}
-        <p className="text-[10px] text-muted-foreground/60 text-center mt-2">
+        <p className="text-[10px] text-muted-foreground/60 text-center mt-1 pb-0.5">
           {t("assistant.disclaimer")}
         </p>
       </div>

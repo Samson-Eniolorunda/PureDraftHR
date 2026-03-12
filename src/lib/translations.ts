@@ -97,6 +97,17 @@ const T: [string, ...string[]][] = [
     "साइन इन",
   ],
   [
+    "common.more",
+    "More",
+    "Más",
+    "Plus",
+    "Mehr",
+    "更多",
+    "Mais",
+    "المزيد",
+    "अधिक",
+  ],
+  [
     "common.theme",
     "Theme",
     "Tema",

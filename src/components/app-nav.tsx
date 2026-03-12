@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -17,8 +17,11 @@ import {
   Globe,
   ChevronDown,
   Sparkles,
+  MoreHorizontal,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { LANGUAGES } from "@/components/language-selector";
 import { useTranslation } from "@/components/i18n-provider";
 
@@ -41,7 +44,13 @@ export function AppNav() {
   const pathname = usePathname();
   const { isSignedIn, isLoaded } = useAuth();
   const [showLangPicker, setShowLangPicker] = useState(false);
+  const [showMorePanel, setShowMorePanel] = useState(false);
   const { language, setLanguage, t } = useTranslation();
+
+  // Close More panel on navigation
+  useEffect(() => {
+    setShowMorePanel(false);
+  }, [pathname]);
 
   return (
     <>
@@ -245,8 +254,98 @@ export function AppNav() {
               </span>
             </Link>
           )}
+          {/* More button */}
+          <button
+            type="button"
+            onClick={() => setShowMorePanel((v) => !v)}
+            className={cn(
+              "flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 min-h-[2.75rem] px-1 py-1 text-[11px] font-medium transition-all duration-200 rounded-xl",
+              showMorePanel
+                ? "text-primary bg-primary/10"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <MoreHorizontal className="h-5 w-5" />
+            <span>{t("common.more")}</span>
+          </button>
         </div>
       </nav>
+
+      {/* ── Mobile "More" slide-up panel ── */}
+      {showMorePanel && (
+        <div
+          className="md:hidden fixed inset-0 z-[60] bg-black/40 animate-in fade-in duration-200"
+          onClick={() => setShowMorePanel(false)}
+        />
+      )}
+      <div
+        className={`md:hidden fixed bottom-0 left-0 right-0 z-[61] bg-card border-t border-border/50 rounded-t-2xl shadow-2xl transition-transform duration-300 ease-in-out ${
+          showMorePanel ? "translate-y-0" : "translate-y-full"
+        }`}
+      >
+        <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-border/50">
+          <span className="font-semibold text-sm">{t("export.moreOptions")}</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setShowMorePanel(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
+          {/* Theme toggle */}
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">{t("common.theme")}</span>
+            <ThemeToggleButton />
+          </div>
+
+          {/* Language selector */}
+          <div className="space-y-1.5">
+            <label htmlFor="mobile-language-select" className="text-xs text-muted-foreground">
+              {t("common.language")}
+            </label>
+            <Select
+              id="mobile-language-select"
+              name="mobile-language-select"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as typeof language)}
+            >
+              {LANGUAGES.map((lang) => (
+                <option key={lang.value} value={lang.value}>
+                  {lang.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          {/* Links */}
+          <div className="space-y-1">
+            {[
+              { href: "/privacy", label: t("common.privacy") },
+              { href: "/terms", label: t("common.terms") },
+              { href: "/faq", label: t("common.faq") },
+              { href: "/contact", label: t("common.contact") },
+            ].map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setShowMorePanel(false)}
+                className="block rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+
+          {/* Attribution */}
+          <p className="text-[10px] text-muted-foreground/50 text-center flex items-center justify-center gap-1 pt-2 border-t border-border/50">
+            <Sparkles className="h-3 w-3" />
+            {t("common.poweredByGemini")}
+          </p>
+        </div>
+      </div>
     </>
   );
 }
