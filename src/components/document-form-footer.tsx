@@ -130,9 +130,10 @@ export function DocumentFormFooter({
             <div className="relative">
               <input
                 id="reference-file"
+                name="reference-file"
                 type="file"
                 accept=".pdf,.docx,.txt,.csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
-                title="Upload a reference template"
+                aria-label="Upload a reference template"
                 onChange={handleReferenceUpload}
                 disabled={isProcessingRef || isLoading}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"

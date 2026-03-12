@@ -60,12 +60,21 @@ export const metadata: Metadata = {
     description:
       "Generate, format, and summarize professional HR documents in seconds with AI. Offer letters, policies, bulk CSV generation, and more.",
     siteName: "PureDraft HR",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "PureDraft HR — AI-Powered HR Document Generator",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "PureDraft HR — AI-Powered HR Document Generator",
     description:
       "Generate, format, and summarize professional HR documents in seconds with AI. Powered by Google Gemini.",
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,

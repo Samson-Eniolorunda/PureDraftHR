@@ -436,11 +436,13 @@ export function ExportButtons({
               {/* Filename rename step — shown only after picking a download type */}
               {pendingDownload ? (
                 <div className="px-3 py-2.5 space-y-2">
-                  <label className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <label htmlFor="export-filename" className="text-[10px] text-muted-foreground flex items-center gap-1">
                     <Pencil className="h-3 w-3" />
                     {t("export.fileName")}
                   </label>
                   <Input
+                    id="export-filename"
+                    name="export-filename"
                     type="text"
                     value={exportFileName}
                     onChange={(e) => setExportFileName(e.target.value)}

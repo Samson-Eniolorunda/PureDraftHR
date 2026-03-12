@@ -597,9 +597,11 @@ Key Details: ${keyDetails}`,
                       </p>
                       <div className="relative">
                         <input
+                          id="csv-upload"
+                          name="csv-upload"
                           type="file"
                           accept=".csv"
-                          title="Upload CSV file for bulk generation"
+                          aria-label="Upload CSV file for bulk generation"
                           onChange={handleCsvUpload}
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         />
@@ -887,6 +889,9 @@ Key Details: ${keyDetails}`,
                     {!isLoading && resultContent && (
                       <div className="mt-4 relative">
                         <Textarea
+                          id="builder-refine"
+                          name="builder-refine"
+                          aria-label="Refine document"
                           rows={1}
                           value={refineText}
                           onChange={(e) => setRefineText(e.target.value)}

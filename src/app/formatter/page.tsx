@@ -228,6 +228,9 @@ export default function FormatterPage() {
                     {!isLoading && resultContent && (
                       <div className="mt-4 relative">
                         <Textarea
+                          id="formatter-refine"
+                          name="formatter-refine"
+                          aria-label="Refine document"
                           rows={1}
                           value={refineText}
                           onChange={(e) => setRefineText(e.target.value)}

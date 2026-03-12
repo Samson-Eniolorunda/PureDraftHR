@@ -189,6 +189,8 @@ export function MultiFileDropZone({
       >
         <input
           ref={inputRef}
+          id="multi-file-upload"
+          name="multi-file-upload"
           type="file"
           multiple
           accept=".txt,.pdf,.docx,.csv,.xlsx,.xls"

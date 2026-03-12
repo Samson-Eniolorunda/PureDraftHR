@@ -275,6 +275,9 @@ export default function SummarizerPage() {
                     {!isLoading && resultContent && (
                       <div className="mt-4 relative">
                         <Textarea
+                          id="summarizer-refine"
+                          name="summarizer-refine"
+                          aria-label="Refine summary"
                           rows={1}
                           value={refineText}
                           onChange={(e) => setRefineText(e.target.value)}

@@ -85,6 +85,9 @@ export function DualInput({
       <TabsContent value="paste">
         <Textarea
           ref={textareaRef}
+          id="paste-text"
+          name="paste-text"
+          aria-label="Paste text content"
           rows={8}
           value={pastedText}
           onChange={handlePasteChange}

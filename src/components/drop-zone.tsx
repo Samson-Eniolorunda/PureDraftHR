@@ -155,6 +155,8 @@ export function DropZone({ onTextExtracted, disabled }: DropZoneProps) {
     >
       <input
         ref={inputRef}
+        id="file-upload"
+        name="file-upload"
         type="file"
         accept=".txt,.pdf,.docx,.csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
         aria-label="Upload a document (PDF, DOCX, TXT, XLSX, CSV)"

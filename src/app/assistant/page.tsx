@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useChat } from "ai/react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
@@ -47,6 +48,17 @@ import {
   Trash2,
   Share2,
   History,
+  Zap,
+  Brain,
+  Globe,
+  Crown,
+  Search,
+  Menu,
+  Mail,
+  ScrollText,
+  CalendarCheck,
+  Star,
+  ClipboardCheck,
 } from "lucide-react";
 
 /* ── Speech Recognition helper ── */
@@ -117,6 +129,7 @@ function fileIcon(ext: string) {
 /* ------------------------------------------------------------------ */
 export default function AssistantPage() {
   const router = useRouter();
+  const { user } = useUser();
 
   const [userPrompt, setUserPrompt] = useState("");
   const { language, t } = useTranslation();
@@ -134,6 +147,7 @@ export default function AssistantPage() {
   const [chatMenuId, setChatMenuId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [chatSearch, setChatSearch] = useState("");
   const chatsPanelRef = useRef<HTMLDivElement>(null);
 
   /** Combined reference text from all uploaded files */
@@ -312,6 +326,13 @@ export default function AssistantPage() {
     }
     setChatMenuId(null);
   }, []);
+
+  // Filtered chat list for search
+  const filteredChats = useMemo(() => {
+    if (!chatSearch.trim()) return chatList;
+    const q = chatSearch.toLowerCase();
+    return chatList.filter((s) => s.title.toLowerCase().includes(q));
+  }, [chatList, chatSearch]);
 
   // Auto-resize textarea
   const handleTextareaChange = useCallback(
@@ -524,63 +545,61 @@ export default function AssistantPage() {
 
   return (
     <div className="assistant-chat-root relative flex flex-col max-w-3xl mx-auto overflow-hidden overscroll-none h-[calc(100dvh-7.5rem)] md:h-[calc(100dvh-3rem)]">
-      {/* ── Top Bar ── */}
-      <div className="flex items-center justify-between px-1 py-3 border-b border-border/50 shrink-0">
-        <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Sparkles className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-base font-semibold leading-tight">
-              {t("assistant.title")}
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              {t("assistant.subtitle")}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowChatsPanel((p) => !p)}
-            className="text-xs gap-1.5 h-8"
-            title="Chats"
-          >
-            <History className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Chats</span>
-          </Button>
-          {hasMessages && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleNewChat}
-              className="text-xs gap-1.5 h-8"
-            >
-              <MessageCircle className="h-3.5 w-3.5" />
-              {t("assistant.newChat")}
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* ── Chats History Panel (overlay) ── */}
+      {/* ── Sidebar Overlay Backdrop ── */}
       {showChatsPanel && (
         <div
-          ref={chatsPanelRef}
-          className="absolute top-14 right-0 z-40 w-72 max-h-[70vh] bg-popover border border-border rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
-        >
-          <div className="px-3 py-2.5 border-b border-border/50 flex items-center justify-between">
-            <h3 className="text-sm font-semibold">Chats</h3>
-            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setShowChatsPanel(false)}>
-              <X className="h-3.5 w-3.5" />
-            </Button>
+          className="fixed inset-0 bg-black/40 z-40 animate-in fade-in duration-200"
+          onClick={() => { setShowChatsPanel(false); setChatMenuId(null); }}
+        />
+      )}
+
+      {/* ── Sidebar (Gemini-style slide-in) ── */}
+      <div
+        ref={chatsPanelRef}
+        className={`fixed top-0 left-0 z-50 h-full w-72 bg-card border-r border-border shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${
+          showChatsPanel ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {/* Sidebar header */}
+        <div className="px-3 py-3 border-b border-border/50 shrink-0">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <input
+              type="text"
+              id="chat-search"
+              name="chat-search"
+              value={chatSearch}
+              onChange={(e) => setChatSearch(e.target.value)}
+              placeholder="Search chats"
+              className="w-full h-9 pl-8 pr-3 rounded-lg bg-muted/50 border border-border/50 text-xs placeholder:text-muted-foreground/60 outline-none focus:border-primary/50 transition-colors"
+            />
           </div>
-          <div className="overflow-y-auto max-h-[calc(70vh-3rem)] scrollbar-none">
-            {chatList.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-8">No conversations yet</p>
-            ) : (
-              chatList.map((session) => (
+        </div>
+
+        {/* New chat button */}
+        <button
+          type="button"
+          onClick={() => { handleNewChat(); setShowChatsPanel(false); }}
+          className="mx-3 mt-3 mb-1 flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-accent/50 transition-colors cursor-pointer"
+        >
+          <Pencil className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">{t("assistant.newChat")}</span>
+        </button>
+
+        {/* Chats header */}
+        <div className="px-3 pt-4 pb-1">
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Chats</h3>
+        </div>
+
+        {/* Chat list */}
+        <div className="flex-1 overflow-y-auto scrollbar-none px-1">
+          {filteredChats.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-8">
+              {chatSearch ? "No matching chats" : "No conversations yet"}
+            </p>
+          ) : (
+            filteredChats.map((session) => (
                 <div
                   key={session.id}
                   className={`group relative flex items-center gap-2 px-3 py-2.5 hover:bg-accent/50 transition-colors cursor-pointer ${
@@ -593,6 +612,9 @@ export default function AssistantPage() {
                     {renamingId === session.id ? (
                       <input
                         type="text"
+                        id="chat-rename"
+                        name="chat-rename"
+                        aria-label="Rename conversation"
                         value={renameValue}
                         onChange={(e) => setRenameValue(e.target.value)}
                         onBlur={() => handleRenameChat(session.id, renameValue)}
@@ -666,44 +688,74 @@ export default function AssistantPage() {
               ))
             )}
           </div>
+      </div>
+
+      {/* ── Top Bar (Gemini-style) ── */}
+      <div className="flex items-center justify-between px-2 py-3 border-b border-border/50 shrink-0">
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => setShowChatsPanel((p) => !p)}
+            className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-accent/60 transition-colors cursor-pointer"
+            aria-label="Toggle sidebar"
+          >
+            <Menu className="h-4.5 w-4.5" />
+          </button>
+          <h1 className="text-base font-semibold">{t("assistant.title")}</h1>
         </div>
-      )}
+        {hasMessages && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleNewChat}
+            className="text-xs gap-1.5 h-8"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t("assistant.newChat")}</span>
+          </Button>
+        )}
+      </div>
 
       {/* ── Chat Messages Area ── */}
       <div
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto overscroll-contain px-1 py-4 space-y-1 scrollbar-none md:scrollbar-thin"
       >
-        {/* Empty state */}
+        {/* Empty state — Gemini-inspired welcome */}
         {!hasMessages && !isLoading && (
-          <div className="flex flex-col items-center justify-center h-full text-center px-4">
-            <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
-              <Sparkles className="h-8 w-8 text-primary" />
-            </div>
-            <h2 className="text-xl font-semibold mb-2">
+          <div className="flex flex-col items-start justify-center h-full px-4 sm:px-8 max-w-xl mx-auto">
+            {/* Greeting */}
+            <p className="text-lg text-muted-foreground mb-1">
+              {t("assistant.greeting")}{user?.firstName ? `, ${user.firstName}` : ""}
+            </p>
+            {/* Bold headline */}
+            <h2 className="text-2xl sm:text-3xl font-bold leading-tight mb-2 bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent whitespace-pre-line">
               {t("assistant.emptyTitle")}
             </h2>
-            <p className="text-sm text-muted-foreground max-w-md mb-8">
+            <p className="text-sm text-muted-foreground mb-8 max-w-md">
               {t("assistant.emptyDesc")}
             </p>
-            {/* Suggestion chips */}
-            <div className="flex flex-wrap gap-2 justify-center max-w-lg">
-              {[
-                t("assistant.chip1"),
-                t("assistant.chip2"),
-                t("assistant.chip3"),
-                t("assistant.chip4"),
-              ].map((suggestion) => (
+            {/* Suggestion chips — 2-column grid with icons */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
+              {([
+                { text: t("assistant.chip1"), icon: FileText },
+                { text: t("assistant.chip2"), icon: Mail },
+                { text: t("assistant.chip3"), icon: ScrollText },
+                { text: t("assistant.chip4"), icon: CalendarCheck },
+                { text: t("assistant.chip5"), icon: Star },
+                { text: t("assistant.chip6"), icon: ClipboardCheck },
+              ]).map((chip) => (
                 <button
-                  key={suggestion}
+                  key={chip.text}
                   type="button"
                   onClick={() => {
-                    setUserPrompt(suggestion);
+                    setUserPrompt(chip.text);
                     textareaRef.current?.focus();
                   }}
-                  className="rounded-xl border border-border/60 bg-card px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/5 transition-all duration-200"
+                  className="flex items-center gap-3 rounded-xl border border-border/60 bg-card/80 px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/5 transition-all duration-200 text-left"
                 >
-                  {suggestion}
+                  <chip.icon className="h-4 w-4 shrink-0 text-primary/60" />
+                  {chip.text}
                 </button>
               ))}
             </div>
@@ -816,11 +868,11 @@ export default function AssistantPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* ── Input Area (pinned to bottom) ── */}
-      <div className="shrink-0 border-t border-border/50 bg-background pt-3 pb-2 px-1">
+      {/* ── Input Area (Gemini-style card) ── */}
+      <div className="shrink-0 bg-background px-2 pb-2 pt-3">
         {/* Attached file cards */}
         {uploadedFiles.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-2">
+          <div className="flex flex-wrap gap-2 mb-2 px-1">
             {uploadedFiles.map((file, idx) => (
               <div
                 key={`${file.name}-${idx}`}
@@ -856,120 +908,15 @@ export default function AssistantPage() {
           </div>
         )}
 
-        {/* Input row */}
-        <div className="flex items-end gap-2">
-          {/* Upload button with menu */}
-          <div className="relative shrink-0" ref={uploadMenuRef}>
-            {/* Hidden file inputs */}
-            <input
-              ref={cameraInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              onChange={handleImageUpload}
-              disabled={isProcessingFile || isLoading || uploadedFiles.length >= 10}
-            />
-            <input
-              ref={galleryInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={handleImageUpload}
-              disabled={isProcessingFile || isLoading || uploadedFiles.length >= 10}
-            />
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept=".pdf,.docx,.txt,.csv,.xlsx,.xls,.html,.htm"
-              className="hidden"
-              onChange={handleDocumentUpload}
-              disabled={isProcessingFile || isLoading || uploadedFiles.length >= 10}
-            />
-
-            {/* Desktop: plus icon, tooltip on hover */}
-            <div className="hidden md:block">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isProcessingFile || isLoading || uploadedFiles.length >= 10}
-                className="h-10 w-10 rounded-xl cursor-pointer"
-                title="Add files"
-              >
-                {isProcessingFile ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Plus className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-
-            {/* Mobile: plus icon opens Camera / Gallery / Files menu */}
-            <div className="md:hidden">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowUploadMenu((p) => !p)}
-                disabled={isProcessingFile || isLoading || uploadedFiles.length >= 10}
-                className="h-10 w-10 rounded-xl cursor-pointer"
-                aria-label="Add files"
-              >
-                {isProcessingFile ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Plus className="h-4 w-4" />
-                )}
-              </Button>
-
-              {showUploadMenu && (
-                <div className="absolute bottom-12 left-0 z-50 min-w-[160px] rounded-xl border border-border bg-popover shadow-lg py-1.5 animate-in fade-in slide-in-from-bottom-2 duration-200">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      cameraInputRef.current?.click();
-                      setShowUploadMenu(false);
-                    }}
-                    className="flex items-center gap-3 w-full px-3 py-2.5 text-sm hover:bg-accent transition-colors cursor-pointer"
-                  >
-                    <Camera className="h-4 w-4 text-muted-foreground" />
-                    Camera
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      galleryInputRef.current?.click();
-                      setShowUploadMenu(false);
-                    }}
-                    className="flex items-center gap-3 w-full px-3 py-2.5 text-sm hover:bg-accent transition-colors cursor-pointer"
-                  >
-                    <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                    Gallery
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      fileInputRef.current?.click();
-                      setShowUploadMenu(false);
-                    }}
-                    className="flex items-center gap-3 w-full px-3 py-2.5 text-sm hover:bg-accent transition-colors cursor-pointer"
-                  >
-                    <FolderOpen className="h-4 w-4 text-muted-foreground" />
-                    Files
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Text input with mode selector + Send/Mic inside */}
-          <div className="flex-1 relative">
+        {/* Input card container */}
+        <div className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
+          {/* Textarea */}
+          <div className="relative">
             <Textarea
               ref={textareaRef}
+              id="chat-input"
+              name="chat-input"
+              aria-label="Chat message"
               rows={1}
               value={userPrompt}
               onChange={handleTextareaChange}
@@ -979,10 +926,131 @@ export default function AssistantPage() {
                   : t("assistant.placeholder")
               }
               disabled={isLoading}
-              className="resize-none min-h-[44px] max-h-[200px] overflow-y-auto scrollbar-none pr-28 rounded-xl text-base"
+              className="resize-none min-h-[44px] max-h-[200px] overflow-y-auto scrollbar-none border-none bg-transparent shadow-none focus-visible:ring-0 rounded-none px-4 py-3 text-base"
             />
-            {/* Send / Stop / Mic + Mode selector — bottom-right */}
-            <div className="absolute right-1.5 bottom-1.5 flex items-center gap-1">
+          </div>
+
+          {/* Bottom toolbar row */}
+          <div className="flex items-center justify-between px-2 pb-2">
+            {/* Left: upload button */}
+            <div className="relative shrink-0" ref={uploadMenuRef}>
+              {/* Hidden file inputs */}
+              <input
+                ref={cameraInputRef}
+                id="camera-upload"
+                name="camera-upload"
+                type="file"
+                accept="image/*"
+                capture="environment"
+                aria-label="Take a photo"
+                className="hidden"
+                onChange={handleImageUpload}
+                disabled={isProcessingFile || isLoading || uploadedFiles.length >= 10}
+              />
+              <input
+                ref={galleryInputRef}
+                id="gallery-upload"
+                name="gallery-upload"
+                type="file"
+                accept="image/*"
+                multiple
+                aria-label="Upload images from gallery"
+                className="hidden"
+                onChange={handleImageUpload}
+                disabled={isProcessingFile || isLoading || uploadedFiles.length >= 10}
+              />
+              <input
+                ref={fileInputRef}
+                id="document-upload"
+                name="document-upload"
+                type="file"
+                multiple
+                accept=".pdf,.docx,.txt,.csv,.xlsx,.xls,.html,.htm"
+                aria-label="Upload documents"
+                className="hidden"
+                onChange={handleDocumentUpload}
+                disabled={isProcessingFile || isLoading || uploadedFiles.length >= 10}
+              />
+
+              {/* Desktop: plus icon */}
+              <div className="hidden md:block">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isProcessingFile || isLoading || uploadedFiles.length >= 10}
+                  className="h-9 w-9 rounded-xl cursor-pointer"
+                  title="Add files"
+                >
+                  {isProcessingFile ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+
+              {/* Mobile: plus icon opens Camera / Gallery / Files menu */}
+              <div className="md:hidden">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowUploadMenu((p) => !p)}
+                  disabled={isProcessingFile || isLoading || uploadedFiles.length >= 10}
+                  className="h-9 w-9 rounded-xl cursor-pointer"
+                  aria-label="Add files"
+                >
+                  {isProcessingFile ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4" />
+                  )}
+                </Button>
+
+                {showUploadMenu && (
+                  <div className="absolute bottom-12 left-0 z-50 min-w-[160px] rounded-xl border border-border bg-popover shadow-lg py-1.5 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        cameraInputRef.current?.click();
+                        setShowUploadMenu(false);
+                      }}
+                      className="flex items-center gap-3 w-full px-3 py-2.5 text-sm hover:bg-accent transition-colors cursor-pointer"
+                    >
+                      <Camera className="h-4 w-4 text-muted-foreground" />
+                      Camera
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        galleryInputRef.current?.click();
+                        setShowUploadMenu(false);
+                      }}
+                      className="flex items-center gap-3 w-full px-3 py-2.5 text-sm hover:bg-accent transition-colors cursor-pointer"
+                    >
+                      <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                      Gallery
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        fileInputRef.current?.click();
+                        setShowUploadMenu(false);
+                      }}
+                      className="flex items-center gap-3 w-full px-3 py-2.5 text-sm hover:bg-accent transition-colors cursor-pointer"
+                    >
+                      <FolderOpen className="h-4 w-4 text-muted-foreground" />
+                      Files
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right: mode selector + send/mic */}
+            <div className="flex items-center gap-1">
               {/* Response mode selector */}
               <div ref={modeMenuRef} className="relative">
                 <button
@@ -990,11 +1058,10 @@ export default function AssistantPage() {
                   onClick={() => setShowModeMenu((p) => !p)}
                   className="flex items-center gap-1 h-8 px-2 rounded-lg text-[11px] font-medium hover:bg-accent/60 transition-colors cursor-pointer"
                 >
-                  <span className={`h-1.5 w-1.5 rounded-full ${
-                    responseMode === "fast" ? "bg-green-500" :
-                    responseMode === "thinking" ? "bg-blue-500" :
-                    responseMode === "research" ? "bg-purple-500" : "bg-amber-500"
-                  }`} />
+                  {responseMode === "fast" ? <Zap className="h-3.5 w-3.5 text-green-500" /> :
+                   responseMode === "thinking" ? <Brain className="h-3.5 w-3.5 text-blue-500" /> :
+                   responseMode === "research" ? <Globe className="h-3.5 w-3.5 text-purple-500" /> :
+                   <Crown className="h-3.5 w-3.5 text-amber-500" />}
                   {responseMode === "fast" ? "Fast" :
                    responseMode === "thinking" ? "Think" :
                    responseMode === "research" ? "Deep" : "Pro"}
@@ -1003,10 +1070,10 @@ export default function AssistantPage() {
                 {showModeMenu && (
                   <div className="absolute bottom-10 right-0 z-50 min-w-[170px] rounded-xl border border-border bg-popover shadow-lg py-1.5 animate-in fade-in slide-in-from-bottom-2 duration-200">
                     {([
-                      { key: "fast" as const, label: "Fast", desc: "Quick responses", color: "bg-green-500" },
-                      { key: "thinking" as const, label: "Thinking", desc: "Step-by-step reasoning", color: "bg-blue-500" },
-                      { key: "research" as const, label: "Deep Research", desc: "Thorough analysis", color: "bg-purple-500" },
-                      { key: "pro" as const, label: "Pro", desc: "Maximum quality", color: "bg-amber-500" },
+                      { key: "fast" as const, label: "Fast", desc: "Quick responses", icon: Zap, iconColor: "text-green-500" },
+                      { key: "thinking" as const, label: "Thinking", desc: "Step-by-step reasoning", icon: Brain, iconColor: "text-blue-500" },
+                      { key: "research" as const, label: "Deep Research", desc: "Thorough analysis", icon: Globe, iconColor: "text-purple-500" },
+                      { key: "pro" as const, label: "Pro", desc: "Maximum quality", icon: Crown, iconColor: "text-amber-500" },
                     ]).map((mode) => (
                       <button
                         key={mode.key}
@@ -1019,7 +1086,7 @@ export default function AssistantPage() {
                           responseMode === mode.key ? "bg-accent/50" : ""
                         }`}
                       >
-                        <span className={`h-2 w-2 rounded-full ${mode.color}`} />
+                        <mode.icon className={`h-4 w-4 ${mode.iconColor}`} />
                         <div className="text-left">
                           <div className="font-medium text-xs">{mode.label}</div>
                           <div className="text-[10px] text-muted-foreground">{mode.desc}</div>

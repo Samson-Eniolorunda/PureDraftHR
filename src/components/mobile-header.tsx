@@ -109,10 +109,12 @@ export function MobileHeader() {
 
             {/* Language selector (dropdown) */}
             <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground">
+              <label htmlFor="language-select" className="text-xs text-muted-foreground">
                 {t("common.language")}
               </label>
               <Select
+                id="language-select"
+                name="language-select"
                 value={language}
                 onChange={(e) => setLanguage(e.target.value as typeof language)}
               >
