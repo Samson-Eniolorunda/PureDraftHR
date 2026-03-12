@@ -1415,14 +1415,14 @@ const T: [string, ...string[]][] = [
   ],
   [
     "styling.confirmGenerate",
-    "Confirm & Generate",
-    "Confirmar y Generar",
-    "Confirmer et Générer",
-    "Bestätigen und Generieren",
-    "确认并生成",
-    "Confirmar e Gerar",
-    "تأكيد وإنشاء",
-    "पुष्टि करें और जनरेट करें",
+    "Format",
+    "Formatear",
+    "Formater",
+    "Formatieren",
+    "格式化",
+    "Formatar",
+    "تنسيق",
+    "फ़ॉर्मेट करें",
   ],
 
   // ── Refine ──

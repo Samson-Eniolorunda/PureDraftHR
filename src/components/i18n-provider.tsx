@@ -43,6 +43,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     window.dispatchEvent(
       new CustomEvent("puredraft-language-change", { detail: lang }),
     );
+    // Reload so the new language caches properly
+    window.location.reload();
   }, []);
 
   // Keep html lang attribute in sync

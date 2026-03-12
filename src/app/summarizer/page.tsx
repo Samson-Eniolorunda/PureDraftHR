@@ -24,10 +24,10 @@ import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
 import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
 import {
   Loader2,
-  Wand2,
   StopCircle,
   ClipboardList,
   FileText,
+  FileStack,
   Send,
 } from "lucide-react";
 
@@ -196,7 +196,7 @@ export default function SummarizerPage() {
 
             {/* Language selector removed — controlled globally from sidebar */}
 
-            {/* Consent & Reference Template Footer */}
+            {/* Consent & Submit Footer */}
             <DocumentFormFooter
               isLoading={isLoading}
               isConsented={isConsented}
@@ -204,6 +204,7 @@ export default function SummarizerPage() {
               onReferenceTextChange={setReferenceText}
               onSubmit={handleSummarizeClick}
               submitLabel={t("summarizer.summarize")}
+              showReferenceTemplate={false}
             />
           </CardContent>
         </Card>

@@ -17,6 +17,7 @@ interface DocumentFormFooterProps {
   onReferenceTextChange: (text: string) => void;
   onSubmit: () => void;
   submitLabel?: string;
+  showReferenceTemplate?: boolean;
 }
 
 export function DocumentFormFooter({
@@ -26,6 +27,7 @@ export function DocumentFormFooter({
   onReferenceTextChange,
   onSubmit,
   submitLabel = "Generate",
+  showReferenceTemplate = true,
 }: DocumentFormFooterProps) {
   const [isProcessingRef, setIsProcessingRef] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
@@ -94,6 +96,7 @@ export function DocumentFormFooter({
   return (
     <div className="space-y-4 mt-6 pb-4">
       {/* Reference Template Upload (Optional) */}
+      {showReferenceTemplate && (<>
       <Card className="p-4 bg-muted/50 border-dashed">
         <div className="space-y-3">
           <Label className="text-sm font-medium">
@@ -186,6 +189,7 @@ export function DocumentFormFooter({
         currentReferenceText={pastedRefText || uploadedFileText}
         disabled={isLoading}
       />
+      </>)}
 
       {/* Consent Checkbox */}
       <div className="space-y-3 border-t pt-4">

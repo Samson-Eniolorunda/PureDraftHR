@@ -21,7 +21,7 @@ import { Modal } from "@/components/ui/modal";
 import { ResultSkeleton } from "@/components/ui/skeleton-loaders";
 import { useDevSkeletonPreview } from "@/hooks/useDevSkeletonPreview";
 import { useDocumentStyling } from "@/hooks/useDocumentStyling";
-import { Loader2, FileText, StopCircle, Send } from "lucide-react";
+import { Loader2, FileText, StopCircle, Send, Wand2 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /*  /formatter — AI-powered HR document formatter                      */

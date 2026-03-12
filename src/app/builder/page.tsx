@@ -31,6 +31,7 @@ import {
   FileSpreadsheet,
   StopCircle,
   Send,
+  Wand2,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
