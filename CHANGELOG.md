@@ -6,33 +6,35 @@ All notable changes to PureDraft HR will be documented in this file.
 
 ### Added
 
-- 🌐 **Full i18n (Internationalization)**: Language selector now changes ALL website UI content — not just AI output. Supports 8 languages: English, Spanish, French, German, Mandarin, Portuguese, Arabic, Hindi
-- 🌐 **Translation system**: New `src/lib/translations.ts` with 115+ translation keys across 8 languages, and `src/components/i18n-provider.tsx` React context with `useTranslation()` hook
-- 🌐 **RTL support for Arabic**: Automatically sets `dir="rtl"` on the HTML element when Arabic is selected
-- 📱 **Mobile 3-dot slide-out menu**: Moved "More" from bottom tab bar to a 3-dot button next to the login button in the mobile header; opens a right-side slide drawer with theme toggle, language dropdown, nav links, and Gemini attribution
-- 📱 **Mobile language dropdown**: Language picker on mobile now uses a proper `<Select>` dropdown instead of chips
-- 🎤 **Microphone permission request**: Voice-to-text now explicitly requests device microphone permission via `getUserMedia` before starting speech recognition
-- 🔗 **Format button in all tools**: Builder, Summarizer, and Assistant export menus now include a "Format" action that routes content to the Formatter page via localStorage
+- 💬 **Chat History (localStorage)**: Full chat session management — save, load, rename, pin, and delete conversations. Chats persist in localStorage with sidebar listing, search, and pinned chats always at the top
+- 🎨 **Gemini-Style Assistant Redesign**: Complete visual overhaul of the Assistant page with a modern, Google Gemini-inspired interface — welcome screen with personalized greeting, gradient accent colors, and polished chat bubbles
+- 🎯 **Response Mode Selector**: Four AI response modes — Fast (⚡), Think (🧠), Deep Research (🌐), and Pro (👑) — each with distinct icons and contextual suggestion chips
+- 👋 **Personalized Greeting**: Assistant welcome screen shows "Hi {name}" when signed in via Clerk, with fallback to generic greeting
+- 💡 **Contextual Suggestion Chips**: Quick-start action buttons on the welcome screen that change based on the selected response mode
+- 📸 **Image & Camera Upload**: Upload images or take photos directly in the Assistant chat input for visual document analysis
+- 🖼️ **OG Image & Social Metadata**: Open Graph image (1200×630) and comprehensive meta tags for rich social sharing previews
+- 🍎 **iOS PWA Compatibility**: Apple-touch-icon PNG (180×180), iOS meta tags (`apple-mobile-web-app-capable`, status bar style), `touch-action: manipulation` to prevent double-tap zoom, `-webkit-appearance: none` for native form inputs
+- 📱 **PNG PWA Icons**: Generated 180×180, 192×192, and 512×512 PNG icons alongside existing SVGs for broader device compatibility
+- 🔗 **Share Conversation (Gemini-style)**: "Share conversation" button in the chat 3-dot menu shows "Creating public link..." loading state then opens the native share sheet (or copies to clipboard). Mobile uses a Gemini-style bottom sheet with full-width action buttons
+- ✉️ **Email Signature**: Contact form emails now include a permanent "Best Regards, PureDraft HR Support" signature block
+- ♿ **Form Accessibility Fixes**: 15 accessibility improvements across 9 files — proper `htmlFor`/`id` associations, `aria-label` attributes, and WCAG-compliant form controls
 
 ### Changed
 
-- 🔔 **Toast notification position**: Moved from `bottom-right` to `top-center` for better visibility on both desktop and mobile
-- 🎤 **Mic error toasts**: Microphone permission errors now use sonner `toast.error()` instead of inline error banner — always visible regardless of scroll position
-- 📱 **Bottom nav simplified**: Removed "More" tab from mobile bottom bar — 3-dot menu is now in the mobile header
-- 🔄 **Centralized language state**: All pages and components now use `useTranslation()` context instead of per-component localStorage sync
-- ✨ **Powered by Gemini pinned to slider footer**: "Powered by Google Gemini" attribution is now pinned to the bottom of the mobile slide-out panel instead of flowing with content
-- 📱 **Mobile content spacing**: Increased main content bottom padding from `pb-16` to `pb-20` + safe-area-inset-bottom so page cards no longer touch the bottom navigation bar
+- 📱 **More Options in Bottom Nav**: "More" button moved beside the Assistant tab in mobile bottom nav — opens a slide-up panel with theme toggle, language selector, nav links, and Gemini attribution
+- 📱 **Chat Actions Bottom Sheet**: Chat 3-dot menu on mobile now opens as a Gemini-style bottom sheet (slide-up panel) instead of a small dropdown — with Share conversation, Pin, Rename, and Delete options
+- 📱 **Chat 3-Dot Menu Visibility**: Chat action buttons (pin, rename, share, delete) are now always visible on mobile, hover-only on desktop
+- 📱 **Welcome Text Position**: Replaced `justify-center h-full` with `pt-8 sm:pt-16` padding to prevent greeting text from hiding under the fixed header
+- 📱 **Mode Selector Overflow**: Removed `overflow-hidden` from chat input card to prevent mode dropdown from being clipped
+- 📱 **Disclaimer Visibility**: Mobile disclaimer moved inside the main scrollable area so it's always accessible
+- 🔗 **PWA Start URL**: Changed from `/formatter` to `/assistant` in `manifest.json`
 
 ### Fixed
 
-- 🐛 **"Microphone access denied" toast hiding**: Toast was hidden behind bottom nav bar on mobile — now shows at top-center
-- 🐛 **Language state drift**: Eliminated duplicate language state management across components
-- 🐛 **Email provider dropdown commas**: Fixed `", ,"` appearing in the email provider select dropdown — replaced `String()` with recursive `childrenToText()` to properly flatten React children (emoji + text)
-- 🐛 **Select dropdown scrollbar**: Hidden scrollbar on the portal dropdown menu on mobile (`scrollbar-none`)
-- 🐛 **Export menu cut-off**: 3-dot dropdown now opens upward (`bottom-full`) with `max-h-[70vh]` to prevent items being cut off on mobile
-- 🐛 **Assistant chat page scroll**: Replaced `scrollIntoView` with `container.scrollTo()` so only the messages area scrolls — input textarea stays pinned at the bottom during AI generation
-- 🐛 **PWA assistant layout**: Added `env(safe-area-inset-top/bottom)` to the assistant chat height calculation to prevent the chat box from shifting in standalone PWA mode
-- 🐛 **Download button label**: Filename rename step now shows the correct format label (PDF/Word/Excel) based on the selected download type instead of always showing "PDF"
+- 🐛 **iOS form zoom**: Prevented iOS Safari auto-zoom on form inputs with `font-size: 16px` and `-webkit-appearance: none`
+- 🐛 **iOS double-tap zoom**: Added `touch-action: manipulation` on body element
+- 🐛 **Orphaned translation strings**: Fixed stray translation key syntax causing Vercel build failure
+- 🐛 **Mobile header imports**: Cleaned up unused imports in `mobile-header.tsx`
 
 ---
 

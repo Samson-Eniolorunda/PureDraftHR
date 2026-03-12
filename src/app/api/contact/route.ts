@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
           <td style="background:rgba(255,255,255,0.2);border-radius:10px;width:40px;height:40px;text-align:center;vertical-align:middle;font-weight:bold;font-size:16px;color:#ffffff;">PD</td>
           <td style="padding-left:12px;font-size:20px;font-weight:bold;color:#ffffff;letter-spacing:-0.5px;">PureDraft HR</td>
         </tr></table>
-        <p style="margin:8px 0 0;font-size:13px;color:rgba(255,255,255,0.85);">New Contact Form Submission</p>
+        <p style="margin:8px 0 0;font-size:13px;color:rgba(255,255,255,0.85);">Contact Form Submission</p>
       </td></tr>
       <!-- Body -->
       <tr><td style="background-color:#ffffff;padding:32px;">
@@ -152,10 +152,16 @@ export async function POST(request: NextRequest) {
           </td></tr>
         </table>
       </td></tr>
+      <!-- Signature -->
+      <tr><td style="background-color:#ffffff;border-top:1px solid #e5e7eb;padding:24px 32px;">
+        <p style="margin:0 0 4px;font-size:14px;color:#374151;">Best Regards,</p>
+        <p style="margin:0;font-size:15px;font-weight:600;color:#111827;">PureDraft HR Support</p>
+        <p style="margin:4px 0 0;font-size:12px;color:#6b7280;">AI-Powered HR Document Platform</p>
+      </td></tr>
       <!-- Footer -->
-      <tr><td style="background-color:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 32px;text-align:center;">
-        <p style="margin:0;font-size:12px;color:#9ca3af;">${timestamp} UTC</p>
-        <p style="margin:8px 0 0;font-size:11px;color:#9ca3af;">&copy; ${new Date().getFullYear()} PureDraft HR &middot; AI-Powered HR Documents</p>
+      <tr><td style="background-color:#f9fafb;border-top:1px solid #e5e7eb;padding:16px 32px;text-align:center;">
+        <p style="margin:0;font-size:11px;color:#9ca3af;">Received ${timestamp} UTC</p>
+        <p style="margin:6px 0 0;font-size:11px;color:#9ca3af;">&copy; ${new Date().getFullYear()} PureDraft HR &middot; AI-Powered HR Documents</p>
       </td></tr>
     </table>
   </td></tr>

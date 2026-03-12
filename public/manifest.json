@@ -2,7 +2,7 @@
   "name": "PureDraft HR",
   "short_name": "PureDraft",
   "description": "Enterprise-grade HR document processing with AI-powered formatting, summarization, and creation for HR professionals.",
-  "start_url": "/formatter",
+  "start_url": "/assistant",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#2563eb",
@@ -20,6 +20,12 @@
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

@@ -61,6 +61,7 @@
     -webkit-tap-highlight-color: transparent;
     overflow-wrap: break-word;
     word-wrap: break-word;
+    touch-action: manipulation;
   }
 }
 
@@ -117,6 +118,8 @@
   select,
   textarea {
     font-size: 16px !important;
+    -webkit-appearance: none;
+    appearance: none;
   }
 }
 

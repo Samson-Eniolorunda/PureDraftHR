@@ -37,7 +37,12 @@ A full-stack web application that empowers HR teams to format, summarize, and ge
 #### 💬 **Assistant** _(NEW)_
 
 - Freeform **HR Copilot** — ask HR questions, draft workplace emails, get policy advice
+- **Gemini-style UI** — modern chat interface with gradient accents, personalized greeting ("Hi {name}" when signed in), and contextual suggestion chips
+- **4 Response Modes** — Fast (⚡), Think (🧠), Deep Research (🌐), Pro (👑) — each with distinct behavior and suggestion chips
+- **Chat History** — conversations saved in localStorage with sidebar listing, search, pin, rename, and delete support
+- **Share Conversation** — Gemini-style "Creating public link..." flow that opens the native share sheet or copies conversation text to clipboard
 - **Chat with a Document** — upload a PDF, DOCX, or TXT file and ask questions about its contents
+- **Image & Camera Upload** — upload images or take photos for visual document analysis
 - Styled output with full document styling modal support
 - Send via button only (Enter inserts newlines); **Stop button** replaces Send while AI is generating
 - 🎤 **Voice-to-text** — mic button with language-aware speech recognition using the selected AI output language; explicitly requests microphone permission from the device
@@ -83,9 +88,10 @@ A full-stack web application that empowers HR teams to format, summarize, and ge
 
 - 📱 Mobile-first responsive design
 - 🏠 "Add to Home Screen" on iOS & Android
+- 🍎 **iOS Optimized** — Apple-touch-icon (180×180 PNG), `apple-mobile-web-app-capable` meta tags, `touch-action: manipulation`, and `-webkit-appearance: none` for native form input styling
 - 📴 Offline support with service worker
 - ⚡ Desktop sidebar + mobile bottom-tab navigation
-- 📱 **Mobile "More" tab** — 3-dot button in the mobile header opens a slide-out drawer with language dropdown, theme toggle, Privacy/Terms/FAQ/Contact links, and Gemini attribution pinned to the footer
+- 📱 **Mobile "More" tab** — bottom nav button opens a slide-up panel with language dropdown, theme toggle, Privacy/Terms/FAQ/Contact links, and Gemini attribution
 - ✨ **Powered by Google Gemini** — attribution displayed in sidebar and mobile More panel
 - 🎨 Beautiful light/dark theme with system/manual toggle
 
@@ -251,10 +257,14 @@ npm run start
 PureDraftHR/
 ├── public/
 │   ├── manifest.json          # PWA manifest
+│   ├── og-image.png           # Open Graph social image (1200×630)
 │   ├── sw.js                  # Service worker
 │   └── icons/
-│       ├── icon-192.svg       # PWA icon
-│       └── icon-512.svg       # PWA splash
+│       ├── apple-touch-icon.png # iOS home screen icon (180×180)
+│       ├── icon-192.png       # PWA icon (PNG)
+│       ├── icon-192.svg       # PWA icon (SVG)
+│       ├── icon-512.png       # PWA splash (PNG)
+│       └── icon-512.svg       # PWA splash (SVG)
 │
 ├── src/
 │   ├── app/
@@ -294,7 +304,7 @@ PureDraftHR/
 │   │   ├── meeting-card.tsx   # Smart Meeting Scheduler card + .ics generation
 │   │   ├── multi-file-drop-zone.tsx # Multi-file upload for batch mode
 │   │   ├── template-library.tsx  # Saved templates library (localStorage)
-│   │   ├── mobile-header.tsx  # Mobile header with auth + 3-dot slide-out panel
+│   │   ├── mobile-header.tsx  # Mobile header with logo + auth button
 │   │   ├── sonner-toaster.tsx # Toast notifications
 │   │   ├── pwa-register.tsx   # Service worker registration
 │   │   ├── theme-provider.tsx # Light/dark/system theme provider
@@ -423,8 +433,8 @@ Handles contact form submissions with validation.
 
 ### Mobile (<768px)
 
-- **Mobile Header** (fixed, top): Logo + auth button + 3-dot slide-out panel
-- **Bottom Tab Bar** (fixed, 64px): Icon + label navigation
+- **Mobile Header** (fixed, top): Logo + auth button
+- **Bottom Tab Bar** (fixed, 64px): Icon + label navigation + "More" tab with slide-up panel
 - **Main Content**: Full width with safe-area padding to avoid bottom nav overlap
 - **Styling Modal**: Same modal popup as desktop
 
@@ -481,7 +491,7 @@ Handles contact form submissions with validation.
 
 1. Go to `/assistant`
 2. Type: "Write a sick leave email to my manager for tomorrow"
-4. Click the Send button (or use voice-to-text with the mic button)
+3. Click the Send button (or use voice-to-text with the mic button)
 4. Export or copy the result
 
 ---

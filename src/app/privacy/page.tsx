@@ -23,7 +23,7 @@ export default function PrivacyPage() {
           </h1>
         </div>
         <p className="mt-2 text-sm text-muted-foreground">
-          Last updated: March 7, 2026
+          Last updated: June 12, 2025
         </p>
       </div>
 
@@ -302,6 +302,15 @@ export default function PrivacyPage() {
       <section className="space-y-3">
         <h2 className="text-lg sm:text-xl font-semibold">Browser-Level Data</h2>
         <ul className="space-y-2.5 text-sm sm:text-base leading-relaxed text-muted-foreground">
+          <li className="flex gap-2">
+            <span className="text-primary mt-1 shrink-0">&bull;</span>
+            <span>
+              <strong className="text-foreground">Chat history</strong>{" "}
+              (Assistant conversations) is stored in your browser&apos;s
+              localStorage. No chat data is sent to our servers — conversations
+              stay on your device.
+            </span>
+          </li>
           <li className="flex gap-2">
             <span className="text-primary mt-1 shrink-0">&bull;</span>
             <span>

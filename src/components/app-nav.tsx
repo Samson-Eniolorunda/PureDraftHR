@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -206,29 +206,46 @@ export function AppNav() {
         className="md:hidden fixed bottom-0 left-0 right-0 z-30 border-t border-border/50 bg-card/95 backdrop-blur-xl supports-[backdrop-filter]:bg-card/75 safe-bottom"
       >
         <div className="flex items-center justify-around h-16 px-2">
-          {NAV_ITEMS.map(({ href, labelKey, icon: Icon }) => {
+          {NAV_ITEMS.map(({ href, labelKey, icon: Icon }, index) => {
             const active = pathname === href;
             return (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  "flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 min-h-[2.75rem] px-1 py-1 text-[11px] font-medium transition-all duration-200 rounded-xl",
-                  active
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <Icon
+              <React.Fragment key={href}>
+                <Link
+                  href={href}
                   className={cn(
-                    "h-5 w-5 transition-transform duration-200",
-                    active && "stroke-[2.5] scale-110",
+                    "flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 min-h-[2.75rem] px-1 py-1 text-[11px] font-medium transition-all duration-200 rounded-xl",
+                    active
+                      ? "text-primary bg-primary/10"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
-                />
-                <span className={cn("truncate", active && "font-semibold")}>
-                  {t(labelKey)}
-                </span>
-              </Link>
+                >
+                  <Icon
+                    className={cn(
+                      "h-5 w-5 transition-transform duration-200",
+                      active && "stroke-[2.5] scale-110",
+                    )}
+                  />
+                  <span className={cn("truncate", active && "font-semibold")}>
+                    {t(labelKey)}
+                  </span>
+                </Link>
+                {/* More button — placed beside Assistant (first item) */}
+                {index === 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowMorePanel((v) => !v)}
+                    className={cn(
+                      "flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 min-h-[2.75rem] px-1 py-1 text-[11px] font-medium transition-all duration-200 rounded-xl",
+                      showMorePanel
+                        ? "text-primary bg-primary/10"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    <MoreHorizontal className="h-5 w-5" />
+                    <span>{t("common.more")}</span>
+                  </button>
+                )}
+              </React.Fragment>
             );
           })}
           {isSignedIn && (
@@ -254,20 +271,6 @@ export function AppNav() {
               </span>
             </Link>
           )}
-          {/* More button */}
-          <button
-            type="button"
-            onClick={() => setShowMorePanel((v) => !v)}
-            className={cn(
-              "flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 min-h-[2.75rem] px-1 py-1 text-[11px] font-medium transition-all duration-200 rounded-xl",
-              showMorePanel
-                ? "text-primary bg-primary/10"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <MoreHorizontal className="h-5 w-5" />
-            <span>{t("common.more")}</span>
-          </button>
         </div>
       </nav>
 
@@ -284,7 +287,9 @@ export function AppNav() {
         }`}
       >
         <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-border/50">
-          <span className="font-semibold text-sm">{t("export.moreOptions")}</span>
+          <span className="font-semibold text-sm">
+            {t("export.moreOptions")}
+          </span>
           <Button
             variant="ghost"
             size="icon"
@@ -303,7 +308,10 @@ export function AppNav() {
 
           {/* Language selector */}
           <div className="space-y-1.5">
-            <label htmlFor="mobile-language-select" className="text-xs text-muted-foreground">
+            <label
+              htmlFor="mobile-language-select"
+              className="text-xs text-muted-foreground"
+            >
               {t("common.language")}
             </label>
             <Select

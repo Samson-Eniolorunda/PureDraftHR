@@ -139,12 +139,17 @@ export default function AssistantPage() {
   >([]);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
   const [showUploadMenu, setShowUploadMenu] = useState(false);
-  const [responseMode, setResponseMode] = useState<"fast" | "thinking" | "research" | "pro">("fast");
+  const [responseMode, setResponseMode] = useState<
+    "fast" | "thinking" | "research" | "pro"
+  >("fast");
   const [showModeMenu, setShowModeMenu] = useState(false);
   const [showChatsPanel, setShowChatsPanel] = useState(false);
   const [chatList, setChatList] = useState<ChatSession[]>([]);
-  const [activeChatId, setActiveChatId] = useState<string>(() => crypto.randomUUID());
+  const [activeChatId, setActiveChatId] = useState<string>(() =>
+    crypto.randomUUID(),
+  );
   const [chatMenuId, setChatMenuId] = useState<string | null>(null);
+  const [sharingId, setSharingId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [chatSearch, setChatSearch] = useState("");
@@ -241,7 +246,10 @@ export default function AssistantPage() {
   useEffect(() => {
     if (!showChatsPanel) return;
     const handler = (e: MouseEvent) => {
-      if (chatsPanelRef.current && !chatsPanelRef.current.contains(e.target as Node)) {
+      if (
+        chatsPanelRef.current &&
+        !chatsPanelRef.current.contains(e.target as Node)
+      ) {
         setShowChatsPanel(false);
         setChatMenuId(null);
       }
@@ -269,34 +277,42 @@ export default function AssistantPage() {
   }, [messages, activeChatId]);
 
   // Load a saved chat
-  const handleLoadChat = useCallback((session: ChatSession) => {
-    setActiveChatId(session.id);
-    setMessages(session.messages.map((m) => ({
-      id: m.id,
-      role: m.role,
-      content: m.content,
-    })));
-    setStreamError(null);
-    setUserPrompt("");
-    setUploadedFiles([]);
-    hasSentRef.current = true;
-    setShowChatsPanel(false);
-    setChatMenuId(null);
-  }, [setMessages]);
-
-  const handleDeleteChat = useCallback((id: string) => {
-    deleteChat(id);
-    setChatList(getChats());
-    if (id === activeChatId) {
-      setActiveChatId(crypto.randomUUID());
-      setMessages([]);
+  const handleLoadChat = useCallback(
+    (session: ChatSession) => {
+      setActiveChatId(session.id);
+      setMessages(
+        session.messages.map((m) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+        })),
+      );
       setStreamError(null);
       setUserPrompt("");
       setUploadedFiles([]);
-      hasSentRef.current = false;
-    }
-    setChatMenuId(null);
-  }, [activeChatId, setMessages]);
+      hasSentRef.current = true;
+      setShowChatsPanel(false);
+      setChatMenuId(null);
+    },
+    [setMessages],
+  );
+
+  const handleDeleteChat = useCallback(
+    (id: string) => {
+      deleteChat(id);
+      setChatList(getChats());
+      if (id === activeChatId) {
+        setActiveChatId(crypto.randomUUID());
+        setMessages([]);
+        setStreamError(null);
+        setUserPrompt("");
+        setUploadedFiles([]);
+        hasSentRef.current = false;
+      }
+      setChatMenuId(null);
+    },
+    [activeChatId, setMessages],
+  );
 
   const handleRenameChat = useCallback((id: string, title: string) => {
     if (title.trim()) {
@@ -314,17 +330,28 @@ export default function AssistantPage() {
   }, []);
 
   const handleShareChat = useCallback((session: ChatSession) => {
-    const text = session.messages
-      .map((m) => `${m.role === "user" ? "You" : "PureDraft"}: ${m.content}`)
-      .join("\n\n");
-    if (navigator.share) {
-      navigator.share({ title: session.title, text }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(text).then(() => {
-        toast.success("Conversation copied to clipboard");
-      });
-    }
-    setChatMenuId(null);
+    setSharingId(session.id);
+    // Show "Creating public link..." briefly, then share
+    setTimeout(() => {
+      const text = session.messages
+        .map((m) => `${m.role === "user" ? "You" : "PureDraft"}: ${m.content}`)
+        .join("\n\n");
+      if (navigator.share) {
+        navigator
+          .share({ title: session.title, text })
+          .catch(() => {})
+          .finally(() => {
+            setSharingId(null);
+            setChatMenuId(null);
+          });
+      } else {
+        navigator.clipboard.writeText(text).then(() => {
+          toast.success("Link copied to clipboard");
+          setSharingId(null);
+          setChatMenuId(null);
+        });
+      }
+    }, 800);
   }, []);
 
   // Filtered chat list for search
@@ -345,8 +372,27 @@ export default function AssistantPage() {
     [],
   );
 
-  const ALLOWED_DOC_EXTS = new Set(["pdf", "docx", "txt", "csv", "xlsx", "xls", "html", "htm"]);
-  const ALLOWED_IMG_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp", "heic", "heif", "bmp", "svg"]);
+  const ALLOWED_DOC_EXTS = new Set([
+    "pdf",
+    "docx",
+    "txt",
+    "csv",
+    "xlsx",
+    "xls",
+    "html",
+    "htm",
+  ]);
+  const ALLOWED_IMG_EXTS = new Set([
+    "jpg",
+    "jpeg",
+    "png",
+    "gif",
+    "webp",
+    "heic",
+    "heif",
+    "bmp",
+    "svg",
+  ]);
 
   const handleDocumentUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -549,7 +595,10 @@ export default function AssistantPage() {
       {showChatsPanel && (
         <div
           className="fixed inset-0 bg-black/40 z-40 animate-in fade-in duration-200"
-          onClick={() => { setShowChatsPanel(false); setChatMenuId(null); }}
+          onClick={() => {
+            setShowChatsPanel(false);
+            setChatMenuId(null);
+          }}
         />
       )}
 
@@ -580,7 +629,10 @@ export default function AssistantPage() {
         {/* New chat button */}
         <button
           type="button"
-          onClick={() => { handleNewChat(); setShowChatsPanel(false); }}
+          onClick={() => {
+            handleNewChat();
+            setShowChatsPanel(false);
+          }}
           className="mx-3 mt-3 mb-1 flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-accent/50 transition-colors cursor-pointer"
         >
           <Pencil className="h-4 w-4 text-muted-foreground" />
@@ -589,7 +641,9 @@ export default function AssistantPage() {
 
         {/* Chats header */}
         <div className="px-3 pt-4 pb-1">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Chats</h3>
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            Chats
+          </h3>
         </div>
 
         {/* Chat list */}
@@ -600,95 +654,187 @@ export default function AssistantPage() {
             </p>
           ) : (
             filteredChats.map((session) => (
-                <div
-                  key={session.id}
-                  className={`group relative flex items-center gap-2 px-3 py-2.5 hover:bg-accent/50 transition-colors cursor-pointer ${
-                    session.id === activeChatId ? "bg-accent/30" : ""
-                  }`}
-                  onClick={() => handleLoadChat(session)}
-                >
-                  {session.pinned && <Pin className="h-3 w-3 text-primary shrink-0" />}
-                  <div className="flex-1 min-w-0">
-                    {renamingId === session.id ? (
-                      <input
-                        type="text"
-                        id="chat-rename"
-                        name="chat-rename"
-                        aria-label="Rename conversation"
-                        value={renameValue}
-                        onChange={(e) => setRenameValue(e.target.value)}
-                        onBlur={() => handleRenameChat(session.id, renameValue)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleRenameChat(session.id, renameValue);
-                          if (e.key === "Escape") setRenamingId(null);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-full bg-transparent border-b border-primary text-xs outline-none py-0.5"
-                        autoFocus
-                      />
-                    ) : (
-                      <p className="text-xs font-medium truncate">{session.title}</p>
-                    )}
-                    <p className="text-[10px] text-muted-foreground">
-                      {new Date(session.updatedAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  {/* 3-dot menu */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setChatMenuId(chatMenuId === session.id ? null : session.id);
-                    }}
-                    className="h-6 w-6 flex items-center justify-center rounded-md opacity-0 group-hover:opacity-100 hover:bg-accent transition-all shrink-0"
-                  >
-                    <MoreVertical className="h-3.5 w-3.5" />
-                  </button>
-                  {/* Context menu */}
-                  {chatMenuId === session.id && (
-                    <div
-                      className="absolute right-2 top-full z-50 min-w-[140px] rounded-xl border border-border bg-popover shadow-lg py-1 animate-in fade-in duration-150"
+              <div
+                key={session.id}
+                className={`group relative flex items-center gap-2 px-3 py-2.5 hover:bg-accent/50 transition-colors cursor-pointer ${
+                  session.id === activeChatId ? "bg-accent/30" : ""
+                }`}
+                onClick={() => handleLoadChat(session)}
+              >
+                {session.pinned && (
+                  <Pin className="h-3 w-3 text-primary shrink-0" />
+                )}
+                <div className="flex-1 min-w-0">
+                  {renamingId === session.id ? (
+                    <input
+                      type="text"
+                      id="chat-rename"
+                      name="chat-rename"
+                      aria-label="Rename conversation"
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onBlur={() => handleRenameChat(session.id, renameValue)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter")
+                          handleRenameChat(session.id, renameValue);
+                        if (e.key === "Escape") setRenamingId(null);
+                      }}
                       onClick={(e) => e.stopPropagation()}
-                    >
-                      <button
-                        type="button"
-                        className="flex items-center gap-2 w-full px-3 py-1.5 text-xs hover:bg-accent transition-colors"
-                        onClick={() => handleShareChat(session)}
-                      >
-                        <Share2 className="h-3 w-3" /> Share
-                      </button>
-                      <button
-                        type="button"
-                        className="flex items-center gap-2 w-full px-3 py-1.5 text-xs hover:bg-accent transition-colors"
-                        onClick={() => handleTogglePin(session.id)}
-                      >
-                        <Pin className="h-3 w-3" /> {session.pinned ? "Unpin" : "Pin"}
-                      </button>
-                      <button
-                        type="button"
-                        className="flex items-center gap-2 w-full px-3 py-1.5 text-xs hover:bg-accent transition-colors"
-                        onClick={() => {
-                          setRenamingId(session.id);
-                          setRenameValue(session.title);
-                          setChatMenuId(null);
-                        }}
-                      >
-                        <Pencil className="h-3 w-3" /> Rename
-                      </button>
-                      <button
-                        type="button"
-                        className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-destructive hover:bg-accent transition-colors"
-                        onClick={() => handleDeleteChat(session.id)}
-                      >
-                        <Trash2 className="h-3 w-3" /> Delete
-                      </button>
-                    </div>
+                      className="w-full bg-transparent border-b border-primary text-xs outline-none py-0.5"
+                      autoFocus
+                    />
+                  ) : (
+                    <p className="text-xs font-medium truncate">
+                      {session.title}
+                    </p>
                   )}
+                  <p className="text-[10px] text-muted-foreground">
+                    {new Date(session.updatedAt).toLocaleDateString()}
+                  </p>
                 </div>
-              ))
-            )}
-          </div>
+                {/* 3-dot menu */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setChatMenuId(
+                      chatMenuId === session.id ? null : session.id,
+                    );
+                  }}
+                  className="h-6 w-6 flex items-center justify-center rounded-md opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-accent transition-all shrink-0"
+                >
+                  <MoreVertical className="h-3.5 w-3.5" />
+                </button>
+                {/* Context menu — desktop dropdown */}
+                {chatMenuId === session.id && (
+                  <div
+                    className="hidden md:block absolute right-2 top-full z-50 min-w-[170px] rounded-xl border border-border bg-popover shadow-lg py-1 animate-in fade-in duration-150"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 w-full px-3 py-1.5 text-xs hover:bg-accent transition-colors"
+                      onClick={() => handleShareChat(session)}
+                    >
+                      <Share2 className="h-3 w-3" />
+                      {sharingId === session.id
+                        ? "Creating public link..."
+                        : "Share conversation"}
+                    </button>
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 w-full px-3 py-1.5 text-xs hover:bg-accent transition-colors"
+                      onClick={() => handleTogglePin(session.id)}
+                    >
+                      <Pin className="h-3 w-3" />{" "}
+                      {session.pinned ? "Unpin" : "Pin"}
+                    </button>
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 w-full px-3 py-1.5 text-xs hover:bg-accent transition-colors"
+                      onClick={() => {
+                        setRenamingId(session.id);
+                        setRenameValue(session.title);
+                        setChatMenuId(null);
+                      }}
+                    >
+                      <Pencil className="h-3 w-3" /> Rename
+                    </button>
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-destructive hover:bg-accent transition-colors"
+                      onClick={() => handleDeleteChat(session.id)}
+                    >
+                      <Trash2 className="h-3 w-3" /> Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
       </div>
+
+      {/* ── Mobile Bottom Sheet for chat actions (Gemini-style) ── */}
+      {chatMenuId && (
+        <>
+          <div
+            className="md:hidden fixed inset-0 z-[70] bg-black/40 animate-in fade-in duration-200"
+            onClick={() => {
+              setChatMenuId(null);
+              setSharingId(null);
+            }}
+          />
+          <div className="md:hidden fixed bottom-0 left-0 right-0 z-[71] bg-card border-t border-border/50 rounded-t-2xl shadow-2xl animate-in slide-in-from-bottom duration-300">
+            {/* Handle bar */}
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+            </div>
+            <div className="px-4 pb-6 space-y-1">
+              <button
+                type="button"
+                className="flex items-center gap-3 w-full px-3 py-3 text-sm hover:bg-accent rounded-lg transition-colors"
+                onClick={() => {
+                  const session = chatList.find((s) => s.id === chatMenuId);
+                  if (session) handleShareChat(session);
+                }}
+              >
+                <Share2 className="h-5 w-5" />
+                <span>
+                  {sharingId === chatMenuId
+                    ? "Creating public link..."
+                    : "Share conversation"}
+                </span>
+              </button>
+              <button
+                type="button"
+                className="flex items-center gap-3 w-full px-3 py-3 text-sm hover:bg-accent rounded-lg transition-colors"
+                onClick={() => {
+                  if (chatMenuId) handleTogglePin(chatMenuId);
+                }}
+              >
+                <Pin className="h-5 w-5" />
+                <span>
+                  {chatList.find((s) => s.id === chatMenuId)?.pinned
+                    ? "Unpin"
+                    : "Pin"}
+                </span>
+              </button>
+              <button
+                type="button"
+                className="flex items-center gap-3 w-full px-3 py-3 text-sm hover:bg-accent rounded-lg transition-colors"
+                onClick={() => {
+                  const session = chatList.find((s) => s.id === chatMenuId);
+                  if (session) {
+                    setRenamingId(session.id);
+                    setRenameValue(session.title);
+                    setChatMenuId(null);
+                  }
+                }}
+              >
+                <Pencil className="h-5 w-5" />
+                <span>Rename</span>
+              </button>
+              <button
+                type="button"
+                className="flex items-center gap-3 w-full px-3 py-3 text-sm text-destructive hover:bg-accent rounded-lg transition-colors"
+                onClick={() => {
+                  if (chatMenuId) handleDeleteChat(chatMenuId);
+                }}
+              >
+                <Trash2 className="h-5 w-5" />
+                <span>Delete</span>
+              </button>
+              {/* Creating public link indicator */}
+              {sharingId === chatMenuId && (
+                <p className="text-xs text-muted-foreground text-center pt-2 border-t border-border/50 mt-2">
+                  Creating public link...
+                </p>
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ── Top Bar (Gemini-style) ── */}
       <div className="flex items-center justify-between px-2 py-3 border-b border-border/50 shrink-0">
@@ -723,10 +869,11 @@ export default function AssistantPage() {
       >
         {/* Empty state — Gemini-inspired welcome */}
         {!hasMessages && !isLoading && (
-          <div className="flex flex-col items-start justify-center h-full px-4 sm:px-8 max-w-xl mx-auto">
+          <div className="flex flex-col items-start px-4 sm:px-8 max-w-xl mx-auto pt-8 sm:pt-16">
             {/* Greeting */}
             <p className="text-lg text-muted-foreground mb-1">
-              {t("assistant.greeting")}{user?.firstName ? `, ${user.firstName}` : ""}
+              {t("assistant.greeting")}
+              {user?.firstName ? `, ${user.firstName}` : ""}
             </p>
             {/* Bold headline */}
             <h2 className="text-2xl sm:text-3xl font-bold leading-tight mb-2 bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent whitespace-pre-line">
@@ -737,14 +884,14 @@ export default function AssistantPage() {
             </p>
             {/* Suggestion chips — 2-column grid with icons */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
-              {([
+              {[
                 { text: t("assistant.chip1"), icon: FileText },
                 { text: t("assistant.chip2"), icon: Mail },
                 { text: t("assistant.chip3"), icon: ScrollText },
                 { text: t("assistant.chip4"), icon: CalendarCheck },
                 { text: t("assistant.chip5"), icon: Star },
                 { text: t("assistant.chip6"), icon: ClipboardCheck },
-              ]).map((chip) => (
+              ].map((chip) => (
                 <button
                   key={chip.text}
                   type="button"
@@ -945,7 +1092,9 @@ export default function AssistantPage() {
                 aria-label="Take a photo"
                 className="hidden"
                 onChange={handleImageUpload}
-                disabled={isProcessingFile || isLoading || uploadedFiles.length >= 10}
+                disabled={
+                  isProcessingFile || isLoading || uploadedFiles.length >= 10
+                }
               />
               <input
                 ref={galleryInputRef}
@@ -957,7 +1106,9 @@ export default function AssistantPage() {
                 aria-label="Upload images from gallery"
                 className="hidden"
                 onChange={handleImageUpload}
-                disabled={isProcessingFile || isLoading || uploadedFiles.length >= 10}
+                disabled={
+                  isProcessingFile || isLoading || uploadedFiles.length >= 10
+                }
               />
               <input
                 ref={fileInputRef}
@@ -969,7 +1120,9 @@ export default function AssistantPage() {
                 aria-label="Upload documents"
                 className="hidden"
                 onChange={handleDocumentUpload}
-                disabled={isProcessingFile || isLoading || uploadedFiles.length >= 10}
+                disabled={
+                  isProcessingFile || isLoading || uploadedFiles.length >= 10
+                }
               />
 
               {/* Desktop: plus icon */}
@@ -979,7 +1132,9 @@ export default function AssistantPage() {
                   variant="ghost"
                   size="icon"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={isProcessingFile || isLoading || uploadedFiles.length >= 10}
+                  disabled={
+                    isProcessingFile || isLoading || uploadedFiles.length >= 10
+                  }
                   className="h-9 w-9 rounded-xl cursor-pointer"
                   title="Add files"
                 >
@@ -998,7 +1153,9 @@ export default function AssistantPage() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowUploadMenu((p) => !p)}
-                  disabled={isProcessingFile || isLoading || uploadedFiles.length >= 10}
+                  disabled={
+                    isProcessingFile || isLoading || uploadedFiles.length >= 10
+                  }
                   className="h-9 w-9 rounded-xl cursor-pointer"
                   aria-label="Add files"
                 >
@@ -1058,23 +1215,56 @@ export default function AssistantPage() {
                   onClick={() => setShowModeMenu((p) => !p)}
                   className="flex items-center gap-1 h-8 px-2 rounded-lg text-[11px] font-medium hover:bg-accent/60 transition-colors cursor-pointer"
                 >
-                  {responseMode === "fast" ? <Zap className="h-3.5 w-3.5 text-green-500" /> :
-                   responseMode === "thinking" ? <Brain className="h-3.5 w-3.5 text-blue-500" /> :
-                   responseMode === "research" ? <Globe className="h-3.5 w-3.5 text-purple-500" /> :
-                   <Crown className="h-3.5 w-3.5 text-amber-500" />}
-                  {responseMode === "fast" ? "Fast" :
-                   responseMode === "thinking" ? "Think" :
-                   responseMode === "research" ? "Deep" : "Pro"}
+                  {responseMode === "fast" ? (
+                    <Zap className="h-3.5 w-3.5 text-green-500" />
+                  ) : responseMode === "thinking" ? (
+                    <Brain className="h-3.5 w-3.5 text-blue-500" />
+                  ) : responseMode === "research" ? (
+                    <Globe className="h-3.5 w-3.5 text-purple-500" />
+                  ) : (
+                    <Crown className="h-3.5 w-3.5 text-amber-500" />
+                  )}
+                  {responseMode === "fast"
+                    ? "Fast"
+                    : responseMode === "thinking"
+                      ? "Think"
+                      : responseMode === "research"
+                        ? "Deep"
+                        : "Pro"}
                   <ChevronDown className="h-2.5 w-2.5 text-muted-foreground" />
                 </button>
                 {showModeMenu && (
                   <div className="absolute bottom-10 right-0 z-50 min-w-[170px] rounded-xl border border-border bg-popover shadow-lg py-1.5 animate-in fade-in slide-in-from-bottom-2 duration-200">
-                    {([
-                      { key: "fast" as const, label: "Fast", desc: "Quick responses", icon: Zap, iconColor: "text-green-500" },
-                      { key: "thinking" as const, label: "Thinking", desc: "Step-by-step reasoning", icon: Brain, iconColor: "text-blue-500" },
-                      { key: "research" as const, label: "Deep Research", desc: "Thorough analysis", icon: Globe, iconColor: "text-purple-500" },
-                      { key: "pro" as const, label: "Pro", desc: "Maximum quality", icon: Crown, iconColor: "text-amber-500" },
-                    ]).map((mode) => (
+                    {[
+                      {
+                        key: "fast" as const,
+                        label: "Fast",
+                        desc: "Quick responses",
+                        icon: Zap,
+                        iconColor: "text-green-500",
+                      },
+                      {
+                        key: "thinking" as const,
+                        label: "Thinking",
+                        desc: "Step-by-step reasoning",
+                        icon: Brain,
+                        iconColor: "text-blue-500",
+                      },
+                      {
+                        key: "research" as const,
+                        label: "Deep Research",
+                        desc: "Thorough analysis",
+                        icon: Globe,
+                        iconColor: "text-purple-500",
+                      },
+                      {
+                        key: "pro" as const,
+                        label: "Pro",
+                        desc: "Maximum quality",
+                        icon: Crown,
+                        iconColor: "text-amber-500",
+                      },
+                    ].map((mode) => (
                       <button
                         key={mode.key}
                         type="button"
@@ -1088,11 +1278,17 @@ export default function AssistantPage() {
                       >
                         <mode.icon className={`h-4 w-4 ${mode.iconColor}`} />
                         <div className="text-left">
-                          <div className="font-medium text-xs">{mode.label}</div>
-                          <div className="text-[10px] text-muted-foreground">{mode.desc}</div>
+                          <div className="font-medium text-xs">
+                            {mode.label}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">
+                            {mode.desc}
+                          </div>
                         </div>
                         {responseMode === mode.key && (
-                          <span className="ml-auto text-primary text-xs">✓</span>
+                          <span className="ml-auto text-primary text-xs">
+                            ✓
+                          </span>
                         )}
                       </button>
                     ))}

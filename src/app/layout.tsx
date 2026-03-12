@@ -116,6 +116,16 @@ export default function RootLayout({
           href={`/icons/icon-192.svg?v=${FAVICON_VERSION}`}
           type="image/svg+xml"
         />
+        <link
+          rel="apple-touch-icon"
+          sizes="180x180"
+          href={`/icons/apple-touch-icon.png?v=${FAVICON_VERSION}`}
+        />
+        {/* iOS standalone mode meta tags */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="PureDraft HR" />
+        <meta name="mobile-web-app-capable" content="yes" />
         {/* Preconnect to Google API for faster AI requests */}
         <link
           rel="preconnect"

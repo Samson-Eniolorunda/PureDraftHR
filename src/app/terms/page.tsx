@@ -23,7 +23,7 @@ export default function TermsPage() {
           </h1>
         </div>
         <p className="mt-2 text-sm text-muted-foreground">
-          Last updated: March 7, 2026
+          Last updated: June 12, 2025
         </p>
       </div>
 
@@ -89,8 +89,11 @@ export default function TermsPage() {
           Additional features include user accounts with authentication, a My
           Documents dashboard for saving and managing generated documents,
           multi-language translation (8 languages), a My Templates Library
-          (localStorage-based), customizable document styling, email document
-          sharing, and client-side export to PDF, DOCX, and clipboard.
+          (localStorage-based), chat history (localStorage-based conversation
+          persistence with pin, rename, and delete), four AI response modes
+          (Fast, Think, Deep Research, Pro), customizable document styling,
+          email document sharing, and client-side export to PDF, DOCX, and
+          clipboard.
         </p>
       </section>
 

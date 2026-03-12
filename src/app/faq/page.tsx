@@ -41,7 +41,15 @@ export default function FAQPage() {
     },
     {
       q: "What tools are available?",
-      a: "There are four main tools:\n\u2022 Assistant \u2014 Ask HR questions, draft emails, chat with uploaded documents, use voice-to-text input, and schedule meetings with Google Calendar / .ics export.\n\u2022 Builder \u2014 Generate complete HR documents from scratch across 31 document templates, with optional Bulk CSV mode.\n\u2022 Formatter \u2014 Upload or paste unstructured text and let AI restructure it into a clean, professional document.\n\u2022 Summarizer \u2014 Condense lengthy HR documents into concise summaries.",
+      a: "There are four main tools:\n\u2022 Assistant \u2014 Ask HR questions, draft emails, chat with uploaded documents, use voice-to-text input, schedule meetings, and choose from four AI response modes (Fast, Think, Deep Research, Pro). Conversations are saved as chat history.\n\u2022 Builder \u2014 Generate complete HR documents from scratch across 31 document templates, with optional Bulk CSV mode.\n\u2022 Formatter \u2014 Upload or paste unstructured text and let AI restructure it into a clean, professional document.\n\u2022 Summarizer \u2014 Condense lengthy HR documents into concise summaries.",
+    },
+    {
+      q: "What are the AI response modes?",
+      a: "The Assistant offers four response modes:\n\u2022 Fast (\u26a1) \u2014 Quick, concise answers for simple HR questions.\n\u2022 Think (\ud83e\udde0) \u2014 More detailed, thoughtful responses with deeper reasoning.\n\u2022 Deep Research (\ud83c\udf10) \u2014 Thorough analysis with comprehensive research-style answers.\n\u2022 Pro (\ud83d\udc51) \u2014 Expert-level output for complex HR scenarios, policies, and compliance matters.\nYou can switch modes at any time using the mode selector below the chat input.",
+    },
+    {
+      q: "Does the Assistant save my conversations?",
+      a: "Yes. Chat history is stored in your browser\u2019s localStorage. You can view past conversations in the sidebar, pin important chats, rename them, share conversations via a public link, and delete conversations you no longer need. Chat history persists across browser sessions but stays local to your device \u2014 nothing is sent to a server.",
     },
     {
       q: "What is the Smart Meeting Scheduler?",
@@ -81,7 +89,11 @@ export default function FAQPage() {
     },
     {
       q: "Can I use PureDraft HR offline?",
-      a: "The UI works offline thanks to our Progressive Web App (PWA) architecture. However, AI generation, document saving, and authentication require an active internet connection.",
+      a: "The UI works offline thanks to our Progressive Web App (PWA) architecture. You can install it on your home screen on iOS, Android, or desktop. However, AI generation, document saving, and authentication require an active internet connection. Chat history and saved templates remain available offline since they\u2019re stored in your browser.",
+    },
+    {
+      q: "Does PureDraft HR work on iOS devices?",
+      a: "Yes. PureDraft HR is fully compatible with iOS. You can add it to your home screen from Safari using the Share button. The app includes optimized iOS meta tags, a dedicated Apple touch icon, and fixes for common iOS Safari quirks like double-tap zoom and form input zoom.",
     },
     {
       q: "Is the Google Gemini API processing secure?",
