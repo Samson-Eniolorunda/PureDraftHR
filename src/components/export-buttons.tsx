@@ -423,7 +423,7 @@ export function ExportButtons({
           </Button>
           {menuOpen && menuPos && (
             <div
-              className={`fixed bg-popover border border-border rounded-xl shadow-lg py-1 z-[100] max-h-[70vh] overflow-y-auto scrollbar-none min-w-[200px] sm:min-w-[200px] max-sm:w-[260px] ${pendingDownload ? 'max-sm:top-1/3 max-sm:left-1/2 max-sm:-translate-x-1/2 max-sm:-translate-y-1/2' : 'max-sm:right-2 max-sm:bottom-16 max-sm:w-[220px]'}`}
+              className={`fixed bg-popover border border-border rounded-xl shadow-lg py-1 z-[100] max-h-[70vh] overflow-y-auto scrollbar-none min-w-[180px] sm:min-w-[200px] ${pendingDownload ? 'max-sm:top-1/3 max-sm:left-1/2 max-sm:-translate-x-1/2 max-sm:-translate-y-1/2 max-sm:w-[240px]' : 'max-sm:right-2 max-sm:bottom-16 max-sm:w-[180px]'}`}
               style={
                 window.innerWidth >= 640
                   ? {

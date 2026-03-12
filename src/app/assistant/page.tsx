@@ -10,6 +10,16 @@ import { ExportButtons } from "@/components/export-buttons";
 import { useTranslation } from "@/components/i18n-provider";
 import { toast } from "sonner";
 import {
+  getChats,
+  getChat,
+  saveChat,
+  deleteChat,
+  renameChat,
+  togglePin,
+  type ChatSession,
+  type ChatMessage,
+} from "@/lib/chat-store";
+import {
   MeetingCard,
   parseMeetingFromResponse,
 } from "@/components/meeting-card";
@@ -20,7 +30,6 @@ import {
   Plus,
   X,
   StopCircle,
-  Bot,
   User,
   Sparkles,
   Mic,
@@ -32,6 +41,12 @@ import {
   Image as ImageIcon,
   FolderOpen,
   ChevronDown,
+  MoreVertical,
+  Pin,
+  Pencil,
+  Trash2,
+  Share2,
+  History,
 } from "lucide-react";
 
 /* ── Speech Recognition helper ── */
@@ -113,6 +128,13 @@ export default function AssistantPage() {
   const [showUploadMenu, setShowUploadMenu] = useState(false);
   const [responseMode, setResponseMode] = useState<"fast" | "thinking" | "research" | "pro">("fast");
   const [showModeMenu, setShowModeMenu] = useState(false);
+  const [showChatsPanel, setShowChatsPanel] = useState(false);
+  const [chatList, setChatList] = useState<ChatSession[]>([]);
+  const [activeChatId, setActiveChatId] = useState<string>(() => crypto.randomUUID());
+  const [chatMenuId, setChatMenuId] = useState<string | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const chatsPanelRef = useRef<HTMLDivElement>(null);
 
   /** Combined reference text from all uploaded files */
   const referenceText = uploadedFiles
@@ -200,6 +222,96 @@ export default function AssistantPage() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [showModeMenu]);
+
+  // Close chats panel on outside click
+  useEffect(() => {
+    if (!showChatsPanel) return;
+    const handler = (e: MouseEvent) => {
+      if (chatsPanelRef.current && !chatsPanelRef.current.contains(e.target as Node)) {
+        setShowChatsPanel(false);
+        setChatMenuId(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showChatsPanel]);
+
+  // Load chat list on mount and when panel opens
+  useEffect(() => {
+    if (showChatsPanel) setChatList(getChats());
+  }, [showChatsPanel]);
+
+  // Auto-save chat whenever messages change (only if there's content)
+  useEffect(() => {
+    if (messages.length > 0) {
+      const mapped: ChatMessage[] = messages.map((m) => ({
+        id: m.id,
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      }));
+      const existing = getChat(activeChatId);
+      saveChat(activeChatId, mapped, existing?.title);
+    }
+  }, [messages, activeChatId]);
+
+  // Load a saved chat
+  const handleLoadChat = useCallback((session: ChatSession) => {
+    setActiveChatId(session.id);
+    setMessages(session.messages.map((m) => ({
+      id: m.id,
+      role: m.role,
+      content: m.content,
+    })));
+    setStreamError(null);
+    setUserPrompt("");
+    setUploadedFiles([]);
+    hasSentRef.current = true;
+    setShowChatsPanel(false);
+    setChatMenuId(null);
+  }, [setMessages]);
+
+  const handleDeleteChat = useCallback((id: string) => {
+    deleteChat(id);
+    setChatList(getChats());
+    if (id === activeChatId) {
+      setActiveChatId(crypto.randomUUID());
+      setMessages([]);
+      setStreamError(null);
+      setUserPrompt("");
+      setUploadedFiles([]);
+      hasSentRef.current = false;
+    }
+    setChatMenuId(null);
+  }, [activeChatId, setMessages]);
+
+  const handleRenameChat = useCallback((id: string, title: string) => {
+    if (title.trim()) {
+      renameChat(id, title.trim());
+      setChatList(getChats());
+    }
+    setRenamingId(null);
+    setChatMenuId(null);
+  }, []);
+
+  const handleTogglePin = useCallback((id: string) => {
+    togglePin(id);
+    setChatList(getChats());
+    setChatMenuId(null);
+  }, []);
+
+  const handleShareChat = useCallback((session: ChatSession) => {
+    const text = session.messages
+      .map((m) => `${m.role === "user" ? "You" : "PureDraft"}: ${m.content}`)
+      .join("\n\n");
+    if (navigator.share) {
+      navigator.share({ title: session.title, text }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(text).then(() => {
+        toast.success("Conversation copied to clipboard");
+      });
+    }
+    setChatMenuId(null);
+  }, []);
 
   // Auto-resize textarea
   const handleTextareaChange = useCallback(
@@ -341,6 +453,7 @@ export default function AssistantPage() {
   }, [userPrompt, isLoading, append]);
 
   const handleNewChat = useCallback(() => {
+    setActiveChatId(crypto.randomUUID());
     setMessages([]);
     setStreamError(null);
     setUserPrompt("");
@@ -410,7 +523,7 @@ export default function AssistantPage() {
   }, [isListening, language]);
 
   return (
-    <div className="assistant-chat-root flex flex-col max-w-3xl mx-auto overflow-hidden overscroll-none h-[calc(100dvh-3.5rem)] md:h-[calc(100dvh-3rem)]">
+    <div className="assistant-chat-root relative flex flex-col max-w-3xl mx-auto overflow-hidden overscroll-none h-[calc(100dvh-7.5rem)] md:h-[calc(100dvh-3rem)]">
       {/* ── Top Bar ── */}
       <div className="flex items-center justify-between px-1 py-3 border-b border-border/50 shrink-0">
         <div className="flex items-center gap-2.5">
@@ -427,6 +540,16 @@ export default function AssistantPage() {
           </div>
         </div>
         <div className="flex items-center gap-1.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowChatsPanel((p) => !p)}
+            className="text-xs gap-1.5 h-8"
+            title="Chats"
+          >
+            <History className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Chats</span>
+          </Button>
           {hasMessages && (
             <Button
               variant="ghost"
@@ -440,6 +563,111 @@ export default function AssistantPage() {
           )}
         </div>
       </div>
+
+      {/* ── Chats History Panel (overlay) ── */}
+      {showChatsPanel && (
+        <div
+          ref={chatsPanelRef}
+          className="absolute top-14 right-0 z-40 w-72 max-h-[70vh] bg-popover border border-border rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+        >
+          <div className="px-3 py-2.5 border-b border-border/50 flex items-center justify-between">
+            <h3 className="text-sm font-semibold">Chats</h3>
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setShowChatsPanel(false)}>
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+          <div className="overflow-y-auto max-h-[calc(70vh-3rem)] scrollbar-none">
+            {chatList.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-8">No conversations yet</p>
+            ) : (
+              chatList.map((session) => (
+                <div
+                  key={session.id}
+                  className={`group relative flex items-center gap-2 px-3 py-2.5 hover:bg-accent/50 transition-colors cursor-pointer ${
+                    session.id === activeChatId ? "bg-accent/30" : ""
+                  }`}
+                  onClick={() => handleLoadChat(session)}
+                >
+                  {session.pinned && <Pin className="h-3 w-3 text-primary shrink-0" />}
+                  <div className="flex-1 min-w-0">
+                    {renamingId === session.id ? (
+                      <input
+                        type="text"
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onBlur={() => handleRenameChat(session.id, renameValue)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleRenameChat(session.id, renameValue);
+                          if (e.key === "Escape") setRenamingId(null);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-full bg-transparent border-b border-primary text-xs outline-none py-0.5"
+                        autoFocus
+                      />
+                    ) : (
+                      <p className="text-xs font-medium truncate">{session.title}</p>
+                    )}
+                    <p className="text-[10px] text-muted-foreground">
+                      {new Date(session.updatedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  {/* 3-dot menu */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setChatMenuId(chatMenuId === session.id ? null : session.id);
+                    }}
+                    className="h-6 w-6 flex items-center justify-center rounded-md opacity-0 group-hover:opacity-100 hover:bg-accent transition-all shrink-0"
+                  >
+                    <MoreVertical className="h-3.5 w-3.5" />
+                  </button>
+                  {/* Context menu */}
+                  {chatMenuId === session.id && (
+                    <div
+                      className="absolute right-2 top-full z-50 min-w-[140px] rounded-xl border border-border bg-popover shadow-lg py-1 animate-in fade-in duration-150"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 w-full px-3 py-1.5 text-xs hover:bg-accent transition-colors"
+                        onClick={() => handleShareChat(session)}
+                      >
+                        <Share2 className="h-3 w-3" /> Share
+                      </button>
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 w-full px-3 py-1.5 text-xs hover:bg-accent transition-colors"
+                        onClick={() => handleTogglePin(session.id)}
+                      >
+                        <Pin className="h-3 w-3" /> {session.pinned ? "Unpin" : "Pin"}
+                      </button>
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 w-full px-3 py-1.5 text-xs hover:bg-accent transition-colors"
+                        onClick={() => {
+                          setRenamingId(session.id);
+                          setRenameValue(session.title);
+                          setChatMenuId(null);
+                        }}
+                      >
+                        <Pencil className="h-3 w-3" /> Rename
+                      </button>
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-destructive hover:bg-accent transition-colors"
+                        onClick={() => handleDeleteChat(session.id)}
+                      >
+                        <Trash2 className="h-3 w-3" /> Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Chat Messages Area ── */}
       <div
@@ -496,8 +724,8 @@ export default function AssistantPage() {
             >
               {/* Avatar - assistant */}
               {!isUser && (
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                  <Bot className="h-4 w-4 text-primary" />
+                <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center shrink-0 mt-0.5 text-primary-foreground text-[10px] font-bold">
+                  PD
                 </div>
               )}
 
@@ -558,8 +786,8 @@ export default function AssistantPage() {
         {/* Typing indicator */}
         {isLoading && !latestResponse && (
           <div className="flex gap-3 py-4">
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-              <Bot className="h-4 w-4 text-primary" />
+            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center shrink-0 text-primary-foreground text-[10px] font-bold">
+              PD
             </div>
             <div className="flex items-center gap-1.5 py-2">
               <span className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:0ms]" />

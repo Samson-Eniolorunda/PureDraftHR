@@ -131,6 +131,15 @@
 .cl-userButtonPopoverCard {
   z-index: 200 !important;
 }
+@media (max-width: 767px) {
+  .cl-userButtonPopoverCard {
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    right: auto !important;
+    margin: 0 auto !important;
+    max-width: calc(100vw - 2rem) !important;
+  }
+}
 
 /* Hide scrollbar for horizontal scroll areas */
 .scrollbar-none {
