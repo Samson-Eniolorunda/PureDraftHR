@@ -101,6 +101,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!process.env.RESEND_API_KEY) {
+      console.error("❌ RESEND_API_KEY env var is not set");
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Server misconfigured. Please try again later.",
+        },
+        { status: 500 },
+      );
+    }
+
     // Escape user-supplied values to prevent HTML injection
     const safeName = escapeHtml(body.name);
     const safeEmail = escapeHtml(body.email);
@@ -171,7 +182,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (sendError) {
-      console.error("❌ Resend API error:", sendError);
+      console.error("❌ Resend API error:", JSON.stringify(sendError));
       return NextResponse.json(
         {
           success: false,

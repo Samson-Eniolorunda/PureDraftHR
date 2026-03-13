@@ -18,6 +18,7 @@ import {
   Volume2,
   VolumeX,
   Paintbrush,
+  Loader2,
 } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import type { DocumentStyling } from "@/hooks/useDocumentStyling";
@@ -80,6 +81,7 @@ export function ExportButtons({
   const [exportFileName, setExportFileName] = useState("");
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   const dynamicFilename = extractFilename(content, filename);
 
@@ -350,11 +352,16 @@ export function ExportButtons({
 
   /* ── Share via Web Share API (fallback to copy) ── */
   const handleShare = useCallback(async () => {
+    setSharing(true);
     const plainText = content
       .replace(/^#{1,6}\s+/gm, "")
       .replace(/\*\*(.+?)\*\*/g, "$1")
       .replace(/\*(.+?)\*/g, "$1")
       .trim();
+
+    // Brief delay to show "Creating public link..." feedback
+    await new Promise((r) => setTimeout(r, 800));
+
     if (navigator.share) {
       try {
         await navigator.share({ title: resolvedFilename, text: plainText });
@@ -362,16 +369,22 @@ export function ExportButtons({
         // User cancelled or share failed
       }
     } else {
-      // Fallback: open email modal
-      setEmailModalOpen(true);
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(plainText);
+        toast.success("Link copied to clipboard");
+      } catch {
+        setEmailModalOpen(true);
+      }
     }
+    setSharing(false);
   }, [content, resolvedFilename]);
 
   if (!content) return null;
 
   return (
     <div className="mt-2">
-      {/* Action row: Copy icon + Share + TTS + 3-dot menu */}
+      {/* Action row: Copy icon + Share + TTS + Format (if provided) + 3-dot menu */}
       <div className="flex items-center gap-1">
         <Button
           variant="ghost"
@@ -390,10 +403,15 @@ export function ExportButtons({
           variant="ghost"
           size="icon"
           className="h-8 w-8"
-          title={t("export.share")}
+          title={sharing ? "Creating public link..." : t("export.share")}
           onClick={handleShare}
+          disabled={sharing}
         >
-          <Share2 className="h-4 w-4" />
+          {sharing ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Share2 className="h-4 w-4" />
+          )}
         </Button>
         <Button
           variant="ghost"
@@ -408,6 +426,17 @@ export function ExportButtons({
             <Volume2 className="h-4 w-4" />
           )}
         </Button>
+        {onFormat && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            title={t("export.format")}
+            onClick={() => onFormat(content)}
+          >
+            <Paintbrush className="h-4 w-4" />
+          </Button>
+        )}
 
         {/* 3-dot dropdown menu */}
         <div ref={menuRef}>
@@ -423,7 +452,7 @@ export function ExportButtons({
           </Button>
           {menuOpen && menuPos && (
             <div
-              className={`fixed bg-popover border border-border rounded-xl shadow-lg py-1 z-[100] max-h-[70vh] overflow-y-auto scrollbar-none min-w-[180px] sm:min-w-[200px] ${pendingDownload ? 'max-sm:top-1/3 max-sm:left-1/2 max-sm:-translate-x-1/2 max-sm:-translate-y-1/2 max-sm:w-[240px]' : 'max-sm:right-2 max-sm:bottom-16 max-sm:w-[180px]'}`}
+              className={`fixed bg-popover border border-border rounded-xl shadow-lg py-1 z-[100] max-h-[70vh] overflow-y-auto scrollbar-none min-w-[180px] sm:min-w-[200px] ${pendingDownload ? "max-sm:top-1/3 max-sm:left-1/2 max-sm:-translate-x-1/2 max-sm:-translate-y-1/2 max-sm:w-[240px]" : "max-sm:right-2 max-sm:bottom-16 max-sm:w-[180px]"}`}
               style={
                 window.innerWidth >= 640
                   ? {
@@ -436,7 +465,10 @@ export function ExportButtons({
               {/* Filename rename step — shown only after picking a download type */}
               {pendingDownload ? (
                 <div className="px-3 py-2.5 space-y-2">
-                  <label htmlFor="export-filename" className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <label
+                    htmlFor="export-filename"
+                    className="text-[10px] text-muted-foreground flex items-center gap-1"
+                  >
                     <Pencil className="h-3 w-3" />
                     {t("export.fileName")}
                   </label>

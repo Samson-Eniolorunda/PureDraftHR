@@ -1496,14 +1496,14 @@ const T: [string, ...string[]][] = [
   // ── Error ──
   [
     "error.rateLimit",
-    "Our AI is currently busy. Please wait a few seconds and try again! ⏳",
-    "Nuestra IA está ocupada. Espere unos segundos e intente de nuevo. ⏳",
-    "Notre IA est occupée. Veuillez patienter quelques secondes. ⏳",
-    "Unsere KI ist ausgelastet. Bitte warten Sie einige Sekunden. ⏳",
-    "我们的AI目前繁忙，请等待几秒钟后重试！⏳",
-    "Nossa IA está ocupada. Aguarde alguns segundos. ⏳",
-    "الذكاء الاصطناعي مشغول حاليًا. انتظر قليلاً وحاول مرة أخرى. ⏳",
-    "हमारी AI व्यस्त है। कृपया कुछ सेकंड प्रतीक्षा करें! ⏳",
+    "PureDraft HR is currently busy. Please wait a few seconds and try again! ⏳",
+    "PureDraft HR está ocupado. Espere unos segundos e intente de nuevo. ⏳",
+    "PureDraft HR est occupé. Veuillez patienter quelques secondes. ⏳",
+    "PureDraft HR ist ausgelastet. Bitte warten Sie einige Sekunden. ⏳",
+    "PureDraft HR目前繁忙，请等待几秒钟后重试！⏳",
+    "PureDraft HR está ocupado. Aguarde alguns segundos. ⏳",
+    "PureDraft HR مشغول حاليًا. انتظر قليلاً وحاول مرة أخرى. ⏳",
+    "PureDraft HR व्यस्त है। कृपया कुछ सेकंड प्रतीक्षा करें! ⏳",
   ],
   [
     "error.generic",

@@ -59,6 +59,7 @@ import {
   CalendarCheck,
   Star,
   ClipboardCheck,
+  RefreshCw,
 } from "lucide-react";
 
 /* ── Speech Recognition helper ── */
@@ -246,6 +247,9 @@ export default function AssistantPage() {
   useEffect(() => {
     if (!showChatsPanel) return;
     const handler = (e: MouseEvent) => {
+      // Don't close if clicking inside the bottom sheet (z-[70]/z-[71])
+      const target = e.target as HTMLElement;
+      if (target.closest("[data-chat-bottom-sheet]")) return;
       if (
         chatsPanelRef.current &&
         !chatsPanelRef.current.contains(e.target as Node)
@@ -263,9 +267,9 @@ export default function AssistantPage() {
     if (showChatsPanel) setChatList(getChats());
   }, [showChatsPanel]);
 
-  // Auto-save chat whenever messages change (only if there's content)
+  // Auto-save chat whenever messages change (only if AI has responded)
   useEffect(() => {
-    if (messages.length > 0) {
+    if (messages.length > 0 && messages.some((m) => m.role === "assistant")) {
       const mapped: ChatMessage[] = messages.map((m) => ({
         id: m.id,
         role: m.role as "user" | "assistant",
@@ -753,19 +757,54 @@ export default function AssistantPage() {
             ))
           )}
         </div>
+
+        {/* Sidebar footer — Theme, Language, Links (md:hidden only, matching More panel) */}
+        <div className="md:hidden shrink-0 border-t border-border/50 px-3 py-3 space-y-3">
+          <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground flex-wrap">
+            <a
+              href="/privacy"
+              className="hover:text-foreground transition-colors"
+            >
+              {t("common.privacy")}
+            </a>
+            <a
+              href="/terms"
+              className="hover:text-foreground transition-colors"
+            >
+              {t("common.terms")}
+            </a>
+            <a href="/faq" className="hover:text-foreground transition-colors">
+              {t("common.faq")}
+            </a>
+            <a
+              href="/contact"
+              className="hover:text-foreground transition-colors"
+            >
+              {t("common.contact")}
+            </a>
+          </div>
+          <p className="text-[10px] text-muted-foreground/50 text-center flex items-center justify-center gap-1">
+            <Sparkles className="h-3 w-3" />
+            {t("common.poweredByGemini")}
+          </p>
+        </div>
       </div>
 
       {/* ── Mobile Bottom Sheet for chat actions (Gemini-style) ── */}
       {chatMenuId && (
         <>
           <div
+            data-chat-bottom-sheet
             className="md:hidden fixed inset-0 z-[70] bg-black/40 animate-in fade-in duration-200"
             onClick={() => {
               setChatMenuId(null);
               setSharingId(null);
             }}
           />
-          <div className="md:hidden fixed bottom-0 left-0 right-0 z-[71] bg-card border-t border-border/50 rounded-t-2xl shadow-2xl animate-in slide-in-from-bottom duration-300">
+          <div
+            data-chat-bottom-sheet
+            className="md:hidden fixed bottom-0 left-0 right-0 z-[71] bg-card border-t border-border/50 rounded-t-2xl shadow-2xl animate-in slide-in-from-bottom duration-300"
+          >
             {/* Handle bar */}
             <div className="flex justify-center pt-3 pb-1">
               <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
@@ -998,16 +1037,39 @@ export default function AssistantPage() {
 
         {/* Error */}
         {streamError && (
-          <div className="mx-auto max-w-md rounded-xl border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3 flex items-center justify-between">
-            <p className="text-sm text-red-700 dark:text-red-400">
-              {streamError}
-            </p>
+          <div className="mx-auto max-w-md rounded-xl border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-red-700 dark:text-red-400">
+                {streamError}
+              </p>
+              <button
+                onClick={() => setStreamError(null)}
+                aria-label="Dismiss error"
+                className="text-red-500 hover:text-red-700 dark:hover:text-red-300 ml-2"
+              >
+                &times;
+              </button>
+            </div>
+            {/* Retry button */}
             <button
-              onClick={() => setStreamError(null)}
-              aria-label="Dismiss error"
-              className="text-red-500 hover:text-red-700 dark:hover:text-red-300 ml-2"
+              type="button"
+              onClick={() => {
+                const lastUserMsg = [...messages]
+                  .reverse()
+                  .find((m) => m.role === "user");
+                if (lastUserMsg) {
+                  setStreamError(null);
+                  // Remove the failed user message and re-send
+                  setMessages(messages.filter((m) => m.id !== lastUserMsg.id));
+                  setTimeout(() => {
+                    append({ role: "user", content: lastUserMsg.content });
+                  }, 100);
+                }
+              }}
+              className="flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 transition-colors"
             >
-              &times;
+              <RefreshCw className="h-3.5 w-3.5" />
+              Retry
             </button>
           </div>
         )}

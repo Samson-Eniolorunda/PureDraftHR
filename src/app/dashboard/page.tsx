@@ -26,7 +26,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowLeft,
-  Paintbrush,
   LayoutDashboard,
 } from "lucide-react";
 
@@ -235,15 +234,8 @@ export default function DashboardPage() {
               <ExportButtons
                 content={selectedDoc.content}
                 filename={selectedDoc.title}
+                onFormat={() => handleRouteToFormatter(selectedDoc.content)}
               />
-              <Button
-                variant="secondary"
-                onClick={() => handleRouteToFormatter(selectedDoc.content)}
-                className="gap-2"
-              >
-                <Paintbrush className="h-4 w-4" />
-                Format Document
-              </Button>
             </div>
           </CardContent>
         </Card>

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Clock } from "lucide-react";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -80,13 +80,18 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-          Contact Us
-        </h1>
-        <p className="mt-1 text-muted-foreground">
+    <div className="max-w-3xl mx-auto space-y-8">
+      {/* Hero header — matching FAQ / legal pages */}
+      <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-border/50 px-6 py-8 sm:px-8 sm:py-10">
+        <div className="flex items-center gap-3 mb-1">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <Mail className="h-5 w-5 text-primary" />
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            Contact Us
+          </h1>
+        </div>
+        <p className="mt-2 text-sm text-muted-foreground">
           Have questions or feedback? We&apos;d love to hear from you. Get in
           touch with our team.
         </p>
@@ -103,38 +108,26 @@ export default function ContactPage() {
               {/* Email */}
               <div className="flex gap-3">
                 <Mail className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                <div>
+                <div className="min-w-0">
                   <p className="font-semibold text-sm">Email</p>
                   <a
                     href="mailto:support@puredrafthr.btbcoder.site"
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors break-all"
                   >
                     support@puredrafthr.btbcoder.site
                   </a>
                 </div>
               </div>
 
-              {/* GitHub */}
-              <div className="flex gap-3">
-                <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-sm">GitHub</p>
-                  <a
-                    href="https://github.com/Samson-Eniolorunda"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Samson-Eniolorunda
-                  </a>
-                </div>
-              </div>
-
               {/* Response Time */}
-              <div className="pt-4 border-t">
-                <p className="text-xs text-muted-foreground">
-                  We typically respond within 24-48 hours.
-                </p>
+              <div className="flex gap-3">
+                <Clock className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-sm">Response Time</p>
+                  <p className="text-sm text-muted-foreground">
+                    We typically respond within 24-48 hours.
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
