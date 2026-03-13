@@ -140,14 +140,34 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
       if (disabled) return;
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setIsOpen(true);
-        requestAnimationFrame(() => optionsRef.current[0]?.focus());
+        if (isOpen) {
+          requestAnimationFrame(() => optionsRef.current[0]?.focus());
+        } else {
+          // Cycle to next value without opening
+          const enabledOptions = options.filter((o) => !o.disabled);
+          const currentIdx = enabledOptions.findIndex(
+            (o) => o.value === selected,
+          );
+          const nextIdx = Math.min(currentIdx + 1, enabledOptions.length - 1);
+          if (enabledOptions[nextIdx])
+            selectValue(enabledOptions[nextIdx].value);
+        }
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        setIsOpen(true);
-        requestAnimationFrame(() =>
-          optionsRef.current[options.length - 1]?.focus(),
-        );
+        if (isOpen) {
+          requestAnimationFrame(() =>
+            optionsRef.current[options.length - 1]?.focus(),
+          );
+        } else {
+          // Cycle to previous value without opening
+          const enabledOptions = options.filter((o) => !o.disabled);
+          const currentIdx = enabledOptions.findIndex(
+            (o) => o.value === selected,
+          );
+          const prevIdx = Math.max(currentIdx - 1, 0);
+          if (enabledOptions[prevIdx])
+            selectValue(enabledOptions[prevIdx].value);
+        }
       } else if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         setIsOpen((s) => !s);

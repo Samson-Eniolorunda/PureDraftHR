@@ -617,7 +617,7 @@ export default function AssistantPage() {
         <div className="px-3 py-3 border-b border-border/50 shrink-0">
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
             <input
               type="text"
               id="chat-search"
@@ -625,7 +625,8 @@ export default function AssistantPage() {
               value={chatSearch}
               onChange={(e) => setChatSearch(e.target.value)}
               placeholder="Search chats"
-              className="w-full h-9 pl-8 pr-3 rounded-lg bg-muted/50 border border-border/50 text-xs placeholder:text-muted-foreground/60 outline-none focus:border-primary/50 transition-colors"
+              className="w-full h-10 pl-8 pr-3 rounded-lg bg-muted border border-border text-sm placeholder:text-muted-foreground/60 outline-none focus:border-primary/50 transition-colors"
+              style={{ fontSize: "16px", WebkitAppearance: "none" }}
             />
           </div>
         </div>
@@ -705,7 +706,8 @@ export default function AssistantPage() {
                       chatMenuId === session.id ? null : session.id,
                     );
                   }}
-                  className="h-6 w-6 flex items-center justify-center rounded-md opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-accent transition-all shrink-0"
+                  className="h-8 w-8 min-h-[32px] min-w-[32px] flex items-center justify-center rounded-md opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-accent active:bg-accent transition-all shrink-0"
+                  aria-label="Chat options"
                 >
                   <MoreVertical className="h-3.5 w-3.5" />
                 </button>

@@ -38,12 +38,12 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setLanguage = useCallback((lang: LanguageValue) => {
-    setLanguageState(lang);
+    // Store first, then reload — do NOT update React state before reload
+    // to avoid a flash of the new language before the page fully reloads.
     localStorage.setItem("puredraft_language", lang);
     window.dispatchEvent(
       new CustomEvent("puredraft-language-change", { detail: lang }),
     );
-    // Reload so the new language caches properly
     window.location.reload();
   }, []);
 

@@ -33,17 +33,71 @@ type DocxModule = typeof import("docx");
 /*  Dynamic filename extraction from markdown content                  */
 /* ------------------------------------------------------------------ */
 function extractFilename(content: string, fallbackPrefix: string): string {
-  // Try to find the first H1 heading
+  // Try to find the first H1 heading for the document type/title
   const h1Match = content.match(/^#\s+(.+)$/m);
+  let title = "";
   if (h1Match) {
-    return h1Match[1]
-      .trim()
-      .replace(/[^a-zA-Z0-9\s\-_]/g, "")
-      .replace(/\s+/g, "_")
-      .substring(0, 60);
+    title = h1Match[1].trim();
   }
 
-  // Fallback to timestamped name
+  // Try to detect a person's name from common patterns:
+  // "Dear John Doe", "Employee: John Doe", "Name: John Doe", "To: John Doe"
+  // "Re: John Doe", "Candidate: John Doe", "Mr./Mrs./Ms. John Doe"
+  let personName = "";
+  const namePatterns = [
+    /(?:Dear|To|Attn|Attention|Employee|Candidate|Applicant|Name|Re|Subject)[:\s]+(?:Mr\.?|Mrs\.?|Ms\.?|Dr\.?|Prof\.?)?\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})/m,
+    /(?:Mr\.?|Mrs\.?|Ms\.?|Dr\.?|Prof\.?)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})/m,
+  ];
+  for (const pattern of namePatterns) {
+    const nameMatch = content.match(pattern);
+    if (nameMatch) {
+      personName = nameMatch[1].trim();
+      break;
+    }
+  }
+
+  if (title) {
+    // Clean up the title
+    let cleanTitle = title
+      .replace(/[^a-zA-Z0-9\s\-_]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .substring(0, 50);
+
+    // Append person name if found and not already in the title
+    if (
+      personName &&
+      !cleanTitle.toLowerCase().includes(personName.toLowerCase())
+    ) {
+      cleanTitle = `${cleanTitle} - ${personName}`.substring(0, 70);
+    }
+
+    return cleanTitle.replace(/\s+/g, "_");
+  }
+
+  // If no H1, try to build name from first meaningful line
+  const firstLine = content
+    .split("\n")
+    .find((l) => l.trim().length > 5 && !l.startsWith("```"));
+  if (firstLine) {
+    let cleanLine = firstLine
+      .replace(/^[#\-*>\s]+/, "")
+      .replace(/\*\*/g, "")
+      .replace(/[^a-zA-Z0-9\s\-_]/g, "")
+      .trim()
+      .substring(0, 50);
+    if (
+      personName &&
+      !cleanLine.toLowerCase().includes(personName.toLowerCase())
+    ) {
+      cleanLine = `${cleanLine} - ${personName}`.substring(0, 70);
+    }
+    if (cleanLine.length > 5) {
+      return cleanLine.replace(/\s+/g, "_");
+    }
+  }
+
+  // Ultimate fallback to timestamped name
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${fallbackPrefix}_${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;

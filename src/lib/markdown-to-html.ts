@@ -11,11 +11,41 @@ export const BULLET_SYMBOLS: Record<string, string> = {
   diamond: "\u2756",
   arrow: "\u27A4",
   checkmark: "\u2713",
+  number: "1.",
+  roman: "I.",
 };
 
 /* ------------------------------------------------------------------ */
 /*  markdownToHtml — lightweight markdown → styled HTML converter      */
 /* ------------------------------------------------------------------ */
+
+/** Convert a number to roman numerals */
+function toRoman(num: number): string {
+  const vals = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+  const syms = [
+    "M",
+    "CM",
+    "D",
+    "CD",
+    "C",
+    "XC",
+    "L",
+    "XL",
+    "X",
+    "IX",
+    "V",
+    "IV",
+    "I",
+  ];
+  let result = "";
+  for (let i = 0; i < vals.length; i++) {
+    while (num >= vals[i]) {
+      result += syms[i];
+      num -= vals[i];
+    }
+  }
+  return result;
+}
 
 /** Convert markdown to styled HTML (used by PDF export and email sending) */
 export function markdownToHtml(md: string, styling?: DocumentStyling): string {
@@ -24,12 +54,17 @@ export function markdownToHtml(md: string, styling?: DocumentStyling): string {
   const h2h3Size = styling?.h2h3SizePt || 18;
   const fontFamily = styling?.fontFamily || "Arial, sans-serif";
   const lineSpacing = styling?.lineSpacing || "1.6";
-  const bulletChar = styling
-    ? BULLET_SYMBOLS[styling.bulletStyle] || ""
-    : "\u2022";
+  const bulletStyle = styling?.bulletStyle || "dot";
+  const bulletChar = BULLET_SYMBOLS[bulletStyle] || "";
+  const isNumbered = bulletStyle === "number";
+  const isRoman = bulletStyle === "roman";
 
-  // Build bullet prefix for <li> items
-  const bulletPrefix = bulletChar ? `${bulletChar} ` : "";
+  // Build bullet prefix for <li> items (only for symbol-based styles)
+  const bulletPrefix =
+    !isNumbered && !isRoman && bulletChar ? `${bulletChar} ` : "";
+
+  // Counter for numbered/roman bullet styles
+  let listItemCounter = 0;
 
   return (
     md
@@ -85,12 +120,19 @@ export function markdownToHtml(md: string, styling?: DocumentStyling): string {
           return table;
         },
       )
-      // Unordered lists — inject bullet character directly into text
-      .replace(
-        /^- (.+)$/gm,
-        `<li style="list-style: none; font-family: ${fontFamily}; font-size: ${bodySize}pt; line-height: ${lineSpacing}; margin-bottom: 4px;">${bulletPrefix}$1</li>`,
-      )
-      // Numbered lists
+      // Unordered lists — inject bullet character or numbered prefix directly into text
+      .replace(/^- (.+)$/gm, (_match, content) => {
+        let prefix = bulletPrefix;
+        if (isNumbered) {
+          listItemCounter++;
+          prefix = `${listItemCounter}. `;
+        } else if (isRoman) {
+          listItemCounter++;
+          prefix = `${toRoman(listItemCounter)}. `;
+        }
+        return `<li style="list-style: none; font-family: ${fontFamily}; font-size: ${bodySize}pt; line-height: ${lineSpacing}; margin-bottom: 4px;">${prefix}${content}</li>`;
+      })
+      // Numbered lists (from original markdown)
       .replace(
         /^\d+\. (.+)$/gm,
         `<li style="font-family: ${fontFamily}; font-size: ${bodySize}pt; line-height: ${lineSpacing}; margin-bottom: 4px;">$1</li>`,

@@ -23,7 +23,9 @@ interface DocumentStylingUIProps {
       | "square"
       | "diamond"
       | "arrow"
-      | "checkmark",
+      | "checkmark"
+      | "number"
+      | "roman",
   ) => void;
   onResetDefaults: () => void;
 }
@@ -36,6 +38,8 @@ const BULLET_STYLES = [
   { value: "diamond", label: "Diamond (\u2756)" },
   { value: "arrow", label: "Arrow (\u27A4)" },
   { value: "checkmark", label: "Checkmark (\u2713)" },
+  { value: "number", label: "Numbered (1. 2. 3.)" },
+  { value: "roman", label: "Roman (I. II. III.)" },
 ];
 
 const LINE_SPACING_OPTIONS = [
@@ -201,7 +205,9 @@ export function DocumentStylingUI({
                 | "square"
                 | "diamond"
                 | "arrow"
-                | "checkmark",
+                | "checkmark"
+                | "number"
+                | "roman",
             )
           }
         >

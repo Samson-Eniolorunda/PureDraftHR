@@ -13,7 +13,9 @@ export interface DocumentStyling {
     | "square"
     | "diamond"
     | "arrow"
-    | "checkmark";
+    | "checkmark"
+    | "number"
+    | "roman";
   googleFonts: string[]; // loaded Google fonts
 }
 
@@ -129,7 +131,9 @@ export function useDocumentStyling() {
         | "square"
         | "diamond"
         | "arrow"
-        | "checkmark",
+        | "checkmark"
+        | "number"
+        | "roman",
     ) => {
       setStyling((prev) => ({ ...prev, bulletStyle: style }));
     },
