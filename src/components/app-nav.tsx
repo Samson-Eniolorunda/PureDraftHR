@@ -17,7 +17,6 @@ import {
   Globe,
   ChevronDown,
   Sparkles,
-  MoreVertical,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -51,6 +50,13 @@ export function AppNav() {
   useEffect(() => {
     setShowMorePanel(false);
   }, [pathname]);
+
+  // Listen for toggle-more-panel event from mobile header
+  useEffect(() => {
+    const handler = () => setShowMorePanel((v) => !v);
+    window.addEventListener("toggle-more-panel", handler);
+    return () => window.removeEventListener("toggle-more-panel", handler);
+  }, []);
 
   return (
     <>
@@ -254,21 +260,6 @@ export function AppNav() {
               </span>
             </Link>
           )}
-
-          {/* More button (vertical dots, icon only) */}
-          <button
-            type="button"
-            onClick={() => setShowMorePanel((v) => !v)}
-            className={cn(
-              "flex flex-col items-center justify-center min-w-0 w-10 min-h-[2.75rem] px-1 py-1 transition-all duration-200 rounded-xl",
-              showMorePanel
-                ? "text-primary bg-primary/10"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-            aria-label="More options"
-          >
-            <MoreVertical className="h-5 w-5" />
-          </button>
         </div>
       </nav>
 

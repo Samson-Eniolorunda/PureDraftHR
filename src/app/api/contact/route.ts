@@ -124,8 +124,8 @@ export async function POST(request: NextRequest) {
     });
 
     // Send email via Resend
-    const fromEmail =
-      process.env.RESEND_FROM_EMAIL || "PureDraftHR <onboarding@resend.dev>";
+    // Use Resend's default domain — custom domain requires paid plan verification
+    const fromEmail = "PureDraft HR <onboarding@resend.dev>";
 
     console.log("[Contact] Sending email:", {
       from: fromEmail,

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { SignInButton, UserButton, useAuth } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import { LogIn, Loader2 } from "lucide-react";
+import { LogIn, Loader2, MoreVertical } from "lucide-react";
 import { useTranslation } from "@/components/i18n-provider";
 
 export function MobileHeader() {
@@ -25,7 +25,17 @@ export function MobileHeader() {
               PureDraft HR
             </span>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() =>
+                window.dispatchEvent(new CustomEvent("toggle-more-panel"))
+              }
+              className="flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              aria-label="More options"
+            >
+              <MoreVertical className="h-4.5 w-4.5" />
+            </button>
             {!isLoaded ? (
               <div className="h-8 w-8 flex items-center justify-center">
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
