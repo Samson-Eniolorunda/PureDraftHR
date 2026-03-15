@@ -1567,7 +1567,7 @@ export default function AssistantPage() {
                   : t("assistant.placeholder")
               }
               disabled={isLoading}
-              className="resize-none min-h-[44px] max-h-[200px] overflow-y-auto overflow-x-hidden scrollbar-none border-none bg-transparent shadow-none focus-visible:ring-0 focus:ring-0 focus:outline-none focus-visible:outline-none focus-visible:border-transparent rounded-none px-4 py-3 text-base"
+              className="resize-none min-h-[44px] max-h-[200px] overflow-y-auto overflow-x-hidden scrollbar-none border-none bg-transparent shadow-none focus-visible:ring-0 focus:ring-0 focus:outline-none focus-visible:outline-none focus-visible:border-transparent focus:border-transparent focus:shadow-none ring-0 outline-none rounded-none px-4 py-3 text-base transition-none"
             />
           </div>
 
