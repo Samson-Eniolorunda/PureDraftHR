@@ -61,6 +61,7 @@ import {
   Star,
   ClipboardCheck,
   RefreshCw,
+  Copy,
 } from "lucide-react";
 
 /* ── Speech Recognition helper ── */
@@ -157,6 +158,8 @@ export default function AssistantPage() {
   const [chatSearch, setChatSearch] = useState("");
   const chatsPanelRef = useRef<HTMLDivElement>(null);
   const [showMemoryPanel, setShowMemoryPanel] = useState(false);
+  const [msgMenuId, setMsgMenuId] = useState<string | null>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /* ── AI Persistent Memory ── */
   const { memories, addMemory, removeMemory, clearMemories, getMemoryContext } =
@@ -604,6 +607,43 @@ export default function AssistantPage() {
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     if (fileInputRef.current) fileInputRef.current.value = "";
   }, [setMessages]);
+
+  /* ── User message copy / edit ── */
+  const handleCopyMessage = useCallback((content: string) => {
+    navigator.clipboard.writeText(content).then(() => {
+      toast.success("Copied to clipboard");
+    });
+    setMsgMenuId(null);
+  }, []);
+
+  const handleEditMessage = useCallback(
+    (msgId: string, content: string) => {
+      setMsgMenuId(null);
+      // Strip the 📎 file prefix if present
+      const cleaned = content.replace(/^📎[^\n]*\n\n/, "");
+      setUserPrompt(cleaned);
+      // Remove this message and everything after it
+      setMessages((prev) => {
+        const idx = prev.findIndex((m) => m.id === msgId);
+        return idx > 0 ? prev.slice(0, idx) : [];
+      });
+      setTimeout(() => textareaRef.current?.focus(), 50);
+    },
+    [setMessages],
+  );
+
+  const handleLongPressStart = useCallback((msgId: string) => {
+    longPressTimerRef.current = setTimeout(() => {
+      setMsgMenuId(msgId);
+    }, 500);
+  }, []);
+
+  const handleLongPressEnd = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
 
   // Push to Formatter Action
   const handleRouteToFormatter = (text: string) => {
@@ -1121,7 +1161,7 @@ export default function AssistantPage() {
           return (
             <div
               key={msg.id}
-              className={`flex gap-3 py-4 ${isUser ? "justify-end" : "justify-start"}`}
+              className={`flex gap-3 py-4 ${isUser ? "justify-end group" : "justify-start"}`}
             >
               {/* Avatar - assistant */}
               {!isUser && (
@@ -1130,18 +1170,76 @@ export default function AssistantPage() {
                 </div>
               )}
 
+              {/* Desktop: copy/edit icons for user messages */}
+              {isUser && (
+                <div className="hidden sm:flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 self-center">
+                  <button
+                    type="button"
+                    onClick={() => handleCopyMessage(msg.content)}
+                    className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                    title="Copy"
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleEditMessage(msg.id, msg.content)}
+                    className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                    title="Edit"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
+
               {/* Message content */}
               <div
-                className={`max-w-[85%] sm:max-w-[75%] ${
+                className={`relative max-w-[85%] sm:max-w-[75%] ${
                   isUser
                     ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md px-4 py-2.5"
                     : "flex-1 min-w-0"
                 }`}
+                {...(isUser
+                  ? {
+                      onTouchStart: () => handleLongPressStart(msg.id),
+                      onTouchEnd: handleLongPressEnd,
+                      onTouchMove: handleLongPressEnd,
+                    }
+                  : {})}
               >
                 {isUser ? (
-                  <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                    {msg.content}
-                  </p>
+                  <>
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed select-text">
+                      {msg.content}
+                    </p>
+                    {/* Mobile: long-press popup menu */}
+                    {msgMenuId === msg.id && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={() => setMsgMenuId(null)}
+                        />
+                        <div className="absolute right-0 top-full mt-1 z-50 bg-popover border border-border rounded-xl shadow-lg py-1 min-w-[140px] sm:hidden">
+                          <button
+                            type="button"
+                            onClick={() => handleCopyMessage(msg.content)}
+                            className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-popover-foreground hover:bg-muted transition-colors"
+                          >
+                            <Copy className="h-4 w-4" />
+                            Copy
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleEditMessage(msg.id, msg.content)}
+                            className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-popover-foreground hover:bg-muted transition-colors"
+                          >
+                            <Pencil className="h-4 w-4" />
+                            Edit
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </>
                 ) : meetingData ? (
                   <div className="space-y-3">
                     <MeetingCard meeting={meetingData.meeting} />
