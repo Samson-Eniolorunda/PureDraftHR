@@ -124,9 +124,18 @@ export async function POST(request: NextRequest) {
     });
 
     // Send email via Resend
-    const { error: sendError } = await resend.emails.send({
-      from:
-        process.env.RESEND_FROM_EMAIL || "PureDraftHR <onboarding@resend.dev>",
+    const fromEmail =
+      process.env.RESEND_FROM_EMAIL || "PureDraftHR <onboarding@resend.dev>";
+
+    console.log("[Contact] Sending email:", {
+      from: fromEmail,
+      to: contactEmail,
+      replyTo: body.email,
+      subject: `New Contact: ${body.subject}`,
+    });
+
+    const { data: sendData, error: sendError } = await resend.emails.send({
+      from: fromEmail,
       to: contactEmail,
       replyTo: body.email,
       subject: `New Contact: ${body.subject}`,
@@ -183,6 +192,7 @@ export async function POST(request: NextRequest) {
 
     if (sendError) {
       console.error("❌ Resend API error:", JSON.stringify(sendError));
+      console.error("❌ From email:", fromEmail, "| To:", contactEmail);
       return NextResponse.json(
         {
           success: false,
@@ -195,6 +205,8 @@ export async function POST(request: NextRequest) {
     console.log(
       "📧 Contact form email sent successfully to",
       process.env.CONTACT_EMAIL,
+      "| ID:",
+      sendData?.id,
     );
 
     return NextResponse.json(

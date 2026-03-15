@@ -56,7 +56,23 @@ function extractFilename(content: string, fallbackPrefix: string): string {
     }
   }
 
+  // Skip AI filler preamble lines (Certainly, Sure, Here is, Of course, etc.)
+  const AI_FILLER_RE =
+    /^(certainly|sure|of course|here\s+(is|are)|absolutely|i('d|\s+would)\s+be\s+happy|great|no\s+problem|i('ve|\s+have)\s+(drafted|created|prepared|written))/i;
+
   if (title) {
+    // If the H1 looks like AI filler, skip it and try the second H1
+    if (AI_FILLER_RE.test(title)) {
+      const secondH1 = content.match(/^#\s+(.+)$/gm);
+      if (secondH1 && secondH1.length > 1) {
+        title = secondH1[1].replace(/^#\s+/, "").trim();
+      } else {
+        title = "";
+      }
+    }
+  }
+
+  if (title && !AI_FILLER_RE.test(title)) {
     // Clean up the title
     let cleanTitle = title
       .replace(/[^a-zA-Z0-9\s\-_]/g, "")
@@ -75,12 +91,20 @@ function extractFilename(content: string, fallbackPrefix: string): string {
     return cleanTitle.replace(/\s+/g, "_");
   }
 
-  // If no H1, try to build name from first meaningful line
-  const firstLine = content
-    .split("\n")
-    .find((l) => l.trim().length > 5 && !l.startsWith("```"));
-  if (firstLine) {
-    let cleanLine = firstLine
+  // If no H1, try to build name from first meaningful non-filler line
+  const meaningfulLine = content.split("\n").find((l) => {
+    const stripped = l
+      .replace(/^[#\-*>\s]+/, "")
+      .replace(/\*\*/g, "")
+      .trim();
+    return (
+      stripped.length > 5 &&
+      !l.startsWith("```") &&
+      !AI_FILLER_RE.test(stripped)
+    );
+  });
+  if (meaningfulLine) {
+    let cleanLine = meaningfulLine
       .replace(/^[#\-*>\s]+/, "")
       .replace(/\*\*/g, "")
       .replace(/[^a-zA-Z0-9\s\-_]/g, "")

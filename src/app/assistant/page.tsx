@@ -24,6 +24,7 @@ import {
   MeetingCard,
   parseMeetingFromResponse,
 } from "@/components/meeting-card";
+import { useAIMemory, parseMemoryCommands } from "@/hooks/useAIMemory";
 import {
   Loader2,
   MessageCircle,
@@ -155,6 +156,11 @@ export default function AssistantPage() {
   const [renameValue, setRenameValue] = useState("");
   const [chatSearch, setChatSearch] = useState("");
   const chatsPanelRef = useRef<HTMLDivElement>(null);
+  const [showMemoryPanel, setShowMemoryPanel] = useState(false);
+
+  /* ── AI Persistent Memory ── */
+  const { memories, addMemory, removeMemory, clearMemories, getMemoryContext } =
+    useAIMemory();
 
   /** Combined reference text from all uploaded files */
   const referenceText = uploadedFiles
@@ -181,6 +187,7 @@ export default function AssistantPage() {
       referenceText: referenceText || undefined,
       responseMode,
       language: language !== "English" ? language : undefined,
+      memoryContext: getMemoryContext() || undefined,
     },
     onError(err) {
       console.error("[Assistant] Stream error:", err);
@@ -202,6 +209,46 @@ export default function AssistantPage() {
     .reverse()
     .find((m) => m.role === "assistant");
   const latestResponse = lastAssistantMsg?.content ?? "";
+
+  // Track whether the AI is currently generating a NEW response (not just has a past one)
+  const prevMsgCountRef = useRef(0);
+  const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
+
+  useEffect(() => {
+    const assistantMsgs = messages.filter((m) => m.role === "assistant");
+    if (isLoading && assistantMsgs.length === prevMsgCountRef.current) {
+      // Loading but no new assistant message yet = waiting for response
+      setIsWaitingForResponse(true);
+    } else {
+      setIsWaitingForResponse(false);
+      prevMsgCountRef.current = assistantMsgs.length;
+    }
+  }, [messages, isLoading]);
+
+  // Parse memory-save commands from completed AI responses
+  const lastParsedIdxRef = useRef(0);
+  useEffect(() => {
+    if (isLoading) return; // only parse when streaming is done
+    const assistantMsgs = messages.filter((m) => m.role === "assistant");
+    for (let i = lastParsedIdxRef.current; i < assistantMsgs.length; i++) {
+      const { cleanText, commands } = parseMemoryCommands(
+        assistantMsgs[i].content,
+      );
+      if (commands.length > 0) {
+        commands.forEach((c) => addMemory(c.key, c.value));
+        // Strip the [MEMORY_SAVE] tags from the displayed message
+        const msgIdx = messages.findIndex(
+          (m) => m === assistantMsgs[i] || m.id === assistantMsgs[i].id,
+        );
+        if (msgIdx >= 0 && cleanText !== assistantMsgs[i].content) {
+          const updated = [...messages];
+          updated[msgIdx] = { ...updated[msgIdx], content: cleanText };
+          setMessages(updated);
+        }
+      }
+    }
+    lastParsedIdxRef.current = assistantMsgs.length;
+  }, [messages, isLoading, addMemory, setMessages]);
 
   // Auto-scroll to bottom only after user has actually sent a message
   useEffect(() => {
@@ -335,22 +382,38 @@ export default function AssistantPage() {
 
   const handleShareChat = useCallback((session: ChatSession) => {
     setSharingId(session.id);
-    // Show "Creating public link..." briefly, then share
     setTimeout(() => {
-      const text = session.messages
-        .map((m) => `${m.role === "user" ? "You" : "PureDraft"}: ${m.content}`)
-        .join("\n\n");
+      // Format conversation nicely for sharing
+      const formattedMessages = session.messages
+        .map((m) => {
+          if (m.role === "user") {
+            return `**You:**\n${m.content}`;
+          }
+          return `**PureDraft HR:**\n${m.content}`;
+        })
+        .join("\n\n---\n\n");
+
+      const shareText = `${session.title}\n\n${formattedMessages}\n\n---\nShared from PureDraft HR — AI-Powered HR Assistant`;
+      const shareUrl =
+        typeof window !== "undefined"
+          ? window.location.origin + "/assistant"
+          : "";
+
       if (navigator.share) {
         navigator
-          .share({ title: session.title, text })
+          .share({
+            title: `PureDraft HR: ${session.title}`,
+            text: shareText,
+            url: shareUrl,
+          })
           .catch(() => {})
           .finally(() => {
             setSharingId(null);
             setChatMenuId(null);
           });
       } else {
-        navigator.clipboard.writeText(text).then(() => {
-          toast.success("Link copied to clipboard");
+        navigator.clipboard.writeText(shareText).then(() => {
+          toast.success("Conversation copied to clipboard");
           setSharingId(null);
           setChatMenuId(null);
         });
@@ -511,9 +574,17 @@ export default function AssistantPage() {
     if (!userPrompt.trim() || isLoading) return;
 
     hasSentRef.current = true;
+
+    // Include file names in the visible message if files are attached
+    let visibleContent = userPrompt;
+    if (uploadedFiles.length > 0) {
+      const fileNames = uploadedFiles.map((f) => f.name).join(", ");
+      visibleContent = `📎 ${fileNames}\n\n${userPrompt}`;
+    }
+
     append({
       role: "user",
-      content: userPrompt,
+      content: visibleContent,
     });
 
     setUserPrompt("");
@@ -521,7 +592,7 @@ export default function AssistantPage() {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
-  }, [userPrompt, isLoading, append]);
+  }, [userPrompt, isLoading, append, uploadedFiles]);
 
   const handleNewChat = useCallback(() => {
     setActiveChatId(crypto.randomUUID());
@@ -877,6 +948,83 @@ export default function AssistantPage() {
         </>
       )}
 
+      {/* ── Memory Panel Overlay Backdrop ── */}
+      {showMemoryPanel && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 animate-in fade-in duration-200"
+          onClick={() => setShowMemoryPanel(false)}
+        />
+      )}
+
+      {/* ── Memory Panel (slide-in from right) ── */}
+      <div
+        className={`fixed top-0 right-0 z-50 h-full w-72 bg-card border-l border-border shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${
+          showMemoryPanel ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="px-3 py-3 border-b border-border/50 shrink-0 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Brain className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-semibold">AI Memory</h2>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowMemoryPanel(false)}
+            className="h-8 w-8 rounded-lg flex items-center justify-center hover:bg-accent/60 transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-3 py-2">
+          {memories.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-8">
+              No memories yet. The AI will automatically remember important
+              details you share — like your name, company, or preferences.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {memories.map((m) => (
+                <div
+                  key={m.key}
+                  className="group flex items-start gap-2 p-2 rounded-lg bg-muted/50 border border-border/50 text-xs"
+                >
+                  <div className="flex-1 min-w-0">
+                    <span className="font-medium text-foreground">{m.key}</span>
+                    <p className="text-muted-foreground mt-0.5 break-words">
+                      {m.value}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeMemory(m.key)}
+                    className="opacity-0 group-hover:opacity-100 h-6 w-6 shrink-0 rounded flex items-center justify-center hover:bg-destructive/10 hover:text-destructive transition-all"
+                    aria-label={`Remove memory: ${m.key}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {memories.length > 0 && (
+          <div className="px-3 py-2 border-t border-border/50 shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                clearMemories();
+                toast.success("AI memory cleared");
+              }}
+              className="w-full text-xs text-destructive hover:bg-destructive/10 rounded-lg py-2 transition-colors"
+            >
+              Clear all memories
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* ── Top Bar (Gemini-style) ── */}
       <div className="flex items-center justify-between px-2 py-3 border-b border-border/50 shrink-0">
         <div className="flex items-center gap-2.5">
@@ -890,17 +1038,30 @@ export default function AssistantPage() {
           </button>
           <h1 className="text-base font-semibold">{t("assistant.title")}</h1>
         </div>
-        {hasMessages && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleNewChat}
-            className="text-xs gap-1.5 h-8"
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setShowMemoryPanel((p) => !p)}
+            className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-accent/60 transition-colors cursor-pointer relative"
+            aria-label="AI Memory"
           >
-            <Pencil className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{t("assistant.newChat")}</span>
-          </Button>
-        )}
+            <Brain className="h-4 w-4" />
+            {memories.length > 0 && (
+              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
+            )}
+          </button>
+          {hasMessages && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleNewChat}
+              className="text-xs gap-1.5 h-8"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{t("assistant.newChat")}</span>
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* ── Chat Messages Area ── */}
@@ -1023,16 +1184,43 @@ export default function AssistantPage() {
           );
         })}
 
-        {/* Typing indicator */}
-        {isLoading && !latestResponse && (
+        {/* Thinking / typing indicator */}
+        {isLoading && isWaitingForResponse && (
           <div className="flex gap-3 py-4">
             <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center shrink-0 text-primary-foreground text-[10px] font-bold">
               PD
             </div>
-            <div className="flex items-center gap-1.5 py-2">
-              <span className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:0ms]" />
-              <span className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:150ms]" />
-              <span className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:300ms]" />
+            <div className="flex flex-col gap-2 py-1">
+              {/* Thinking phase label */}
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <svg
+                  className="h-3.5 w-3.5 animate-spin text-primary"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    d="M12 2v4m0 12v4m-7.07-3.93l2.83-2.83m8.48-8.48l2.83-2.83M2 12h4m12 0h4m-3.93 7.07l-2.83-2.83M7.76 7.76L4.93 4.93"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <span className="animate-pulse">
+                  {responseMode === "thinking"
+                    ? "Thinking step by step..."
+                    : responseMode === "research"
+                      ? "Researching in depth..."
+                      : responseMode === "pro"
+                        ? "Crafting expert response..."
+                        : "Generating response..."}
+                </span>
+              </div>
+              {/* Animated dots */}
+              <div className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-primary/50 animate-bounce [animation-delay:0ms]" />
+                <span className="h-2 w-2 rounded-full bg-primary/50 animate-bounce [animation-delay:150ms]" />
+                <span className="h-2 w-2 rounded-full bg-primary/50 animate-bounce [animation-delay:300ms]" />
+              </div>
             </div>
           </div>
         )}
@@ -1137,7 +1325,7 @@ export default function AssistantPage() {
                   : t("assistant.placeholder")
               }
               disabled={isLoading}
-              className="resize-none min-h-[44px] max-h-[200px] overflow-y-auto overflow-x-hidden scrollbar-none border-none bg-transparent shadow-none focus-visible:ring-0 rounded-none px-4 py-3 text-base"
+              className="resize-none min-h-[44px] max-h-[200px] overflow-y-auto overflow-x-hidden scrollbar-none border-none bg-transparent shadow-none focus-visible:ring-0 focus:ring-0 focus:outline-none focus-visible:outline-none focus-visible:border-transparent rounded-none px-4 py-3 text-base"
             />
           </div>
 

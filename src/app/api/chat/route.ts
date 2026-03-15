@@ -317,18 +317,26 @@ export async function POST(req: Request) {
       );
     }
 
-    const { messages, tool, template, referenceText, language, responseMode } =
-      body as {
-        messages: {
-          role: "user" | "assistant" | "system" | "tool";
-          content: string;
-        }[];
-        tool: string;
-        template?: string;
-        referenceText?: string;
-        language?: string;
-        responseMode?: string;
-      };
+    const {
+      messages,
+      tool,
+      template,
+      referenceText,
+      language,
+      responseMode,
+      memoryContext,
+    } = body as {
+      messages: {
+        role: "user" | "assistant" | "system" | "tool";
+        content: string;
+      }[];
+      tool: string;
+      template?: string;
+      referenceText?: string;
+      language?: string;
+      responseMode?: string;
+      memoryContext?: string;
+    };
 
     console.log("[API/chat] POST received", {
       tool,
@@ -390,6 +398,28 @@ You have FULL ACCESS to the above document content. Use it to answer questions, 
     // Multi-language support: if a non-English language is selected, append instruction
     if (language && language !== "English") {
       systemPrompt += `\n\nMANDATORY LANGUAGE INSTRUCTION: You MUST generate the final output entirely in ${sanitizeString(language)}, maintaining a highly professional, native-level business tone. All headings, body text, labels, and formatting should be in ${sanitizeString(language)}. Do not mix languages.`;
+    }
+
+    // Persistent memory context (assistant tool only)
+    if (tool === "assistant" && memoryContext && memoryContext.trim()) {
+      systemPrompt += `\n\nUSER MEMORY (information the user has shared in previous conversations — use this to personalize your responses):
+${sanitizeString(memoryContext)}
+
+MEMORY INSTRUCTIONS:
+- Use this context naturally in your responses (e.g., address the user by name if known).
+- When the user shares new personal or preference info (their name, company, role, preferred tone, etc.), save it by including this tag in your response: [MEMORY_SAVE: key | value]
+  Example: [MEMORY_SAVE: userName | Sarah]
+  Example: [MEMORY_SAVE: company | Acme Corp]
+  Example: [MEMORY_SAVE: preferredTone | casual and friendly]
+- Only save genuinely useful, reusable information. Don't save trivial conversation details.
+- The [MEMORY_SAVE] tags will be automatically stripped from the displayed response.`;
+    } else if (tool === "assistant") {
+      // No memory yet — instruct AI to start collecting
+      systemPrompt += `\n\nMEMORY INSTRUCTIONS:
+When the user shares personal or preference info (their name, company, role, preferred tone, etc.), save it by including this tag in your response: [MEMORY_SAVE: key | value]
+Example: [MEMORY_SAVE: userName | Sarah]
+Example: [MEMORY_SAVE: company | Acme Corp]
+The [MEMORY_SAVE] tags will be automatically stripped from the displayed response. Only save genuinely useful, reusable info — not trivial details.`;
     }
 
     // Response mode instructions (assistant tool only)
