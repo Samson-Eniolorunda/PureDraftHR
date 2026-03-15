@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -341,6 +342,7 @@ export function ExportButtons({
   const [speaking, setSpeaking] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(
     null,
@@ -375,9 +377,8 @@ export function ExportButtons({
       return;
     }
     const rect = triggerRef.current.getBoundingClientRect();
-    // Position above the button, aligned to its right edge
     setMenuPos({
-      top: rect.top, // will be adjusted via bottom-anchor in CSS
+      top: rect.top,
       left: rect.right,
     });
   }, [menuOpen]);
@@ -386,15 +387,24 @@ export function ExportButtons({
   useEffect(() => {
     if (!menuOpen) return;
     const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(target) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(target)
+      ) {
         setMenuOpen(false);
         setPendingDownload(null);
       }
     };
     const scrollHandler = (e: Event) => {
-      // Don't close if scrolling inside the menu itself
-      if (menuRef.current?.contains(e.target as Node)) return;
-      // Don't close when user is in the rename step — keyboard opening causes scroll
+      const target = e.target as Node;
+      if (
+        menuRef.current?.contains(target) ||
+        dropdownRef.current?.contains(target)
+      )
+        return;
       if (pendingDownloadRef.current || scrollGraceRef.current) return;
       setMenuOpen(false);
       setPendingDownload(null);
@@ -528,178 +538,189 @@ export function ExportButtons({
           >
             <MoreVertical className="h-4 w-4" />
           </Button>
-          {menuOpen && menuPos && (
-            <div
-              className={`fixed bg-popover border border-border rounded-xl shadow-lg py-1 z-[100] max-h-[70vh] overflow-y-auto scrollbar-none min-w-[180px] sm:min-w-[200px] ${pendingDownload ? "max-sm:top-1/3 max-sm:left-1/2 max-sm:-translate-x-1/2 max-sm:-translate-y-1/2 max-sm:w-[240px]" : "max-sm:right-2 max-sm:bottom-16 max-sm:w-[180px]"}`}
-              style={
-                window.innerWidth >= 640
-                  ? {
-                      bottom: `${window.innerHeight - menuPos.top + 4}px`,
-                      right: `${window.innerWidth - menuPos.left}px`,
-                    }
-                  : undefined
-              }
-            >
-              {/* Filename rename step — shown only after picking a download type */}
-              {pendingDownload ? (
-                <div className="px-3 py-2.5 space-y-2">
-                  <label
-                    htmlFor="export-filename"
-                    className="text-[10px] text-muted-foreground flex items-center gap-1"
-                  >
-                    <Pencil className="h-3 w-3" />
-                    {t("export.fileName")}
-                  </label>
-                  <Input
-                    id="export-filename"
-                    name="export-filename"
-                    type="text"
-                    value={exportFileName}
-                    onChange={(e) => setExportFileName(e.target.value)}
-                    placeholder={dynamicFilename}
-                    className="h-7 text-xs"
-                    autoFocus
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        if (pendingDownload === "pdf") handlePdfExport();
-                        else if (pendingDownload === "docx") handleDocxExport();
-                        else if (pendingDownload === "excel")
-                          handleExcelExport();
-                        setPendingDownload(null);
-                        setMenuOpen(false);
+          {menuOpen &&
+            menuPos &&
+            createPortal(
+              <div
+                ref={dropdownRef}
+                className="fixed bg-popover border border-border rounded-xl shadow-lg py-1 z-[9999] max-h-[70vh] overflow-y-auto scrollbar-none min-w-[180px] sm:min-w-[200px]"
+                style={
+                  pendingDownload && window.innerWidth < 640
+                    ? {
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        width: "240px",
                       }
-                    }}
-                  />
-                  <div className="flex gap-1.5">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex-1 h-7 text-xs"
-                      onClick={() => setPendingDownload(null)}
+                    : {
+                        bottom: `${window.innerHeight - menuPos.top + 4}px`,
+                        right: `${Math.max(8, window.innerWidth - menuPos.left)}px`,
+                      }
+                }
+              >
+                {/* Filename rename step — shown only after picking a download type */}
+                {pendingDownload ? (
+                  <div className="px-3 py-2.5 space-y-2">
+                    <label
+                      htmlFor="export-filename"
+                      className="text-[10px] text-muted-foreground flex items-center gap-1"
                     >
-                      Back
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="flex-1 h-7 text-xs gap-1"
-                      onClick={() => {
-                        if (pendingDownload === "pdf") handlePdfExport();
-                        else if (pendingDownload === "docx") handleDocxExport();
-                        else if (pendingDownload === "excel")
-                          handleExcelExport();
-                        setPendingDownload(null);
-                        setMenuOpen(false);
+                      <Pencil className="h-3 w-3" />
+                      {t("export.fileName")}
+                    </label>
+                    <Input
+                      id="export-filename"
+                      name="export-filename"
+                      type="text"
+                      value={exportFileName}
+                      onChange={(e) => setExportFileName(e.target.value)}
+                      placeholder={dynamicFilename}
+                      className="h-7 text-xs"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          if (pendingDownload === "pdf") handlePdfExport();
+                          else if (pendingDownload === "docx")
+                            handleDocxExport();
+                          else if (pendingDownload === "excel")
+                            handleExcelExport();
+                          setPendingDownload(null);
+                          setMenuOpen(false);
+                        }
                       }}
-                    >
-                      <Download className="h-3 w-3" />
-                      {t(
-                        pendingDownload === "docx"
-                          ? "export.downloadWord"
-                          : pendingDownload === "excel"
-                            ? "export.downloadExcel"
-                            : "export.downloadPdf",
-                      )
-                        .split(" ")
-                        .slice(-1)[0] || "Download"}
-                    </Button>
+                    />
+                    <div className="flex gap-1.5">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex-1 h-7 text-xs"
+                        onClick={() => setPendingDownload(null)}
+                      >
+                        Back
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="flex-1 h-7 text-xs gap-1"
+                        onClick={() => {
+                          if (pendingDownload === "pdf") handlePdfExport();
+                          else if (pendingDownload === "docx")
+                            handleDocxExport();
+                          else if (pendingDownload === "excel")
+                            handleExcelExport();
+                          setPendingDownload(null);
+                          setMenuOpen(false);
+                        }}
+                      >
+                        <Download className="h-3 w-3" />
+                        {t(
+                          pendingDownload === "docx"
+                            ? "export.downloadWord"
+                            : pendingDownload === "excel"
+                              ? "export.downloadExcel"
+                              : "export.downloadPdf",
+                        )
+                          .split(" ")
+                          .slice(-1)[0] || "Download"}
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
-                    onClick={() => setPendingDownload("pdf")}
-                  >
-                    <Download className="h-4 w-4" />
-                    {t("export.downloadPdf")}
-                  </button>
-                  <button
-                    type="button"
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
-                    onClick={() => setPendingDownload("docx")}
-                  >
-                    <Download className="h-4 w-4" />
-                    {t("export.downloadWord")}
-                  </button>
-                  <button
-                    type="button"
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
-                    onClick={() => setPendingDownload("excel")}
-                    title={
-                      hasTable
-                        ? "Export table data to Excel"
-                        : "Export text to Excel"
-                    }
-                  >
-                    <FileSpreadsheet className="h-4 w-4" />
-                    {t("export.downloadExcel")}
-                  </button>
-                  <div className="my-1 border-t border-border/50" />
-                  {onFormat && (
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
+                      onClick={() => setPendingDownload("pdf")}
+                    >
+                      <Download className="h-4 w-4" />
+                      {t("export.downloadPdf")}
+                    </button>
+                    <button
+                      type="button"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
+                      onClick={() => setPendingDownload("docx")}
+                    >
+                      <Download className="h-4 w-4" />
+                      {t("export.downloadWord")}
+                    </button>
+                    <button
+                      type="button"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
+                      onClick={() => setPendingDownload("excel")}
+                      title={
+                        hasTable
+                          ? "Export table data to Excel"
+                          : "Export text to Excel"
+                      }
+                    >
+                      <FileSpreadsheet className="h-4 w-4" />
+                      {t("export.downloadExcel")}
+                    </button>
+                    <div className="my-1 border-t border-border/50" />
+                    {onFormat && (
+                      <button
+                        type="button"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
+                        onClick={() => {
+                          onFormat(content);
+                          setMenuOpen(false);
+                        }}
+                      >
+                        <Paintbrush className="h-4 w-4" />
+                        {t("export.format")}
+                      </button>
+                    )}
                     <button
                       type="button"
                       className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
                       onClick={() => {
-                        onFormat(content);
+                        setEmailModalOpen(true);
                         setMenuOpen(false);
                       }}
                     >
-                      <Paintbrush className="h-4 w-4" />
-                      {t("export.format")}
+                      <Mail className="h-4 w-4" />
+                      {t("export.email")}
                     </button>
-                  )}
-                  <button
-                    type="button"
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors"
-                    onClick={() => {
-                      setEmailModalOpen(true);
-                      setMenuOpen(false);
-                    }}
-                  >
-                    <Mail className="h-4 w-4" />
-                    {t("export.email")}
-                  </button>
-                  {isSignedIn && tool && (
-                    <button
-                      type="button"
-                      disabled={saving}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors disabled:opacity-50"
-                      onClick={async () => {
-                        setSaving(true);
-                        try {
-                          const res = await fetch("/api/documents", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                              title: resolvedFilename,
-                              content,
-                              tool,
-                              docType,
-                            }),
-                          });
-                          if (!res.ok) {
-                            const data = await res.json();
-                            toast.error(data.error || t("export.saveError"));
-                            return;
+                    {isSignedIn && tool && (
+                      <button
+                        type="button"
+                        disabled={saving}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent transition-colors disabled:opacity-50"
+                        onClick={async () => {
+                          setSaving(true);
+                          try {
+                            const res = await fetch("/api/documents", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                title: resolvedFilename,
+                                content,
+                                tool,
+                                docType,
+                              }),
+                            });
+                            if (!res.ok) {
+                              const data = await res.json();
+                              toast.error(data.error || t("export.saveError"));
+                              return;
+                            }
+                            toast.success(t("export.savedSuccess"));
+                          } catch {
+                            toast.error(t("export.saveError"));
+                          } finally {
+                            setSaving(false);
+                            setMenuOpen(false);
                           }
-                          toast.success(t("export.savedSuccess"));
-                        } catch {
-                          toast.error(t("export.saveError"));
-                        } finally {
-                          setSaving(false);
-                          setMenuOpen(false);
-                        }
-                      }}
-                    >
-                      <Save className="h-4 w-4" />
-                      {saving ? "…" : t("export.save")}
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
-          )}
+                        }}
+                      >
+                        <Save className="h-4 w-4" />
+                        {saving ? "…" : t("export.save")}
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>,
+              document.body,
+            )}
         </div>
       </div>
 

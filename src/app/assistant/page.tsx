@@ -1230,7 +1230,9 @@ export default function AssistantPage() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleEditMessage(msg.id, msg.content)}
+                            onClick={() =>
+                              handleEditMessage(msg.id, msg.content)
+                            }
                             className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-popover-foreground hover:bg-muted transition-colors"
                           >
                             <Pencil className="h-4 w-4" />
@@ -1325,40 +1327,57 @@ export default function AssistantPage() {
 
         {/* Error */}
         {streamError && (
-          <div className="mx-auto max-w-md rounded-xl border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-red-700 dark:text-red-400">
+          <div className="flex gap-3 py-4 justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="h-8 w-8 rounded-full bg-destructive/10 dark:bg-destructive/20 flex items-center justify-center shrink-0 mt-0.5">
+              <svg
+                className="h-4 w-4 text-destructive"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0 space-y-2">
+              <p className="text-sm text-foreground/80 leading-relaxed">
                 {streamError}
               </p>
-              <button
-                onClick={() => setStreamError(null)}
-                aria-label="Dismiss error"
-                className="text-red-500 hover:text-red-700 dark:hover:text-red-300 ml-2"
-              >
-                &times;
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const lastUserMsg = [...messages]
+                      .reverse()
+                      .find((m) => m.role === "user");
+                    if (lastUserMsg) {
+                      setStreamError(null);
+                      setMessages(
+                        messages.filter((m) => m.id !== lastUserMsg.id),
+                      );
+                      setTimeout(() => {
+                        append({ role: "user", content: lastUserMsg.content });
+                      }, 100);
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  <RefreshCw className="h-3 w-3" />
+                  Retry
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStreamError(null)}
+                  className="inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                >
+                  Dismiss
+                </button>
+              </div>
             </div>
-            {/* Retry button */}
-            <button
-              type="button"
-              onClick={() => {
-                const lastUserMsg = [...messages]
-                  .reverse()
-                  .find((m) => m.role === "user");
-                if (lastUserMsg) {
-                  setStreamError(null);
-                  // Remove the failed user message and re-send
-                  setMessages(messages.filter((m) => m.id !== lastUserMsg.id));
-                  setTimeout(() => {
-                    append({ role: "user", content: lastUserMsg.content });
-                  }, 100);
-                }
-              }}
-              className="flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 transition-colors"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              Retry
-            </button>
           </div>
         )}
 
@@ -1379,10 +1398,10 @@ export default function AssistantPage() {
                 <button
                   type="button"
                   onClick={() => handleRemoveDocument(idx)}
-                  className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  className="absolute top-1 right-1 h-5 w-5 rounded-full bg-foreground/70 text-background flex items-center justify-center hover:bg-destructive transition-colors z-10"
                   aria-label={t("assistant.removeDocument")}
                 >
-                  <X className="h-2.5 w-2.5" />
+                  <X className="h-3 w-3" />
                 </button>
                 {fileIcon(file.ext)}
                 <span className="mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-primary/10 text-primary">
