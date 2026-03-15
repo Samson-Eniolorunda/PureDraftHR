@@ -154,6 +154,7 @@ export default function AssistantPage() {
   const [chatMenuId, setChatMenuId] = useState<string | null>(null);
   const [sharingId, setSharingId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [chatSearch, setChatSearch] = useState("");
   const chatsPanelRef = useRef<HTMLDivElement>(null);
@@ -216,6 +217,7 @@ export default function AssistantPage() {
   // Track whether the AI is currently generating a NEW response (not just has a past one)
   const prevMsgCountRef = useRef(0);
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
+  const [thinkingPhase, setThinkingPhase] = useState(0);
 
   useEffect(() => {
     const assistantMsgs = messages.filter((m) => m.role === "assistant");
@@ -224,9 +226,20 @@ export default function AssistantPage() {
       setIsWaitingForResponse(true);
     } else {
       setIsWaitingForResponse(false);
+      setThinkingPhase(0);
       prevMsgCountRef.current = assistantMsgs.length;
     }
   }, [messages, isLoading]);
+
+  // Cycle through thinking phases while waiting
+  useEffect(() => {
+    if (!isWaitingForResponse) return;
+    setThinkingPhase(0);
+    const interval = setInterval(() => {
+      setThinkingPhase((p) => p + 1);
+    }, 2200);
+    return () => clearInterval(interval);
+  }, [isWaitingForResponse]);
 
   // Parse memory-save commands from completed AI responses
   const lastParsedIdxRef = useRef(0);
@@ -383,45 +396,44 @@ export default function AssistantPage() {
     setChatMenuId(null);
   }, []);
 
-  const handleShareChat = useCallback((session: ChatSession) => {
+  const handleShareChat = useCallback(async (session: ChatSession) => {
     setSharingId(session.id);
-    setTimeout(() => {
-      // Format conversation nicely for sharing
-      const formattedMessages = session.messages
-        .map((m) => {
-          if (m.role === "user") {
-            return `**You:**\n${m.content}`;
-          }
-          return `**PureDraft HR:**\n${m.content}`;
-        })
-        .join("\n\n---\n\n");
+    try {
+      const res = await fetch("/api/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: session.title,
+          messages: session.messages
+            .filter((m) => m.role === "user" || m.role === "assistant")
+            .map((m) => ({ role: m.role, content: m.content })),
+        }),
+      });
+      const data = await res.json();
+      if (!data.success || !data.shareUrl) {
+        toast.error("Failed to create share link");
+        return;
+      }
 
-      const shareText = `${session.title}\n\n${formattedMessages}\n\n---\nShared from PureDraft HR — AI-Powered HR Assistant`;
-      const shareUrl =
-        typeof window !== "undefined"
-          ? window.location.origin + "/assistant"
-          : "";
+      const shareUrl = data.shareUrl;
 
       if (navigator.share) {
         navigator
           .share({
             title: `PureDraft HR: ${session.title}`,
-            text: shareText,
             url: shareUrl,
           })
-          .catch(() => {})
-          .finally(() => {
-            setSharingId(null);
-            setChatMenuId(null);
-          });
+          .catch(() => {});
       } else {
-        navigator.clipboard.writeText(shareText).then(() => {
-          toast.success("Conversation copied to clipboard");
-          setSharingId(null);
-          setChatMenuId(null);
-        });
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success("Share link copied to clipboard");
       }
-    }, 800);
+    } catch {
+      toast.error("Failed to create share link");
+    } finally {
+      setSharingId(null);
+      setChatMenuId(null);
+    }
   }, []);
 
   // Filtered chat list for search
@@ -860,7 +872,10 @@ export default function AssistantPage() {
                     <button
                       type="button"
                       className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-destructive hover:bg-accent transition-colors"
-                      onClick={() => handleDeleteChat(session.id)}
+                      onClick={() => {
+                        setDeleteConfirmId(session.id);
+                        setChatMenuId(null);
+                      }}
                     >
                       <Trash2 className="h-3 w-3" /> Delete
                     </button>
@@ -971,7 +986,8 @@ export default function AssistantPage() {
                 type="button"
                 className="flex items-center gap-3 w-full px-3 py-3 text-sm text-destructive hover:bg-accent rounded-lg transition-colors"
                 onClick={() => {
-                  if (chatMenuId) handleDeleteChat(chatMenuId);
+                  setDeleteConfirmId(chatMenuId);
+                  setChatMenuId(null);
                 }}
               >
                 <Trash2 className="h-5 w-5" />
@@ -983,6 +999,44 @@ export default function AssistantPage() {
                   Creating public link...
                 </p>
               )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Delete Confirmation Dialog ── */}
+      {deleteConfirmId && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 z-50 animate-in fade-in duration-150"
+            onClick={() => setDeleteConfirmId(null)}
+          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="bg-card rounded-2xl shadow-xl max-w-sm w-full p-6 animate-in zoom-in-95 fade-in duration-200">
+              <h3 className="text-lg font-semibold mb-2">Delete chat?</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                You&apos;ll no longer see this chat here. This will also delete
+                all messages in this conversation.
+              </p>
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  className="px-4 py-2 text-sm font-medium text-primary hover:bg-accent rounded-lg transition-colors"
+                  onClick={() => setDeleteConfirmId(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="px-4 py-2 text-sm font-medium text-primary hover:bg-accent rounded-lg transition-colors"
+                  onClick={() => {
+                    handleDeleteChat(deleteConfirmId);
+                    setDeleteConfirmId(null);
+                  }}
+                >
+                  Confirm
+                </button>
+              </div>
             </div>
           </div>
         </>
@@ -1079,17 +1133,6 @@ export default function AssistantPage() {
           <h1 className="text-base font-semibold">{t("assistant.title")}</h1>
         </div>
         <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => setShowMemoryPanel((p) => !p)}
-            className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-accent/60 transition-colors cursor-pointer relative"
-            aria-label="AI Memory"
-          >
-            <Brain className="h-4 w-4" />
-            {memories.length > 0 && (
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
-            )}
-          </button>
           {hasMessages && (
             <Button
               variant="ghost"
@@ -1107,7 +1150,7 @@ export default function AssistantPage() {
       {/* ── Chat Messages Area ── */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto overscroll-contain px-1 py-4 space-y-1 scrollbar-none md:scrollbar-thin"
+        className="flex-1 overflow-y-auto overscroll-contain px-1 py-4 space-y-1 scrollbar-none"
       >
         {/* Empty state — Gemini-inspired welcome */}
         {!hasMessages && !isLoading && (
@@ -1291,35 +1334,88 @@ export default function AssistantPage() {
               PD
             </div>
             <div className="flex flex-col gap-2 py-1">
-              {/* Thinking phase label */}
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <svg
-                  className="h-3.5 w-3.5 animate-spin text-primary"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    d="M12 2v4m0 12v4m-7.07-3.93l2.83-2.83m8.48-8.48l2.83-2.83M2 12h4m12 0h4m-3.93 7.07l-2.83-2.83M7.76 7.76L4.93 4.93"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span className="animate-pulse">
-                  {responseMode === "thinking"
-                    ? "Thinking step by step..."
-                    : responseMode === "research"
-                      ? "Researching in depth..."
-                      : responseMode === "pro"
-                        ? "Crafting expert response..."
-                        : "Generating response..."}
-                </span>
-              </div>
-              {/* Animated dots */}
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-primary/50 animate-bounce [animation-delay:0ms]" />
-                <span className="h-2 w-2 rounded-full bg-primary/50 animate-bounce [animation-delay:150ms]" />
-                <span className="h-2 w-2 rounded-full bg-primary/50 animate-bounce [animation-delay:300ms]" />
+              {/* Multi-phase thinking indicator */}
+              <div className="flex flex-col gap-1.5 py-0.5">
+                {(() => {
+                  const hasFiles = uploadedFiles.length > 0;
+                  const phases = hasFiles
+                    ? [
+                        { icon: "📄", text: "Reading your documents..." },
+                        { icon: "🔍", text: "Analyzing content..." },
+                        {
+                          icon: "🧠",
+                          text:
+                            responseMode === "thinking"
+                              ? "Thinking step by step..."
+                              : responseMode === "research"
+                                ? "Deep searching..."
+                                : responseMode === "pro"
+                                  ? "Applying expert knowledge..."
+                                  : "Processing your request...",
+                        },
+                        { icon: "✍️", text: "Composing response..." },
+                      ]
+                    : [
+                        { icon: "🔍", text: "Understanding your request..." },
+                        {
+                          icon: "🧠",
+                          text:
+                            responseMode === "thinking"
+                              ? "Thinking step by step..."
+                              : responseMode === "research"
+                                ? "Researching in depth..."
+                                : responseMode === "pro"
+                                  ? "Applying expert knowledge..."
+                                  : "Processing...",
+                        },
+                        { icon: "✍️", text: "Composing response..." },
+                      ];
+                  const currentIdx = Math.min(thinkingPhase, phases.length - 1);
+                  return phases.map((phase, i) => (
+                    <div
+                      key={i}
+                      className={`flex items-center gap-2 text-xs transition-all duration-300 ${
+                        i < currentIdx
+                          ? "text-muted-foreground/50"
+                          : i === currentIdx
+                            ? "text-foreground"
+                            : "text-transparent"
+                      }`}
+                    >
+                      {i < currentIdx ? (
+                        <svg
+                          className="h-3.5 w-3.5 text-primary"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2.5}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      ) : i === currentIdx ? (
+                        <svg
+                          className="h-3.5 w-3.5 animate-spin text-primary"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path
+                            d="M12 2v4m0 12v4m-7.07-3.93l2.83-2.83m8.48-8.48l2.83-2.83M2 12h4m12 0h4m-3.93 7.07l-2.83-2.83M7.76 7.76L4.93 4.93"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      ) : (
+                        <span className="h-3.5 w-3.5" />
+                      )}
+                      <span className={i === currentIdx ? "animate-pulse" : ""}>
+                        {phase.icon} {phase.text}
+                      </span>
+                    </div>
+                  ));
+                })()}
               </div>
             </div>
           </div>

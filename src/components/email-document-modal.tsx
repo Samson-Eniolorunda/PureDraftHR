@@ -5,8 +5,13 @@ import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ExternalLink, ChevronDown, ChevronUp, Mail } from "lucide-react";
-import { Select } from "@/components/ui/select";
+import {
+  ExternalLink,
+  ChevronDown,
+  ChevronUp,
+  Mail,
+  Check,
+} from "lucide-react";
 
 /* ── Brand SVG Icons ── */
 
@@ -475,22 +480,35 @@ export function EmailDocumentModal({
           />
         </div>
 
-        {/* Provider selection — dropdown */}
+        {/* Provider selection — icon list */}
         <div className="space-y-1.5">
-          <Label htmlFor="email-provider" className="text-sm">
-            Email Provider
-          </Label>
-          <Select
-            id="email-provider"
-            value={selectedProviderId}
-            onChange={(e) => setSelectedProviderId(e.target.value)}
-          >
-            {EMAIL_PROVIDERS.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </Select>
+          <Label className="text-sm">Email Provider</Label>
+          <div className="grid grid-cols-3 gap-2">
+            {EMAIL_PROVIDERS.map((p) => {
+              const Icon = p.icon;
+              const isSelected = selectedProviderId === p.id;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setSelectedProviderId(p.id)}
+                  className={`relative flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-xs font-medium transition-all ${
+                    isSelected
+                      ? "border-primary bg-primary/5 text-foreground shadow-sm"
+                      : "border-input hover:border-primary/40 hover:bg-accent/50 text-muted-foreground"
+                  }`}
+                >
+                  {isSelected && (
+                    <Check className="absolute top-1.5 right-1.5 h-3 w-3 text-primary" />
+                  )}
+                  <Icon className="h-5 w-5" />
+                  <span className="truncate w-full text-center leading-tight">
+                    {p.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Send button */}

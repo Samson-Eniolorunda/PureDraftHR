@@ -212,23 +212,23 @@ export function AppNav() {
               <Link
                 key={href}
                 href={href}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 min-h-[2.75rem] px-1 py-1 text-[11px] font-medium transition-all duration-200 rounded-xl",
+                  active
+                    ? "text-primary bg-primary/10"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Icon
                   className={cn(
-                    "flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 min-h-[2.75rem] px-1 py-1 text-[11px] font-medium transition-all duration-200 rounded-xl",
-                    active
-                      ? "text-primary bg-primary/10"
-                      : "text-muted-foreground hover:text-foreground",
+                    "h-5 w-5 transition-transform duration-200",
+                    active && "stroke-[2.5] scale-110",
                   )}
-                >
-                  <Icon
-                    className={cn(
-                      "h-5 w-5 transition-transform duration-200",
-                      active && "stroke-[2.5] scale-110",
-                    )}
-                  />
-                  <span className={cn("truncate", active && "font-semibold")}>
-                    {t(labelKey)}
-                  </span>
-                </Link>
+                />
+                <span className={cn("truncate", active && "font-semibold")}>
+                  {t(labelKey)}
+                </span>
+              </Link>
             );
           })}
           {isSignedIn && (
@@ -254,25 +254,6 @@ export function AppNav() {
               </span>
             </Link>
           )}
-
-          {/* Sign-in / User avatar */}
-          <div className="flex flex-col items-center justify-center min-w-0 flex-1 min-h-[2.75rem] px-1 py-1">
-            {!isLoaded ? (
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            ) : isSignedIn ? (
-              <UserButton />
-            ) : (
-              <SignInButton mode="modal">
-                <button
-                  type="button"
-                  className="flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <LogIn className="h-5 w-5" />
-                  <span>{t("common.signIn")}</span>
-                </button>
-              </SignInButton>
-            )}
-          </div>
 
           {/* More button (vertical dots, icon only) */}
           <button
