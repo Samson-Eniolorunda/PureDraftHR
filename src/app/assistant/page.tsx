@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useChat } from "ai/react";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -132,6 +133,7 @@ function fileIcon(ext: string) {
 /* ------------------------------------------------------------------ */
 export default function AssistantPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useUser();
 
   const [userPrompt, setUserPrompt] = useState("");
@@ -363,6 +365,33 @@ export default function AssistantPage() {
     },
     [setMessages],
   );
+
+  // Load shared chat from ?share= query param
+  useEffect(() => {
+    const shareId = searchParams.get("share");
+    if (!shareId || !/^[a-f0-9]{12}$/.test(shareId)) return;
+    fetch(`/api/share?id=${encodeURIComponent(shareId)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.chat?.messages?.length > 0) {
+          const newId = crypto.randomUUID();
+          setActiveChatId(newId);
+          setMessages(
+            data.chat.messages.map(
+              (m: { role: string; content: string }, i: number) => ({
+                id: `shared-${i}`,
+                role: m.role,
+                content: m.content,
+              }),
+            ),
+          );
+          hasSentRef.current = true;
+          // Clean URL without triggering navigation
+          router.replace("/assistant", { scroll: false });
+        }
+      })
+      .catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDeleteChat = useCallback(
     (id: string) => {

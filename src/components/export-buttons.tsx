@@ -438,34 +438,38 @@ export function ExportButtons({
     setSpeaking(true);
   }, [content, speaking]);
 
-  /* ── Share via Web Share API (fallback to copy) ── */
+  /* ── Share via persistent link (like conversation share) ── */
   const handleShare = useCallback(async () => {
     setSharing(true);
-    const plainText = content
-      .replace(/^#{1,6}\s+/gm, "")
-      .replace(/\*\*(.+?)\*\*/g, "$1")
-      .replace(/\*(.+?)\*/g, "$1")
-      .trim();
-
-    // Brief delay to show "Creating public link..." feedback
-    await new Promise((r) => setTimeout(r, 800));
-
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: resolvedFilename, text: plainText });
-      } catch {
-        // User cancelled or share failed
+    try {
+      const res = await fetch("/api/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "document",
+          title: resolvedFilename,
+          content,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success || !data.shareUrl) {
+        toast.error("Failed to create share link");
+        return;
       }
-    } else {
-      // Fallback: copy to clipboard
-      try {
-        await navigator.clipboard.writeText(plainText);
-        toast.success("Link copied to clipboard");
-      } catch {
-        setEmailModalOpen(true);
+      const shareUrl = data.shareUrl;
+      if (navigator.share) {
+        await navigator
+          .share({ title: resolvedFilename, url: shareUrl })
+          .catch(() => {});
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success("Share link copied to clipboard");
       }
+    } catch {
+      toast.error("Failed to create share link");
+    } finally {
+      setSharing(false);
     }
-    setSharing(false);
   }, [content, resolvedFilename]);
 
   if (!content) return null;

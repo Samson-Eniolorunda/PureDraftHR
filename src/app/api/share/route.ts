@@ -12,43 +12,60 @@ interface SharedMessage {
 }
 
 interface SharedChat {
+  type?: "chat" | "document";
   title: string;
   messages: SharedMessage[];
+  content?: string;
   sharedAt: number;
 }
 
 const SHARE_PREFIX = "shared_chat:";
 const SHARE_TTL = 60 * 60 * 24 * 90; // 90 days
 
-/** POST — create a shared chat link */
+/** POST — create a shared chat or document link */
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as {
+      type?: "chat" | "document";
       title: string;
-      messages: SharedMessage[];
+      messages?: SharedMessage[];
+      content?: string;
     };
 
-    if (
-      !body.title ||
-      !Array.isArray(body.messages) ||
-      body.messages.length === 0
-    ) {
-      return NextResponse.json(
-        { error: "Title and messages are required" },
-        { status: 400 },
-      );
+    if (!body.title) {
+      return NextResponse.json({ error: "Title is required" }, { status: 400 });
+    }
+
+    const isDocument = body.type === "document";
+
+    if (isDocument) {
+      if (!body.content || body.content.trim().length === 0) {
+        return NextResponse.json(
+          { error: "Content is required for document sharing" },
+          { status: 400 },
+        );
+      }
+    } else {
+      if (!Array.isArray(body.messages) || body.messages.length === 0) {
+        return NextResponse.json(
+          { error: "Messages are required for chat sharing" },
+          { status: 400 },
+        );
+      }
     }
 
     // Filter to only user/assistant messages, limit to 200 messages
-    const sanitizedMessages = body.messages
-      .filter((m) => m.role === "user" || m.role === "assistant")
-      .slice(0, 200)
-      .map((m) => ({
-        role: m.role,
-        content: m.content.slice(0, 50000), // cap per-message size
-      }));
+    const sanitizedMessages = isDocument
+      ? []
+      : (body.messages || [])
+          .filter((m) => m.role === "user" || m.role === "assistant")
+          .slice(0, 200)
+          .map((m) => ({
+            role: m.role,
+            content: m.content.slice(0, 50000),
+          }));
 
-    if (sanitizedMessages.length === 0) {
+    if (!isDocument && sanitizedMessages.length === 0) {
       return NextResponse.json(
         { error: "No valid messages to share" },
         { status: 400 },
@@ -59,8 +76,10 @@ export async function POST(request: NextRequest) {
     const id = crypto.randomUUID().replace(/-/g, "").slice(0, 12);
 
     const sharedChat: SharedChat = {
+      type: isDocument ? "document" : "chat",
       title: body.title.slice(0, 200),
       messages: sanitizedMessages,
+      ...(isDocument && { content: (body.content || "").slice(0, 100000) }),
       sharedAt: Date.now(),
     };
 
