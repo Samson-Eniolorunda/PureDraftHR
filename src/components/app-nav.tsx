@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -17,7 +17,7 @@ import {
   Globe,
   ChevronDown,
   Sparkles,
-  MoreHorizontal,
+  MoreVertical,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -206,12 +206,12 @@ export function AppNav() {
         className="md:hidden fixed bottom-0 left-0 right-0 z-30 border-t border-border/50 bg-card/95 backdrop-blur-xl supports-[backdrop-filter]:bg-card/75 safe-bottom"
       >
         <div className="flex items-center justify-around h-16 px-2">
-          {NAV_ITEMS.map(({ href, labelKey, icon: Icon }, index) => {
+          {NAV_ITEMS.map(({ href, labelKey, icon: Icon }) => {
             const active = pathname === href;
             return (
-              <React.Fragment key={href}>
-                <Link
-                  href={href}
+              <Link
+                key={href}
+                href={href}
                   className={cn(
                     "flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 min-h-[2.75rem] px-1 py-1 text-[11px] font-medium transition-all duration-200 rounded-xl",
                     active
@@ -229,23 +229,6 @@ export function AppNav() {
                     {t(labelKey)}
                   </span>
                 </Link>
-                {/* More button — placed beside Assistant (first item) */}
-                {index === 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setShowMorePanel((v) => !v)}
-                    className={cn(
-                      "flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 min-h-[2.75rem] px-1 py-1 text-[11px] font-medium transition-all duration-200 rounded-xl",
-                      showMorePanel
-                        ? "text-primary bg-primary/10"
-                        : "text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    <MoreHorizontal className="h-5 w-5" />
-                    <span>{t("common.more")}</span>
-                  </button>
-                )}
-              </React.Fragment>
             );
           })}
           {isSignedIn && (
@@ -271,6 +254,40 @@ export function AppNav() {
               </span>
             </Link>
           )}
+
+          {/* Sign-in / User avatar */}
+          <div className="flex flex-col items-center justify-center min-w-0 flex-1 min-h-[2.75rem] px-1 py-1">
+            {!isLoaded ? (
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            ) : isSignedIn ? (
+              <UserButton />
+            ) : (
+              <SignInButton mode="modal">
+                <button
+                  type="button"
+                  className="flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <LogIn className="h-5 w-5" />
+                  <span>{t("common.signIn")}</span>
+                </button>
+              </SignInButton>
+            )}
+          </div>
+
+          {/* More button (vertical dots, icon only) */}
+          <button
+            type="button"
+            onClick={() => setShowMorePanel((v) => !v)}
+            className={cn(
+              "flex flex-col items-center justify-center min-w-0 w-10 min-h-[2.75rem] px-1 py-1 transition-all duration-200 rounded-xl",
+              showMorePanel
+                ? "text-primary bg-primary/10"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+            aria-label="More options"
+          >
+            <MoreVertical className="h-5 w-5" />
+          </button>
         </div>
       </nav>
 

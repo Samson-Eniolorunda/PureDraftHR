@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ExternalLink, ChevronDown, ChevronUp, Mail } from "lucide-react";
+import { Select } from "@/components/ui/select";
 
 /* ── Brand SVG Icons ── */
 
@@ -474,37 +475,22 @@ export function EmailDocumentModal({
           />
         </div>
 
-        {/* Provider selection — card-style grid */}
+        {/* Provider selection — dropdown */}
         <div className="space-y-1.5">
-          <Label className="text-sm flex items-center gap-1.5">
-            <Mail className="h-4 w-4" />
+          <Label htmlFor="email-provider" className="text-sm">
             Email Provider
           </Label>
-          <div className="grid grid-cols-2 gap-2">
-            {EMAIL_PROVIDERS.map((p) => {
-              const Icon = p.icon;
-              const isSelected = p.id === selectedProviderId;
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => setSelectedProviderId(p.id)}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left text-sm transition-all cursor-pointer ${
-                    isSelected
-                      ? "border-primary bg-primary/5 ring-1 ring-primary/30 dark:bg-primary/10"
-                      : "border-border bg-card hover:bg-accent/50"
-                  }`}
-                >
-                  <Icon className="h-5 w-5 shrink-0" />
-                  <span
-                    className={`text-xs font-medium truncate ${isSelected ? "text-primary" : ""}`}
-                  >
-                    {p.name}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          <Select
+            id="email-provider"
+            value={selectedProviderId}
+            onChange={(e) => setSelectedProviderId(e.target.value)}
+          >
+            {EMAIL_PROVIDERS.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </Select>
         </div>
 
         {/* Send button */}
