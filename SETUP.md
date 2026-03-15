@@ -53,6 +53,14 @@ DIRECT_URL=""
 # Get from: https://supabase.com → Project Settings → Database → Connection string
 # DATABASE_URL = Transaction/Pooler connection string (port 6543)
 # DIRECT_URL  = Direct connection string (port 5432)
+
+# ── Sentry — Error Monitoring (optional) ─────────────────
+NEXT_PUBLIC_SENTRY_DSN=""
+SENTRY_ORG=""
+SENTRY_PROJECT=""
+SENTRY_AUTH_TOKEN=""
+# Get from: https://sentry.io → Project Settings → Client Keys (DSN)
+# SENTRY_AUTH_TOKEN for source-map uploads (Settings → Auth Tokens)
 ```
 
 ---
@@ -127,7 +135,28 @@ npm run dev
 
 ---
 
-## 6. Post-Deploy Checklist
+## 6. Sentry Error Monitoring (optional)
+
+1. Go to [Sentry](https://sentry.io) and create a new **Next.js** project
+2. Copy the **DSN** from your project settings
+3. Add the following environment variables:
+
+```env
+# ── Sentry — Error Monitoring (optional) ─────────────────
+NEXT_PUBLIC_SENTRY_DSN=""
+SENTRY_ORG=""
+SENTRY_PROJECT=""
+SENTRY_AUTH_TOKEN=""
+# Get from: https://sentry.io → Project Settings → Client Keys (DSN)
+# SENTRY_AUTH_TOKEN is for source-map uploads (Settings → Auth Tokens)
+```
+
+4. Add the same env vars in Vercel (Settings → Environment Variables) for production
+5. Sentry will automatically capture client errors, server errors, and edge errors
+
+---
+
+## 7. Post-Deploy Checklist
 
 - [ ] All env vars set in Vercel
 - [ ] Clerk Google OAuth enabled and redirect URIs configured
